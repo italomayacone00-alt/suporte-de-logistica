@@ -3,3 +3,4 @@ pandas==2.0.3
 pulp==2.7.0
 openpyxl==3.1.2
 Werkzeug==2.3.7
+gunicorn
