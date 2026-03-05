@@ -1,0 +1,130 @@
+<!-- templates/otimizador_cds.html - Ferramenta de Otimização de CDs -->
+{% extends "base.html" %}
+
+{% block title %}Otimização de CDs - MetriQ{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <section class="tool-header">
+        <div class="tool-info">
+            <h1>Otimização de CDs</h1>
+            <p>Dimensionamento e layout de centros de distribuição</p>
+        </div>
+        <div class="tool-icon-large yellow">
+            <span class="material-symbols-outlined">warehouse</span>
+        </div>
+    </section>
+
+    <!-- Progress Steps -->
+    <div class="steps">
+        <div class="step active" id="step1Indicator">
+            <div class="step-num">1</div>
+            <span>Configurar</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step2Indicator">
+            <div class="step-num">2</div>
+            <span>Dados</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step3Indicator">
+            <div class="step-num">3</div>
+            <span>Resultado</span>
+        </div>
+    </div>
+
+    <!-- Step 1: Configuration -->
+    <div class="card" id="step1">
+        <div class="card-header">
+            <h2>Configuração do Problema</h2>
+        </div>
+        
+        <form action="/gerar_template" method="POST">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="num_cds">
+                        <span class="material-symbols-outlined">warehouse</span>
+                        CDs Candidatos
+                    </label>
+                    <input type="number" id="num_cds" name="num_cds" min="1" max="50" required placeholder="5">
+                    <small>Número de centros de distribuição disponíveis</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="num_clientes">
+                        <span class="material-symbols-outlined">location_on</span>
+                        Clientes
+                    </label>
+                    <input type="number" id="num_clientes" name="num_clientes" min="1" max="200" required placeholder="20">
+                    <small>Número de pontos de entrega a atender</small>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-large" onclick="mostrarPasso2()">
+                <span class="material-symbols-outlined">download</span>
+                Baixar Planilha
+            </button>
+        </form>
+    </div>
+
+    <!-- Step 2: Upload (Hidden) -->
+    <div class="card hidden" id="step2">
+        <div class="card-header">
+            <h2>Upload dos Dados</h2>
+        </div>
+        
+        <div class="upload-instructions">
+            <div class="instruction-item">
+                <span class="instruction-num">1</span>
+                <span>Preencha capacidade e custos fixos dos CDs</span>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-num">2</span>
+                <span>Informe a demanda de cada cliente</span>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-num">3</span>
+                <span>Defina custos de transporte por rota</span>
+            </div>
+        </div>
+        
+        <form action="/resolver" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-area" id="dropZone">
+                <input type="file" id="arquivo_planilha" name="arquivo_planilha" accept=".xlsx" required>
+                <div class="upload-content">
+                    <span class="material-symbols-outlined upload-icon">cloud_upload</span>
+                    <p>Arraste o arquivo ou clique para selecionar</p>
+                    <span>Apenas arquivos .xlsx</span>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="backToStep1()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Voltar
+                </button>
+                <button type="submit" class="btn btn-success btn-large" id="uploadBtn">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                    Otimizar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="info-card">
+        <div class="info-icon">
+            <span class="material-symbols-outlined">info</span>
+        </div>
+        <div class="info-content">
+            <h3>Sobre o Método</h3>
+            <p>Este sistema utiliza <strong>Programação Linear Inteira</strong> com o solver PuLP para encontrar a configuração ótima de CDs que minimiza os custos totais (fixos + transporte) enquanto atende toda a demanda.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}

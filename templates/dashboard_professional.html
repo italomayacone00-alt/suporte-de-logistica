@@ -1,0 +1,51 @@
+<!-- templates/dashboard_professional.html - Dashboard MetriQ -->
+{% extends "base.html" %}
+
+{% block title %}MetriQ - Sistema de Planejamento Logístico{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Sistema de Planejamento Logístico</h1>
+        <p>Selecione uma ferramenta para iniciar sua análise ou gere relatórios profissionais dos dados salvos.</p>
+    </section>
+
+    <!-- Tools Grid -->
+    <section class="tools-section">
+        <div class="tools-grid">
+            <!-- Otimização de CDs -->
+            <a href="/otimizador_cds" class="tool-card">
+                <div class="tool-icon yellow">
+                    <span class="material-symbols-outlined">warehouse</span>
+                </div>
+                <h3>Otimização de CDs</h3>
+                <p>Dimensionamento e layout de centros de distribuição.</p>
+            </a>
+
+            
+        </div>
+    </section>
+
+    <!-- Saved Projects -->
+    <section class="saved-projects">
+        <div class="projects-header">
+            <h2>PROJETOS SALVOS</h2>
+            <div class="projects-count">0</div>
+        </div>
+        
+        <div class="empty-state">
+            <p>Nenhuma análise salva ainda. Use as ferramentas ao lado e clique em 'Salvar'.</p>
+            <button class="btn btn-primary" disabled>
+                GERAR RELATÓRIO
+            </button>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Apenas para futuras implementações
+</script>
+{% endblock %}

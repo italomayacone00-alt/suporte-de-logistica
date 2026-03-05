@@ -1,0 +1,89 @@
+<!-- templates/index.html - Página Inicial -->
+{% extends "base.html" %}
+
+{% block title %}MetriQ - Sistema de Planejamento Logístico{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Sistema de Planejamento Logístico</h1>
+        <p>Selecione uma ferramenta para iniciar sua análise ou gere relatórios profissionais dos dados salvos.</p>
+    </section>
+
+    <!-- Tools Grid -->
+    <section class="tools-section">
+        <div class="tools-grid">
+            <!-- Otimização de CDs -->
+            <a href="/otimizador_cds" class="tool-card" style="text-decoration: none; color: inherit; display: block; position: relative; z-index: 9999; pointer-events: auto !important; cursor: pointer !important;">
+                <div class="tool-icon yellow">
+                    <span class="material-symbols-outlined">warehouse</span>
+                </div>
+                <h3>Otimização de CDs</h3>
+                <p>Dimensionamento e layout de centros de distribuição.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- Saved Projects -->
+    <section class="saved-projects">
+        <div class="projects-header">
+            <h2>PROJETOS SALVOS</h2>
+            <div class="projects-count">0</div>
+        </div>
+        
+        <div class="empty-state">
+            <p>Nenhuma análise salva ainda. Use as ferramentas ao lado e clique em 'Salvar'.</p>
+            <button class="btn btn-primary" disabled>
+                GERAR RELATÓRIO
+            </button>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* Garante que o card seja clicável */
+.tool-card {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    color: inherit !important;
+    display: block !important;
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+.tool-card:hover {
+    text-decoration: none !important;
+    color: inherit !important;
+}
+</style>
+
+<script>
+// Teste simples e direto
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Página carregada!');
+    
+    const toolCard = document.querySelector('.tool-card');
+    if (toolCard) {
+        console.log('Card encontrado:', toolCard);
+        
+        // Força o clique
+        toolCard.addEventListener('click', function(e) {
+            console.log('Clique detectado no card!');
+            e.preventDefault();
+            window.location.href = '/otimizador_cds';
+        });
+        
+        // Força estilos
+        toolCard.style.pointerEvents = 'auto';
+        toolCard.style.cursor = 'pointer';
+        toolCard.style.zIndex = '9999';
+    } else {
+        console.log('Card não encontrado!');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+<!-- templates/resultado.html - Resultado MetriQ -->
+{% extends "base.html" %}
+
+{% block title %}Resultado - MetriQ{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Success Header -->
+    <section class="result-header">
+        <div class="result-icon success">
+            <span class="material-symbols-outlined">check_circle</span>
+        </div>
+        <div class="result-info">
+            <h1>Solução Ótima Encontrada</h1>
+            <p>Configuração ideal dos centros de distribuição identificada com sucesso</p>
+        </div>
+    </section>
+
+    {% if resultado.status == 'Sucesso' %}
+    
+    <!-- Main Metrics -->
+    <section class="metrics-section">
+        <div class="metrics-grid">
+            <div class="metric-card main">
+                <div class="metric-icon">
+                    <span class="material-symbols-outlined">payments</span>
+                </div>
+                <div class="metric-content">
+                    <span class="metric-label">Custo Total Mensal</span>
+                    <span class="metric-value">R$ {{ "{:,.2f}".format(resultado.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') }}</span>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <span class="material-symbols-outlined">warehouse</span>
+                </div>
+                <div class="metric-content">
+                    <span class="metric-label">CDs Abertos</span>
+                    <span class="metric-value">{{ resultado.cds_abertos|length }}</span>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <span class="material-symbols-outlined">trending_down</span>
+                </div>
+                <div class="metric-content">
+                    <span class="metric-label">Economia Estimada</span>
+                    <span class="metric-value">~15%</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CDs Selected -->
+    <section class="card">
+        <div class="card-header">
+            <h2>CDs Selecionados</h2>
+            <div class="badge">{{ resultado.cds_abertos|length }} unidades</div>
+        </div>
+        
+        <div class="cds-list">
+            {% for cd in resultado.cds_abertos %}
+            <div class="cd-item">
+                <div class="cd-info">
+                    <div class="cd-name">{{ cd }}</div>
+                    <div class="cd-details">
+                        <!-- Debug: mostrar dados brutos -->
+                        <small>Debug: capacidade_utilizada existe? {{ resultado.capacidade_utilizada is defined }}</small>
+                        <small>Debug: CD {{ cd }} está em capacidade_utilizada? {{ resultado.capacidade_utilizada and cd in resultado.capacidade_utilizada }}</small>
+                        
+                        {% if resultado.capacidade_utilizada and cd in resultado.capacidade_utilizada %}
+                        <span>Capacidade: {{ resultado.capacidade_utilizada[cd].disponivel }}</span>
+                        <span>Utilizado: {{ resultado.capacidade_utilizada[cd].utilizada }}</span>
+                        {% else %}
+                        <span>Capacidade: {{ resultado.capacidade_utilizada[cd].disponivel if resultado.capacidade_utilizada and cd in resultado.capacidade_utilizada else 'N/A' }}</span>
+                        <span>Utilizado: {{ resultado.capacidade_utilizada[cd].utilizada if resultado.capacidade_utilizada and cd in resultado.capacidade_utilizada else 'N/A' }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="cd-progress-container">
+                    {% if resultado.capacidade_utilizada and cd in resultado.capacidade_utilizada %}
+                    <div class="cd-progress" style="width: {{ resultado.capacidade_utilizada[cd].percentual_uso }}%"></div>
+                    <span class="cd-percent">{{ resultado.capacidade_utilizada[cd].percentual_uso }}%</span>
+                    {% else %}
+                    <div class="cd-progress" style="width: 0%"></div>
+                    <span class="cd-percent">0%</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Transport Routes -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Rotas de Transporte</h2>
+            <div class="badge">{{ resultado.transportes|length }} rotas</div>
+        </div>
+        
+        <div class="table-container">
+            <table class="routes-table">
+                <thead>
+                    <tr>
+                        <th>CD Origem</th>
+                        <th>Cliente Destino</th>
+                        <th>Quantidade</th>
+                        <th>Custo Unitário</th>
+                        <th>Custo Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if resultado.transportes %}
+                    {% for rota in resultado.transportes %}
+                    <tr>
+                        <td><span class="tag">{{ rota.origem }}</span></td>
+                        <td>{{ rota.destino }}</td>
+                        <td>{{ rota.quantidade }}</td>
+                        <td>R$ {{ "%.2f"|format(rota.custo_unitario) }}</td>
+                        <td class="cost-cell">R$ {{ "%.2f"|format(rota.custo_total_rota) }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 20px;">
+                            <p><strong>Nenhuma rota encontrada</strong></p>
+                            <p>Verifique se os dados foram preenchidos corretamente na planilha</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="actions-section">
+        <button class="btn btn-outline" onclick="window.print()">
+            <span class="material-symbols-outlined">print</span>
+            Imprimir Relatório
+        </button>
+        
+        <a href="{{ url_for('tools') }}" class="btn btn-primary">
+            <span class="material-symbols-outlined">refresh</span>
+            Nova Análise
+        </a>
+        
+        <button class="btn btn-success" onclick="exportResults()">
+            <span class="material-symbols-outlined">download</span>
+            Exportar Resultados
+        </button>
+    </section>
+
+    {% else %}
+    
+    <!-- Error State -->
+    <section class="result-header error">
+        <div class="result-icon error">
+            <span class="material-symbols-outlined">error</span>
+        </div>
+        <div class="result-info">
+            <h1>Erro na Otimização</h1>
+            <p>{{ resultado.mensagem }}</p>
+        </div>
+        <a href="{{ url_for('tools') }}" class="btn btn-primary">
+            <span class="material-symbols-outlined">refresh</span>
+            Tentar Novamente
+        </a>
+    </section>
+    
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportResults() {
+    // Função para exportar resultados
+    alert('Função de exportação será implementada em breve!');
+}
+</script>
+{% endblock %}
