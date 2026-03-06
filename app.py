@@ -5,6 +5,7 @@ import os
 from werkzeug.utils import secure_filename
 import tempfile
 import io
+from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 
 app = Flask(__name__)
 app.secret_key = 'sua_chave_secreta_aqui'
@@ -69,16 +70,156 @@ def gerar_template():
         # Criar o DataFrame (Tabela)
         df = pd.DataFrame(dados, columns=colunas)
         
-        # Salvar na memória como Excel
+        # Salvar na memória como Excel com Design Profissional
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Localizacao_CDs', index=False)
-            
-            # Ajustar largura das colunas para ficar bonito
             worksheet = writer.sheets['Localizacao_CDs']
+            
+            # Criar aba de instruções
+            from openpyxl import Workbook
+            instructions_worksheet = writer.book.create_sheet('Como Usar')
+            
+            # --- DEFININDO OS ESTILOS PARA ABA DE INSTRUÇÕES ---
+            # Cor do Cabeçalho (Azul Escuro) e Fonte Branca
+            instructions_header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            instructions_header_font = Font(color="FFFFFF", bold=True, size=12)
+            
+            # Cor de destaque (Azul Claro)
+            highlight_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+            instructions_bold_font = Font(bold=True, size=11)
+            
+            # Fonte normal
+            normal_font = Font(size=10)
+            
+            # Alinhamento e Bordas
+            center_align = Alignment(horizontal="center", vertical="center")
+            left_align = Alignment(horizontal="left", vertical="center", wrap_text=True)
+            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                                 top=Side(style='thin'), bottom=Side(style='thin'))
+            
+            # --- ADICIONAR INSTRUÇÕES NA ABA "Como Usar" ---
+            instructions_data = [
+                ['📋 GUIA DE USO - PLANILHA DE OTIMIZAÇÃO DE CDs', ''],
+                ['', ''],
+                ['🎯 OBJETIVO', 'Encontrar a configuração ótima de Centros de Distribuição que minimiza custos totais'],
+                ['', ''],
+                ['📝 COMO PREENCHER A PLANILHA "Localizacao_CDs":', ''],
+                ['1. CUSTOS DE TRANSPORTE (Células Cinzas)', 'Nas células cinza, informe o custo unitário (R$/unidade) para transportar mercadorias de cada CD para cada cliente'],
+                ['2. CUSTO FIXO DOS CDs (Coluna "Custo Fixo")', 'Informe o custo mensal fixo (R$) para operar cada CD candidato'],
+                ['3. CAPACIDADE DOS CDs (Coluna "Capacidade")', 'Informe a capacidade máxima (unidades/mês) que cada CD pode processar'],
+                ['4. DEMANDA DOS CLIENTES (Linha "Demanda Total")', 'Informe a demanda mensal (unidades) que cada cliente precisa receber'],
+                ['', ''],
+                ['🎨 GUIA VISUAL DAS CORES:', ''],
+                ['AZUL ESCURO (Cabeçalho)', 'Títulos das colunas - não editar'],
+                ['AZUL CLARO (Primeira coluna)', 'Nomes dos CDs e linha de demanda - não editar'],
+                ['CINZA CLARO (Miolo da tabela)', 'ÁREA PARA PREENCHER SEUS DADOS'],
+                ['', ''],
+                ['💡 EXEMPLO PRÁTICO:', ''],
+                ['Para 2 CDs (SP, RJ) e 3 Clientes (A, B, C):', ''],
+                ['• Custo SP → Cliente A: R$ 5,50/unidade', ''],
+                ['• Custo Fixo SP: R$ 15.000/mês', ''],
+                ['• Capacidade SP: 1.000 unidades/mês', ''],
+                ['• Demanda Cliente A: 300 unidades/mês', ''],
+                ['', ''],
+                ['⚠️ DICAS IMPORTANTES:', ''],
+                ['• Use números sem formatação (ex: 15000, não R$ 15.000)', ''],
+                ['• Verifique se a capacidade total ≥ demanda total', ''],
+                ['• Custos de transporte devem ser por unidade de produto', ''],
+                ['• O sistema decidirá quais CDs abrir e fechar automaticamente', ''],
+                ['', ''],
+                ['🚀 PRÓXIMOS PASSOS:', ''],
+                ['1. Preencha todos os dados na aba "Localizacao_CDs"', ''],
+                ['2. Salve o arquivo Excel', ''],
+                ['3. Faça upload no sistema', ''],
+                ['4. Aguarde o resultado da otimização', ''],
+            ]
+            
+            # Adicionar instruções na worksheet
+            for row_idx, (col1, col2) in enumerate(instructions_data, 1):
+                # Coluna 1
+                cell1 = instructions_worksheet.cell(row=row_idx, column=1, value=col1)
+                if row_idx == 1:
+                    cell1.font = instructions_header_font
+                    cell1.fill = instructions_header_fill
+                    cell1.alignment = center_align
+                elif col1.startswith('🎯') or col1.startswith('📝') or col1.startswith('🎨') or col1.startswith('💡') or col1.startswith('⚠️') or col1.startswith('🚀'):
+                    cell1.font = instructions_bold_font
+                    cell1.fill = highlight_fill
+                    cell1.alignment = left_align
+                else:
+                    cell1.font = normal_font
+                    cell1.alignment = left_align
+                cell1.border = thin_border
+                
+                # Coluna 2
+                cell2 = instructions_worksheet.cell(row=row_idx, column=2, value=col2)
+                cell2.font = normal_font
+                cell2.alignment = left_align
+                cell2.border = thin_border
+            
+            # Ajustar largura das colunas da aba de instruções
+            instructions_worksheet.column_dimensions['A'].width = 50
+            instructions_worksheet.column_dimensions['B'].width = 80
+            
+            # Congelar painel para facilitar navegação
+            instructions_worksheet.freeze_panes = 'A2'
+            
+            # --- DEFININDO OS ESTILOS PARA ABA DE DADOS ---
+            # Cor do Cabeçalho (Azul Escuro) e Fonte Branca
+            header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True)
+            
+            # Cor da Primeira Coluna (Azul Claro) e Negrito
+            col1_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+            bold_font = Font(bold=True)
+            
+            # Cor da Área de Digitação (Cinza bem claro para guiar o usuário)
+            input_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+            
+            # Alinhamento Centralizado e Bordas Finas
+            center_align = Alignment(horizontal="center", vertical="center")
+            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                                 top=Side(style='thin'), bottom=Side(style='thin'))
+            
+            # --- APLICANDO OS ESTILOS ---
+            max_row = worksheet.max_row
+            max_col = worksheet.max_column
+
+            # 1. Estilizar o Cabeçalho (Linha 1)
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = center_align
+                cell.border = thin_border
+
+            # 2. Estilizar o restante da tabela
+            for row in range(2, max_row + 1):
+                for col in range(1, max_col + 1):
+                    cell = worksheet.cell(row=row, column=col)
+                    cell.border = thin_border
+                    cell.alignment = center_align
+                    
+                    # Se for a primeira coluna (Nomes dos CDs e Demanda)
+                    if col == 1:
+                        cell.font = bold_font
+                        cell.fill = col1_fill
+                    # Se for a área onde o usuário vai digitar os números
+                    else:
+                        cell.fill = input_fill
+
+            # 3. Ajustar largura das colunas automaticamente
             for col in worksheet.columns:
-                max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
-                worksheet.column_dimensions[col[0].column_letter].width = max_length + 2
+                max_length = 0
+                column = col[0].column_letter # Pega a letra da coluna (A, B, C...)
+                for cell in col:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                # Dá um respiro de tamanho (+4) para não ficar apertado
+                worksheet.column_dimensions[column].width = max_length + 4
 
         output.seek(0)
         
