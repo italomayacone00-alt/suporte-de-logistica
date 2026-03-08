@@ -1,7 +1,7 @@
-<!-- templates/resultado.html - Resultado MetriQ -->
+<!-- templates/resultado_tradicional.html - Resultado Otimizador de CDs -->
 {% extends "base.html" %}
 
-{% block title %}Resultado - MetriQ{% endblock %}
+{% block title %}Resultado - Otimização de CDs{% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
@@ -27,7 +27,7 @@
                 </div>
                 <div class="metric-content">
                     <span class="metric-label">Custo Total Mensal</span>
-                    <span class="metric-value">R$ {{ "{:,.2f}".format(resultado.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') }}</span>
+                    <span class="metric-value">R$ {{ "{:,.2f}".format(resultado.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_total is not none else '0,00' }}</span>
                 </div>
             </div>
             
@@ -37,7 +37,7 @@
                 </div>
                 <div class="metric-content">
                     <span class="metric-label">CDs Abertos</span>
-                    <span class="metric-value">{{ resultado.cds_abertos|length }}</span>
+                    <span class="metric-value">{{ resultado.cds_abertos|length if resultado.cds_abertos is not none else 0 }}</span>
                 </div>
             </div>
             
@@ -53,11 +53,45 @@
         </div>
     </section>
 
+    <!-- Cost Breakdown -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Análise de Custos</h2>
+            <div class="badge">{{ resultado.num_cds_abertos if resultado.num_cds_abertos is not none else 0 }} CDs</div>
+        </div>
+        
+        <div class="cost-breakdown">
+            <div class="cost-item">
+                <div class="cost-label">
+                    <span class="material-symbols-outlined">store</span>
+                    <span>Custos Fixos</span>
+                </div>
+                <div class="cost-value">R$ {{ "{:,.2f}".format(resultado.custo_fixo_total).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_fixo_total is not none else '0,00' }}</div>
+            </div>
+            
+            <div class="cost-item">
+                <div class="cost-label">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                    <span>Custos de Transporte</span>
+                </div>
+                <div class="cost-value">R$ {{ "{:,.2f}".format(resultado.custo_transporte_total).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_transporte_total is not none else '0,00' }}</div>
+            </div>
+            
+            <div class="cost-item total">
+                <div class="cost-label">
+                    <span class="material-symbols-outlined">calculate</span>
+                    <span>Custo Total</span>
+                </div>
+                <div class="cost-value">R$ {{ "{:,.2f}".format(resultado.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_total is not none else '0,00' }}</div>
+            </div>
+        </div>
+    </section>
+
     <!-- CDs Selected -->
     <section class="card">
         <div class="card-header">
-            <h2>CDs Selecionados</h2>
-            <div class="badge">{{ resultado.cds_abertos|length }} unidades</div>
+            <h2>CDs Abertos</h2>
+            <div class="badge">{{ resultado.cds_abertos|length if resultado.cds_abertos is not none else 0 }} unidades</div>
         </div>
         
         <div class="cds-list">
@@ -66,16 +100,12 @@
                 <div class="cd-info">
                     <div class="cd-name">{{ cd }}</div>
                     <div class="cd-details">
-                        <!-- Debug: mostrar dados brutos -->
-                        <small>Debug: capacidade_utilizada existe? {{ resultado.capacidade_utilizada is defined }}</small>
-                        <small>Debug: CD {{ cd }} está em capacidade_utilizada? {{ resultado.capacidade_utilizada and cd in resultado.capacidade_utilizada }}</small>
-                        
                         {% if resultado.capacidade_utilizada and cd in resultado.capacidade_utilizada %}
                         <span>Capacidade: {{ resultado.capacidade_utilizada[cd].disponivel }}</span>
                         <span>Utilizado: {{ resultado.capacidade_utilizada[cd].utilizada }}</span>
                         {% else %}
-                        <span>Capacidade: {{ resultado.capacidade_utilizada[cd].disponivel if resultado.capacidade_utilizada and cd in resultado.capacidade_utilizada else 'N/A' }}</span>
-                        <span>Utilizado: {{ resultado.capacidade_utilizada[cd].utilizada if resultado.capacidade_utilizada and cd in resultado.capacidade_utilizada else 'N/A' }}</span>
+                        <span>Capacidade: N/A</span>
+                        <span>Utilizado: N/A</span>
                         {% endif %}
                     </div>
                 </div>
@@ -97,7 +127,7 @@
     <section class="card">
         <div class="card-header">
             <h2>Rotas de Transporte</h2>
-            <div class="badge">{{ resultado.transportes|length }} rotas</div>
+            <div class="badge">{{ resultado.transportes|length if resultado.transportes is not none else 0 }} rotas</div>
         </div>
         
         <div class="table-container">
@@ -117,9 +147,9 @@
                     <tr>
                         <td><span class="tag">{{ rota.origem }}</span></td>
                         <td>{{ rota.destino }}</td>
-                        <td>{{ rota.quantidade }}</td>
-                        <td>R$ {{ "%.2f"|format(rota.custo_unitario) }}</td>
-                        <td class="cost-cell">R$ {{ "%.2f"|format(rota.custo_total_rota) }}</td>
+                        <td>{{ rota.quantidade if rota.quantidade is not none else 0 }}</td>
+                        <td>R$ {{ "%.2f"|format(rota.custo_unitario) if rota.custo_unitario is not none else '0,00' }}</td>
+                        <td class="cost-cell">R$ {{ "%.2f"|format(rota.custo_total_rota) if rota.custo_total_rota is not none else '0,00' }}</td>
                     </tr>
                     {% endfor %}
                     {% else %}
@@ -142,7 +172,7 @@
             Imprimir Relatório
         </button>
         
-        <a href="{{ url_for('tools') }}" class="btn btn-primary">
+        <a href="{{ url_for('otimizador_cds') }}" class="btn btn-primary">
             <span class="material-symbols-outlined">refresh</span>
             Nova Análise
         </a>
@@ -164,7 +194,7 @@
             <h1>Erro na Otimização</h1>
             <p>{{ resultado.mensagem }}</p>
         </div>
-        <a href="{{ url_for('tools') }}" class="btn btn-primary">
+        <a href="{{ url_for('otimizador_cds') }}" class="btn btn-primary">
             <span class="material-symbols-outlined">refresh</span>
             Tentar Novamente
         </a>

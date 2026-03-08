@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}p-Centros - MetriQ{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <section class="tool-header">
+        <div class="tool-info">
+            <h1>p-Centros</h1>
+            <p>Minimize a distância máxima de atendimento (foco em equidade e tempo de resposta rápido)</p>
+        </div>
+        <div class="tool-icon-large blue">
+            <span class="material-symbols-outlined">center_focus_strong</span>
+        </div>
+    </section>
+
+    <!-- Progress Steps -->
+    <div class="steps">
+        <div class="step active" id="step1Indicator">
+            <div class="step-num">1</div>
+            <span>Configurar</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step2Indicator">
+            <div class="step-num">2</div>
+            <span>Dados</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step3Indicator">
+            <div class="step-num">3</div>
+            <span>Resultado</span>
+        </div>
+    </div>
+
+    <!-- Step 1: Configuration -->
+    <div class="card" id="step1">
+        <div class="card-header">
+            <h2>Configuração do Problema p-Centros</h2>
+        </div>
+        
+        <form action="/gerar_template_pcentros" method="POST">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="num_cds">
+                        <span class="material-symbols-outlined">warehouse</span>
+                        CDs Candidatos
+                    </label>
+                    <input type="number" id="num_cds" name="num_cds" min="1" max="50" required placeholder="5">
+                    <small>Número de centros de distribuição disponíveis</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="num_clientes">
+                        <span class="material-symbols-outlined">location_on</span>
+                        Clientes
+                    </label>
+                    <input type="number" id="num_clientes" name="num_clientes" min="1" max="200" required placeholder="20">
+                    <small>Número de pontos de entrega a atender</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="p_cds">
+                        <span class="material-symbols-outlined">pin_drop</span>
+                        CDs a Abrir (p)
+                    </label>
+                    <input type="number" id="p_cds" name="p_cds" min="1" max="10" required placeholder="3">
+                    <small>Número exato de CDs que serão abertos</small>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-large" onclick="mostrarPasso2()">
+                <span class="material-symbols-outlined">download</span>
+                Baixar Planilha
+            </button>
+        </form>
+    </div>
+
+    <!-- Step 2: Upload (Hidden) -->
+    <div class="card hidden" id="step2">
+        <div class="card-header">
+            <h2>Upload dos Dados</h2>
+        </div>
+        
+        <div class="upload-instructions">
+            <div class="instruction-item">
+                <span class="material-symbols-outlined">info</span>
+                <span>A planilha já vem com o guia completo de uso na aba "Como Usar"</span>
+            </div>
+        </div>
+        
+        <form action="/resolver_pcentros" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <!-- Campo oculto para passar o valor de p -->
+            <input type="hidden" id="p_cds_hidden" name="p_cds" value="">
+            
+            <div class="upload-area" id="dropZone">
+                <input type="file" id="arquivo_planilha" name="file" accept=".xlsx" required>
+                <div class="upload-content">
+                    <span class="material-symbols-outlined upload-icon">cloud_upload</span>
+                    <p>Arraste o arquivo ou clique para selecionar</p>
+                    <span>Apenas arquivos .xlsx</span>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="backToStep1()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Voltar
+                </button>
+                <button type="submit" class="btn btn-success btn-large" id="uploadBtn">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                    Otimizar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="info-card">
+        <div class="info-icon">
+            <span class="material-symbols-outlined">lightbulb</span>
+        </div>
+        <div class="info-content">
+            <h3>Sobre os p-Centros</h3>
+            <p>Este modelo seleciona exatamente <strong>p</strong> localizações para minimizar a <strong>maior distância</strong> de atendimento. Cada cliente é atendido por um único CD, garantindo equidade máxima no tempo de resposta.</p>
+        </div>
+    </div>
+
+    <!-- Comparison Card -->
+    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
+        <div class="card-header">
+            <h4>🔄 p-Centros vs p-Medianas</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
+                <h5 style="color: #1F4E78; margin-bottom: 10px;">p-Centros (Min-Max)</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li>Minimiza maior distância</li>
+                    <li>Foco em equidade</li>
+                    <li>Sem demanda ou custo fixo</li>
+                    <li>Atendimento emergencial</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                <h5 style="color: #28a745; margin-bottom: 10px;">p-Medianas (Min-Sum)</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li>Minimiza soma total</li>
+                    <li>Foco em eficiência</li>
+                    <li>Com demanda ponderada</li>
+                    <li>Atendimento otimizado</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+// Validação do formulário
+document.querySelector('form[action="/gerar_template_pcentros"]').addEventListener('submit', function(e) {
+    const numCds = parseInt(document.getElementById('num_cds').value);
+    const numClientes = parseInt(document.getElementById('num_clientes').value);
+    const pCds = parseInt(document.getElementById('p_cds').value);
+    
+    if (numCds < 1) {
+        e.preventDefault();
+        alert('O número de CDs candidatos deve ser maior que zero.');
+        return;
+    }
+    
+    if (numClientes < 1) {
+        e.preventDefault();
+        alert('O número de clientes deve ser maior que zero.');
+        return;
+    }
+    
+    if (pCds < 1) {
+        e.preventDefault();
+        alert('O número de CDs a abrir deve ser pelo menos 1.');
+        return;
+    }
+    
+    if (pCds > numCds) {
+        e.preventDefault();
+        alert('O número de CDs a abrir (p) não pode ser maior que o número de CDs candidatos.');
+        return;
+    }
+});
+
+// Funções de navegação entre passos
+function mostrarPasso2() {
+    document.getElementById('step1').classList.add('hidden');
+    document.getElementById('step2').classList.remove('hidden');
+    document.getElementById('step1Indicator').classList.remove('active');
+    document.getElementById('step2Indicator').classList.add('active');
+    
+    // Salvar o valor de p no campo oculto
+    const pCds = document.getElementById('p_cds').value;
+    document.getElementById('p_cds_hidden').value = pCds;
+}
+
+function backToStep1() {
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step1').classList.remove('hidden');
+    document.getElementById('step2Indicator').classList.remove('active');
+    document.getElementById('step1Indicator').classList.add('active');
+}
+
+// Garantir que p seja salvo antes do upload
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const pCds = document.getElementById('p_cds_hidden').value;
+    if (!pCds || pCds === '0') {
+        e.preventDefault();
+        alert('Por favor, configure o número de CDs a abrir (p) primeiro.');
+        backToStep1();
+    }
+});
+</script>
+{% endblock %}

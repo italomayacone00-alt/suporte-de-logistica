@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Máxima Cobertura - MetriQ{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <section class="tool-header">
+        <div class="tool-info">
+            <h1>Máxima Cobertura</h1>
+            <p>Maximize a cobertura de pontos dentro de um raio limitado (genérico para qualquer aplicação)</p>
+        </div>
+        <div class="tool-icon-large blue">
+            <span class="material-symbols-outlined">radar</span>
+        </div>
+    </section>
+
+    <!-- Progress Steps -->
+    <div class="steps">
+        <div class="step active" id="step1Indicator">
+            <div class="step-num">1</div>
+            <span>Configurar</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step2Indicator">
+            <div class="step-num">2</div>
+            <span>Dados</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step3Indicator">
+            <div class="step-num">3</div>
+            <span>Resultado</span>
+        </div>
+    </div>
+
+    <!-- Step 1: Configuration -->
+    <div class="card" id="step1">
+        <div class="card-header">
+            <h2>Configuração do Problema Máxima Cobertura</h2>
+        </div>
+        
+        <form action="/gerar_template_maxcobertura" method="POST">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="num_instalacoes">
+                        <span class="material-symbols-outlined">location_city</span>
+                        Instalações Candidatas
+                    </label>
+                    <input type="number" id="num_instalacoes" name="num_instalacoes" min="1" max="50" required placeholder="5">
+                    <small>Número de instalações disponíveis (antenas, bases, câmeras, etc.)</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="num_pontos">
+                        <span class="material-symbols-outlined">place</span>
+                        Pontos de Demanda
+                    </label>
+                    <input type="number" id="num_pontos" name="num_pontos" min="1" max="200" required placeholder="20">
+                    <small>Número de pontos a serem cobertos (bairros, zonas, setores, etc.)</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="p_instalacoes">
+                        <span class="material-symbols-outlined">pin_drop</span>
+                        Instalações a Abrir (p)
+                    </label>
+                    <input type="number" id="p_instalacoes" name="p_instalacoes" min="1" max="10" required placeholder="3">
+                    <small>Número exato de instalações que serão abertas</small>
+                </div>
+                
+                <div class="input-group highlight-box">
+                    <label for="raio_cobertura">
+                        <span class="material-symbols-outlined">track_changes</span>
+                        Raio Máximo de Cobertura
+                    </label>
+                    <input type="number" id="raio_cobertura" name="raio_cobertura" min="0.1" step="0.1" required placeholder="15.0">
+                    <small>Distância máxima para considerar um ponto coberto (km, metros, tempo, etc.)</small>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-large" onclick="mostrarPasso2()">
+                <span class="material-symbols-outlined">download</span>
+                Baixar Planilha
+            </button>
+        </form>
+    </div>
+
+    <!-- Step 2: Upload (Hidden) -->
+    <div class="card hidden" id="step2">
+        <div class="card-header">
+            <h2>Upload dos Dados</h2>
+        </div>
+        
+        <div class="upload-instructions">
+            <div class="instruction-item">
+                <span class="material-symbols-outlined">info</span>
+                <span>A planilha já vem com o guia completo de uso na aba "Como Usar"</span>
+            </div>
+        </div>
+        
+        <form action="/resolver_maxcobertura" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <!-- Campo oculto para passar o valor de p -->
+            <input type="hidden" id="p_instalacoes_hidden" name="p_instalacoes" value="">
+            <input type="hidden" id="raio_cobertura_hidden" name="raio_cobertura" value="">
+            
+            <div class="upload-area" id="dropZone">
+                <input type="file" id="arquivo_planilha" name="file" accept=".xlsx" required>
+                <div class="upload-content">
+                    <span class="material-symbols-outlined upload-icon">cloud_upload</span>
+                    <p>Arraste o arquivo ou clique para selecionar</p>
+                    <span>Apenas arquivos .xlsx</span>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="backToStep1()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Voltar
+                </button>
+                <button type="submit" class="btn btn-success btn-large" id="uploadBtn">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                    Otimizar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="info-card">
+        <div class="info-icon">
+            <span class="material-symbols-outlined">lightbulb</span>
+        </div>
+        <div class="info-content">
+            <h3>Sobre a Máxima Cobertura (Genérica)</h3>
+            <p>Este modelo seleciona exatamente <strong>p</strong> instalações para maximizar a <strong>cobertura ponderada</strong> dentro de um raio predefinido. É uma ferramenta universal aplicável a qualquer cenário de cobertura.</p>
+        </div>
+    </div>
+
+    <!-- Examples Card -->
+    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
+        <div class="card-header">
+            <h4>🌍 Exemplos de Aplicação</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
+                <h5 style="color: #1F4E78; margin-bottom: 10px;">📡 Telecomunicações</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Antenas 5G</li>
+                    <li><strong>Pontos:</strong> Bairros da cidade</li>
+                    <li><strong>Peso:</strong> População por bairro</li>
+                    <li><strong>Raio:</strong> 2 km de alcance</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                <h5 style="color: #28a745; margin-bottom: 10px;">🚔 Segurança Pública</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Bases policiais</li>
+                    <li><strong>Pontos:</strong> Zonas de ocorrência</li>
+                    <li><strong>Peso:</strong> Nº de ocorrências/mês</li>
+                    <li><strong>Raio:</strong> 5 min de resposta</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                <h5 style="color: #dc3545; margin-bottom: 10px;">🎥 Vigilância</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Câmeras de segurança</li>
+                    <li><strong>Pontos:</strong> Corredores de acesso</li>
+                    <li><strong>Peso:</strong> Valor em estoque</li>
+                    <li><strong>Raio:</strong> 50m de visão</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Validações antes de avançar ou baixar template
+document.querySelector('form[action="/gerar_template_maxcobertura"]').addEventListener('submit', function(e) {
+    const numInstalacoes = parseInt(document.getElementById('num_instalacoes').value);
+    const pInstalacoes = parseInt(document.getElementById('p_instalacoes').value);
+    
+    if (pInstalacoes > numInstalacoes) {
+        e.preventDefault();
+        alert('O número de instalações a abrir (p) não pode ser maior que o número de instalações candidatas.');
+    }
+});
+
+// Funções de navegação entre passos
+function mostrarPasso2() {
+    const numInstalacoes = document.getElementById('num_instalacoes').value;
+    const numPontos = document.getElementById('num_pontos').value;
+    const pInstalacoes = document.getElementById('p_instalacoes').value;
+    const raioCobertura = document.getElementById('raio_cobertura').value;
+
+    if (!numInstalacoes || !numPontos || !pInstalacoes || !raioCobertura) {
+        alert("Por favor, preencha todos os campos antes de avançar.");
+        return;
+    }
+
+    if (parseInt(pInstalacoes) > parseInt(numInstalacoes)) {
+        alert('O número de instalações a abrir (p) não pode ser maior que o número de instalações candidatas.');
+        return;
+    }
+
+    document.getElementById('step1').classList.add('hidden');
+    document.getElementById('step2').classList.remove('hidden');
+    document.getElementById('step1Indicator').classList.remove('active');
+    document.getElementById('step2Indicator').classList.add('active');
+    
+    // Salvar os valores nos campos ocultos do formulário de upload
+    document.getElementById('p_instalacoes_hidden').value = pInstalacoes;
+    document.getElementById('raio_cobertura_hidden').value = raioCobertura;
+}
+
+function backToStep1() {
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step1').classList.remove('hidden');
+    document.getElementById('step2Indicator').classList.remove('active');
+    document.getElementById('step1Indicator').classList.add('active');
+}
+
+// Garantir que p e raio sejam salvos antes do upload
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const pInstalacoes = document.getElementById('p_instalacoes_hidden').value;
+    const raioCobertura = document.getElementById('raio_cobertura_hidden').value;
+    
+    if (!pInstalacoes || pInstalacoes === '0') {
+        e.preventDefault();
+        alert('Por favor, configure o número de instalações a abrir (p) no Passo 1.');
+        backToStep1();
+    }
+    
+    if (!raioCobertura || raioCobertura === '0') {
+        e.preventDefault();
+        alert('Por favor, configure o raio de cobertura no Passo 1.');
+        backToStep1();
+    }
+});
+</script>
+{% endblock %}

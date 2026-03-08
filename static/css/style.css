@@ -517,6 +517,21 @@ body {
     color: var(--white);
 }
 
+.tool-icon-large.green {
+    background: linear-gradient(135deg, var(--green), #10b981);
+    color: var(--white);
+}
+
+.tool-icon-large.purple {
+    background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+    color: var(--white);
+}
+
+.tool-icon-large.blue {
+    background: linear-gradient(135deg, var(--blue), #3b82f6);
+    color: var(--white);
+}
+
 .tool-icon-large .material-symbols-outlined {
     font-size: 40px;
     font-weight: 700;
@@ -1335,6 +1350,50 @@ body {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+/* Upload Instructions */
+.upload-instructions {
+    background: var(--gray-light);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.upload-instructions h4 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.instruction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.instruction-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.instruction-item .material-symbols-outlined {
+    color: var(--primary);
+    font-size: 20px;
+}
+
+/* Formula */
+.formula {
+    background: var(--gray-light);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    border-left: 4px solid var(--primary);
 }
 
 /* Existing styles continue below... */

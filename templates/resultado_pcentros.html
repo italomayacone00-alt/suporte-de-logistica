@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Resultado - p-Centros{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Success Header -->
+    <section class="result-header">
+        <div class="result-icon success">
+            <span class="material-symbols-outlined">center_focus_strong</span>
+        </div>
+        <div class="result-info">
+            <h1>Solução Ótima p-Centros (Min-Max)</h1>
+            <p>{{ resultado.p }} CDs selecionados para minimizar a maior distância (equidade máxima)</p>
+        </div>
+    </section>
+
+    {% if resultado.status == 'Sucesso' %}
+    
+    <!-- Main Metrics -->
+    <section class="metrics-section">
+        <div class="metrics-grid">
+            <div class="metric-card main">
+                <div class="metric-icon">
+                    <span class="material-symbols-outlined">straighten</span>
+                </div>
+                <div class="metric-content">
+                    <span class="metric-label">Distância Máxima</span>
+                    <span class="metric-value">{{ "{:,.2f}".format(resultado.distancia_maxima).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.distancia_maxima is not none else '0,00' }}</span>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <span class="material-symbols-outlined">location_city</span>
+                </div>
+                <div class="metric-content">
+                    <span class="metric-label">CDs Selecionados</span>
+                    <span class="metric-value">{{ resultado.num_cds_selecionados }} / {{ resultado.p }}</span>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <span class="material-symbols-outlined">groups</span>
+                </div>
+                <div class="metric-content">
+                    <span class="metric-label">Total Clientes</span>
+                    <span class="metric-value">{{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Info -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Informações do Modelo p-Centros</h2>
+            <div class="badge blue">p = {{ resultado.p }}</div>
+        </div>
+        
+        <div class="model-info">
+            <div class="info-item">
+                <div class="info-label">
+                    <span class="material-symbols-outlined">calculate</span>
+                    <span>Função Objetivo</span>
+                </div>
+                <div class="info-value">Minimizar Max(d_ij × X_ij) onde X_ij = atendimento binário</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">
+                    <span class="material-symbols-outlined">rule</span>
+                    <span>Restrições</span>
+                </div>
+                <div class="info-value">
+                    • Σ Y_i = p (exatamente p CDs)<br>
+                    • Σ X_ij = 1 (atendimento completo)<br>
+                    • Z ≥ d_ij × X_ij (distância máxima)
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">
+                    <span class="material-symbols-outlined">data_usage</span>
+                    <span>Aplicação Ideal</span>
+                </div>
+                <div class="info-value">Serviços emergenciais, entregas expressas, atendimento prioritário</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CDs Selected -->
+    <section class="card">
+        <div class="card-header">
+            <h2>CDs Selecionados (p-Centros)</h2>
+            <div class="badge">{{ resultado.num_cds_selecionados }} / {{ resultado.p }} unidades</div>
+        </div>
+        
+        <div class="cds-list">
+            {% for cd in resultado.cds_selecionados %}
+            <div class="cd-item">
+                <div class="cd-info">
+                    <div class="cd-name">{{ cd }}</div>
+                    <div class="cd-details">
+                        <span>Clientes atendidos: {{ resultado.clientes_por_cd[cd] if resultado.clientes_por_cd and cd in resultado.clientes_por_cd else 0 }}</span>
+                    </div>
+                </div>
+                <div class="cd-progress-container">
+                    <div class="cd-progress" style="width: 100%"></div>
+                    <span class="cd-percent">Ativo</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Client Assignments -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Atribuições Clientes-CDs</h2>
+            <div class="badge">{{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }} atribuições</div>
+        </div>
+        
+        <div class="table-container">
+            <table class="routes-table">
+                <thead>
+                    <tr>
+                        <th>CD Selecionado</th>
+                        <th>Cliente Atendido</th>
+                        <th>Distância (d_ij)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if resultado.atribuicoes %}
+                    {% for atrib in resultado.atribuicoes %}
+                    <tr {% if atrib.distancia == resultado.distancia_maxima %} style="background-color: #ffebee;" title="Esta é a distância máxima do sistema!" {% endif %}>
+                        <td><span class="tag">{{ atrib.cd }}</span></td>
+                        <td>{{ atrib.cliente }}</td>
+                        <td>{{ "%.2f"|format(atrib.distancia) if atrib.distancia is not none else '0,00' }}</td>
+                        <td><span class="badge success">Atendido</span></td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px;">Nenhuma atribuição encontrada</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Ações</h2>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-outline" onclick="window.print()">
+                <span class="material-symbols-outlined">print</span>
+                Imprimir Relatório
+            </button>
+            <a href="{{ url_for('p_centros') }}" class="btn btn-primary">
+                <span class="material-symbols-outlined">refresh</span>
+                Nova Análise
+            </a>
+        </div>
+    </section>
+
+    {% else %}
+    <!-- Error State -->
+    <section class="result-header error">
+        <div class="result-icon error">
+            <span class="material-symbols-outlined">error</span>
+        </div>
+        <div class="result-info">
+            <h1>Erro na Otimização</h1>
+            <p>{{ resultado.mensagem }}</p>
+        </div>
+        <a href="{{ url_for('p_centros') }}" class="btn btn-primary">Tentar Novamente</a>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

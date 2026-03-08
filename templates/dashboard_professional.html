@@ -14,16 +14,37 @@
     <!-- Tools Grid -->
     <section class="tools-section">
         <div class="tools-grid">
-            <!-- Otimização de CDs -->
-            <a href="/otimizador_cds" class="tool-card">
-                <div class="tool-icon yellow">
-                    <span class="material-symbols-outlined">warehouse</span>
+            <a href="{{ url_for('p_medianas') }}" class="tool-card">
+                <div class="tool-icon">
+                    <span class="material-symbols-outlined">location_city</span>
                 </div>
-                <h3>Otimização de CDs</h3>
-                <p>Dimensionamento e layout de centros de distribuição.</p>
+                <h3>p-Medianas</h3>
+                <p>Otimização com número fixo de instalações</p>
             </a>
-
             
+            <a href="{{ url_for('p_centros') }}" class="tool-card">
+                <div class="tool-icon">
+                    <span class="material-symbols-outlined">center_focus_strong</span>
+                </div>
+                <h3>p-Centros</h3>
+                <p>Minimize a distância máxima de atendimento</p>
+            </a>
+            
+            <a href="{{ url_for('max_cobertura') }}" class="tool-card">
+                <div class="tool-icon">
+                    <span class="material-symbols-outlined">radar</span>
+                </div>
+                <h3>Máxima Cobertura</h3>
+                <p>Maximize a demanda dentro de um raio de cobertura</p>
+            </a>
+            
+            <a href="{{ url_for('tradicional') }}" class="tool-card">
+                <div class="tool-icon">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                </div>
+                <h3>Problema Tradicional</h3>
+                <p>Localização com custos fixos e capacidades</p>
+            </a>
         </div>
     </section>
 
