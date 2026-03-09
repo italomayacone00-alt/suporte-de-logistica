@@ -388,54 +388,30 @@ def max_cobertura():
 @app.route('/gerar_template_maxcobertura', methods=['POST'])
 def gerar_template_maxcobertura():
     try:
-        num_instalacoes = int(request.form.get('num_instalacoes', 0))
-        num_pontos = int(request.form.get('num_pontos', 0))
+        num_cds = int(request.form.get('num_cds', 0))
+        num_clientes = int(request.form.get('num_clientes', 0))
         
-        if num_instalacoes <= 0 or num_pontos <= 0:
+        if num_cds <= 0 or num_clientes <= 0:
             flash('Por favor, insira valores válidos para gerar o template.', 'error')
             return redirect(url_for('max_cobertura'))
             
-        # 1. Montando o cabeçalho (Pontos a serem cobertos)
-        colunas = ['Instalação / Ponto'] + [f'Ponto {i}' for i in range(1, num_pontos + 1)]
+        colunas = ['Origem / Destino'] + [f'Cliente {i}' for i in range(1, num_clientes + 1)]
         df_template = pd.DataFrame(columns=colunas)
         
-        # 2. Inserindo as Instalações nas linhas
-        for i in range(1, num_instalacoes + 1):
-            df_template.loc[i-1] = [f'Instalação {i}'] + ['' for _ in range(num_pontos)]
+        for i in range(1, num_cds + 1):
+            df_template.loc[i-1] = [f'CD {i}'] + ['' for _ in range(num_clientes)]
             
-        # 3. Adicionando a linha genérica de Peso/Demanda no final
-        df_template.loc[num_instalacoes] = ['Peso / Demanda'] + ['' for _ in range(num_pontos)]
+        # Voltando ao padrão logístico: Demanda Total
+        df_template.loc[num_cds] = ['Demanda Total'] + ['' for _ in range(num_clientes)]
             
-        # 4. Criando a aba de Instruções (Como Usar)
         guia_uso = [
             ["📋 GUIA DE USO - MÁXIMA COBERTURA", ""],
-            ["", ""],
-            ["🎯 OBJETIVO", "Escolher as melhores instalações para cobrir o MAIOR peso/demanda possível dentro de um raio limite."],
-            ["", ""],
-            ["📝 COMO PREENCHER:", ""],
-            ["1. DISTÂNCIAS/TEMPOS", "No miolo cinza, informe a distância (ou tempo) entre a Instalação e o Ponto."],
-            ["2. MATRIZ BINÁRIA", "Se não tiver distâncias, coloque 1 (se a instalação alcança o ponto) e 0 (se não alcança)."],
-            ["3. PESO / DEMANDA", "Na última linha, informe a importância, população ou volume de cada ponto."],
-            ["", ""],
-            ["💡 EXEMPLOS DE USO:", ""],
-            ["• Antenas e Bairros", "Instalações = Antenas | Pontos = Bairros | Peso = População"],
-            ["• Viaturas e Ocorrências", "Instalações = Bases Policiais | Pontos = Zonas | Peso = Nº de Ocorrências"],
-            ["• Câmeras e Corredores", "Instalações = Câmeras | Pontos = Setores | Peso = Valor em Estoque"],
-            ["", ""],
-            ["🎨 GUIA VISUAL DAS CORES:", ""],
-            ["AZUL ESCURO (Cabeçalho)", "Títulos das colunas - não editar."],
-            ["AZUL CLARO (Primeira coluna)", "Nomes das Instalações e Peso/Demanda - não editar."],
-            ["CINZA CLARO (Miolo da tabela)", "ÁREA PARA PREENCHER SEUS DADOS DE DISTÂNCIA."],
-            ["VERDE CLARO (Linha final)", "ÁREA PARA PREENCHER OS PESOS/DEMANDAS."],
-            ["", ""],
-            ["⚠️ DICAS IMPORTANTES:", ""],
-            ["• Formato Numérico", "Use números sem formatação de texto (ex: 5.50, não escreva 'R$ 5,50')."],
-            ["• Peso Ponderado", "Pontos com maior peso têm mais importância na otimização."],
-            ["• Raio de Cobertura", "Definido na interface: distância máxima para cobertura."]
+            ["1. DISTÂNCIAS", "Informe a distância (ou tempo) entre o CD e o Cliente."],
+            ["2. MATRIZ BINÁRIA", "Se não tiver distâncias exatas, coloque 1 (se o CD alcança) ou 0 (não alcança). Nesse caso, o Raio no site deve ser 0."],
+            ["3. DEMANDA", "Na última linha, informe a demanda em quantidade de produtos/pedidos de cada cliente."]
         ]
         df_como_usar = pd.DataFrame(guia_uso)
             
-        # 5. Criando o arquivo Excel com as duas abas
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df_template.to_excel(writer, index=False, sheet_name='Maxima_Cobertura')
@@ -446,9 +422,9 @@ def gerar_template_maxcobertura():
             # --- ESTILIZANDO A ABA 1 (Máxima Cobertura) ---
             worksheet = writer.sheets['Maxima_Cobertura']
             header_fill = PatternFill(start_color='1F4E78', end_color='1F4E78', fill_type='solid') # Azul escuro
-            instalacao_fill = PatternFill(start_color='D9E1F2', end_color='D9E1F2', fill_type='solid')     # Azul claro
+            cd_fill = PatternFill(start_color='D9E1F2', end_color='D9E1F2', fill_type='solid')     # Azul claro
             input_fill = PatternFill(start_color='F2F2F2', end_color='F2F2F2', fill_type='solid')  # Cinza
-            peso_fill = PatternFill(start_color='E8F5E8', end_color='E8F5E8', fill_type='solid') # Verde claro
+            demanda_fill = PatternFill(start_color='E8F5E8', end_color='E8F5E8', fill_type='solid') # Verde claro
             
             white_font = Font(color='FFFFFF', bold=True)
             bold_font = Font(bold=True)
@@ -464,33 +440,33 @@ def gerar_template_maxcobertura():
                 cell.border = thin_border
                 worksheet.column_dimensions[cell.column_letter].width = 15
                 
-            # Instalações (linhas 2 até num_instalacoes+1)
-            for row_num in range(2, num_instalacoes + 2):
-                instalacao_cell = worksheet.cell(row=row_num, column=1)
-                instalacao_cell.fill = instalacao_fill
-                instalacao_cell.font = bold_font
-                instalacao_cell.alignment = center_alignment
-                instalacao_cell.border = thin_border
+            # CDs (linhas 2 até num_cds+1)
+            for row_num in range(2, num_cds + 2):
+                cd_cell = worksheet.cell(row=row_num, column=1)
+                cd_cell.fill = cd_fill
+                cd_cell.font = bold_font
+                cd_cell.alignment = center_alignment
+                cd_cell.border = thin_border
                 
-                for col_num in range(2, num_pontos + 2):
+                for col_num in range(2, num_clientes + 2):
                     input_cell = worksheet.cell(row=row_num, column=col_num)
                     input_cell.fill = input_fill
                     input_cell.alignment = center_alignment
                     input_cell.border = thin_border
             
-            # Linha de peso/demanda (última linha)
-            row_peso = num_instalacoes + 2
-            peso_cell = worksheet.cell(row=row_peso, column=1)
-            peso_cell.fill = instalacao_fill
-            peso_cell.font = bold_font
-            peso_cell.alignment = center_alignment
-            peso_cell.border = thin_border
+            # Linha de demanda (última linha)
+            row_demanda = num_cds + 2
+            demanda_cell = worksheet.cell(row=row_demanda, column=1)
+            demanda_cell.fill = cd_fill
+            demanda_cell.font = bold_font
+            demanda_cell.alignment = center_alignment
+            demanda_cell.border = thin_border
             
-            for col_num in range(2, num_pontos + 2):
-                peso_input_cell = worksheet.cell(row=row_peso, column=col_num)
-                peso_input_cell.fill = peso_fill
-                peso_input_cell.alignment = center_alignment
-                peso_input_cell.border = thin_border
+            for col_num in range(2, num_clientes + 2):
+                demanda_input_cell = worksheet.cell(row=row_demanda, column=col_num)
+                demanda_input_cell.fill = demanda_fill
+                demanda_input_cell.alignment = center_alignment
+                demanda_input_cell.border = thin_border
 
             # --- ESTILIZANDO A ABA 2 (Como Usar) ---
             ws_como_usar = writer.sheets['Como Usar']
@@ -506,7 +482,7 @@ def gerar_template_maxcobertura():
                     cell_a.font = bold_font
                 
                 # Destacar os cabeçalhos principais
-                if row in [1, 3, 5, 13, 20]: 
+                if row in [1]:
                     cell_a.font = Font(bold=True, size=12, color='1F4E78')
                     
         output.seek(0)
@@ -516,7 +492,6 @@ def gerar_template_maxcobertura():
             as_attachment=True,
             download_name='Template_MaximaCobertura.xlsx'
         )
-        
     except Exception as e:
         flash(f'Erro ao gerar template: {str(e)}', 'error')
         return redirect(url_for('max_cobertura'))
@@ -524,47 +499,61 @@ def gerar_template_maxcobertura():
 @app.route('/resolver_maxcobertura', methods=['POST'])
 def resolver_maxcobertura_route():
     try:
-        if 'file' not in request.files:
-            flash('Nenhum arquivo foi selecionado.', 'error')
+        print(f"=== DEBUG - ROTA MÁXIMA COBERTURA ===")
+        
+        # Puxando as variáveis corretas do HTML (mesmo padrão do p-Centros)
+        p = int(request.form.get('p_cds', 0))
+        raio = float(request.form.get('raio_cobertura', 0))
+        
+        print(f"Parâmetros recebidos: p={p}, raio={raio}")
+        
+        file = request.files.get('file')
+        print(f"Arquivo recebido: {file}")
+        print(f"Nome do arquivo: {file.filename if file else 'None'}")
+        
+        if p <= 0:
+            flash('Número de CDs a abrir deve ser maior que zero.', 'error')
             return redirect(url_for('max_cobertura'))
-        
-        file = request.files['file']
-        
-        if file.filename == '':
-            flash('Nenhum arquivo foi selecionado.', 'error')
-            return redirect(url_for('max_cobertura'))
-        
+            
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Ler dados do Excel
-            df_principal = pd.read_excel(filepath)
+            print(f"Arquivo salvo em: {filepath}")
             
-            # Obter parâmetros do formulário
-            p_instalacoes = int(request.form.get('p_instalacoes', 1))
-            raio_cobertura = float(request.form.get('raio_cobertura', 10))
+            df = pd.read_excel(filepath)
+            print(f"DataFrame lido com sucesso: {df.shape}")
             
-            # Resolver o problema de Máxima Cobertura
             from solver_maxcobertura import resolver_maxcobertura
-            resultado = resolver_maxcobertura(df_principal, p_instalacoes, raio_cobertura)
+            resultado = resolver_maxcobertura(df, p, raio)
             
-            # Limpar arquivo temporário
+            print(f"Resultado do solver: {resultado}")
+            
             os.remove(filepath)
             
             if resultado.get('status') == 'Erro':
                 flash(f"Erro na otimização: {resultado.get('mensagem')}", 'error')
                 return redirect(url_for('max_cobertura'))
             
-            return render_template('resultado_maxcobertura.html', resultado=resultado)
+            # Adicionar mensagem de sucesso
+            if resultado.get('status') == 'Sucesso':
+                cds_selecionados = resultado.get('cds_selecionados', [])
+                demanda_coberta = resultado.get('demanda_coberta', 0)
+                percentual = resultado.get('percentual_cobertura', 0)
+                mensagem = f"✅ Otimização concluída com sucesso! {len(cds_selecionados)} CDs selecionados cobrindo {percentual:.1f}% da demanda total ({demanda_coberta:.0f} unidades)."
+                flash(mensagem, 'success')
+                print(f"✅ Mensagem de sucesso configurada: {mensagem}")
+                print(f"✅ Redirecionando para template resultado_maxcobertura.html")
                 
+            return render_template('resultado_maxcobertura.html', resultado=resultado)
         else:
-            flash('Formato de arquivo inválido. Por favor, envie um arquivo .xlsx ou .csv.', 'error')
+            print("❌ Arquivo inválido ou não recebido")
+            flash('Arquivo inválido ou não selecionado.', 'error')
             return redirect(url_for('max_cobertura'))
-            
     except Exception as e:
-        flash(f'Erro ao processar arquivo: {str(e)}', 'error')
+        print(f"❌ Erro na rota: {str(e)}")
+        flash(f'Erro ao processar: {str(e)}', 'error')
         return redirect(url_for('max_cobertura'))
 
 # --- ROTA PARA p-CENTROS ---

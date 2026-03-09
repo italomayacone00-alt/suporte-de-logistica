@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Máxima Cobertura - MetriQ{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <section class="tool-header">
+        <div class="tool-info">
+            <h1>Máxima Cobertura</h1>
+            <p>Maximize a cobertura de pontos dentro de um raio limitado (genérico para qualquer aplicação)</p>
+        </div>
+        <div class="tool-icon-large blue">
+            <span class="material-symbols-outlined">radar</span>
+        </div>
+    </section>
+
+    <!-- Progress Steps -->
+    <div class="steps">
+        <div class="step active" id="step1Indicator">
+            <div class="step-num">1</div>
+            <span>Configurar</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step2Indicator">
+            <div class="step-num">2</div>
+            <span>Dados</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step3Indicator">
+            <div class="step-num">3</div>
+            <span>Resultado</span>
+        </div>
+    </div>
+
+    <!-- Step 1: Configuration -->
+    <div class="card" id="step1">
+        <div class="card-header">
+            <h2>Configuração do Problema Máxima Cobertura</h2>
+        </div>
+        
+        <form action="/gerar_template_maxcobertura" method="POST">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="num_cds">
+                        <span class="material-symbols-outlined">warehouse</span>
+                        CDs Candidatos
+                    </label>
+                    <input type="number" id="num_cds" name="num_cds" min="1" max="50" required placeholder="5">
+                    <small>Número de centros de distribuição disponíveis</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="num_clientes">
+                        <span class="material-symbols-outlined">location_on</span>
+                        Clientes
+                    </label>
+                    <input type="number" id="num_clientes" name="num_clientes" min="1" max="200" required placeholder="20">
+                    <small>Número de pontos de entrega a atender</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="p_cds">
+                        <span class="material-symbols-outlined">pin_drop</span>
+                        CDs a Abrir (p)
+                    </label>
+                    <input type="number" id="p_cds" name="p_cds" min="1" max="10" required placeholder="3">
+                    <small>Número exato de CDs que serão abertos</small>
+                </div>
+                
+                <div class="input-group highlight-box">
+                    <label for="raio_cobertura">
+                        <span class="material-symbols-outlined">track_changes</span>
+                        Raio Máximo de Cobertura (0 = Binário)
+                    </label>
+                    <input type="number" id="raio_cobertura" name="raio_cobertura" min="0" step="0.1" required placeholder="15.0">
+                    <small>Distância máxima para cobertura (0 = matriz binária)</small>
+                </div>
+            </div>
+            
+            <button type="button" class="btn btn-primary btn-large" onclick="mostrarPasso2()">
+                <span class="material-symbols-outlined">download</span>
+                Baixar Planilha
+            </button>
+        </form>
+    </div>
+
+    <!-- Step 2: Upload (Hidden) -->
+    <div class="card hidden" id="step2">
+        <div class="card-header">
+            <h2>Upload dos Dados</h2>
+        </div>
+        
+        <div class="upload-instructions">
+            <div class="instruction-item">
+                <span class="material-symbols-outlined">info</span>
+                <span>A planilha já vem com o guia completo de uso na aba "Como Usar"</span>
+            </div>
+        </div>
+        
+        <form action="/resolver_maxcobertura" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <!-- Campo oculto para passar o valor de p -->
+            <input type="hidden" id="p_cds_hidden" name="p_cds" value="">
+            <input type="hidden" id="raio_cobertura_hidden" name="raio_cobertura" value="">
+            
+            <div class="upload-area" id="dropZone">
+                <input type="file" id="arquivo_planilha" name="file" accept=".xlsx" required>
+                <div class="upload-content">
+                    <span class="material-symbols-outlined upload-icon">cloud_upload</span>
+                    <p>Arraste o arquivo ou clique para selecionar</p>
+                    <span>Apenas arquivos .xlsx</span>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="backToStep1()">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Voltar
+                </button>
+                <button type="submit" class="btn btn-success btn-large" id="uploadBtn">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                    Otimizar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="info-card">
+        <div class="info-icon">
+            <span class="material-symbols-outlined">lightbulb</span>
+        </div>
+        <div class="info-content">
+            <h3>Sobre a Máxima Cobertura (Genérica)</h3>
+            <p>Este modelo seleciona exatamente <strong>p</strong> instalações para maximizar a <strong>cobertura ponderada</strong> dentro de um raio predefinido. É uma ferramenta universal aplicável a qualquer cenário de cobertura.</p>
+        </div>
+    </div>
+
+    <!-- Examples Card -->
+    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
+        <div class="card-header">
+            <h4>🌍 Exemplos de Aplicação</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
+                <h5 style="color: #1F4E78; margin-bottom: 10px;">📡 Telecomunicações</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Antenas 5G</li>
+                    <li><strong>Pontos:</strong> Bairros da cidade</li>
+                    <li><strong>Peso:</strong> População por bairro</li>
+                    <li><strong>Raio:</strong> 2 km de alcance</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                <h5 style="color: #28a745; margin-bottom: 10px;">🚔 Segurança Pública</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Bases policiais</li>
+                    <li><strong>Pontos:</strong> Zonas de ocorrência</li>
+                    <li><strong>Peso:</strong> Nº de ocorrências/mês</li>
+                    <li><strong>Raio:</strong> 5 min de resposta</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                <h5 style="color: #dc3545; margin-bottom: 10px;">🎥 Vigilância</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Câmeras de segurança</li>
+                    <li><strong>Pontos:</strong> Corredores de acesso</li>
+                    <li><strong>Peso:</strong> Valor em estoque</li>
+                    <li><strong>Raio:</strong> 50m de visão</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+// Validações antes de avançar ou baixar template
+document.querySelector('form[action="/gerar_template_maxcobertura"]').addEventListener('submit', function(e) {
+    const numCds = parseInt(document.getElementById('num_cds').value);
+    const pCds = parseInt(document.getElementById('p_cds').value);
+    
+    if (pCds > numCds) {
+        e.preventDefault();
+        alert('O número de CDs a abrir (p) não pode ser maior que o número de CDs candidatos.');
+    }
+});
+
+// Funções de navegação entre passos
+function mostrarPasso2() {
+    const numCds = document.getElementById('num_cds').value;
+    const numClientes = document.getElementById('num_clientes').value;
+    const pCds = document.getElementById('p_cds').value;
+    const raioCobertura = document.getElementById('raio_cobertura').value;
+
+    console.log("=== DEBUG - MOSTRAR PASSO 2 ===");
+    console.log(`numCds: ${numCds}`);
+    console.log(`numClientes: ${numClientes}`);
+    console.log(`pCds: ${pCds}`);
+    console.log(`raioCobertura: ${raioCobertura}`);
+
+    if (!numCds || !numClientes || !pCds || raioCobertura === '') {
+        alert("Por favor, preencha todos os campos antes de avançar.");
+        return;
+    }
+
+    if (parseInt(pCds) > parseInt(numCds)) {
+        alert('O número de CDs a abrir (p) não pode ser maior que o número de CDs candidatos.');
+        return;
+    }
+
+    // Salvar os valores nos campos ocultos do formulário de upload
+    document.getElementById('p_cds_hidden').value = pCds;
+    document.getElementById('raio_cobertura_hidden').value = raioCobertura;
+    
+    console.log("Valores salvos nos campos ocultos:");
+    console.log(`p_cds_hidden.value: ${document.getElementById('p_cds_hidden').value}`);
+    console.log(`raio_cobertura_hidden.value: ${document.getElementById('raio_cobertura_hidden').value}`);
+
+    // Submeter o formulário de template para baixar o Excel
+    const form = document.querySelector('form[action="/gerar_template_maxcobertura"]');
+    form.submit();
+    
+    // Mostrar passo 2 após um pequeno delay
+    setTimeout(() => {
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('step1Indicator').classList.remove('active');
+        document.getElementById('step2Indicator').classList.add('active');
+    }, 500);
+}
+
+function backToStep1() {
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step1').classList.remove('hidden');
+    document.getElementById('step2Indicator').classList.remove('active');
+    document.getElementById('step1Indicator').classList.add('active');
+}
+
+// Garantir que p e raio sejam salvos antes do upload
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    console.log("=== DEBUG - FORMULÁRIO ENVIADO ===");
+    
+    const pCds = document.getElementById('p_cds_hidden').value;
+    const raioCobertura = document.getElementById('raio_cobertura_hidden').value;
+    
+    console.log(`p_cds_hidden: ${pCds}`);
+    console.log(`raio_cobertura_hidden: ${raioCobertura}`);
+    
+    // Verificar todos os campos do formulário
+    const formData = new FormData(this);
+    console.log("Todos os campos do formulário:");
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+    
+    if (!pCds || pCds === '0') {
+        e.preventDefault();
+        alert('Por favor, configure o número de CDs a abrir (p) no Passo 1.');
+        backToStep1();
+    }
+    
+    if (!raioCobertura || raioCobertura === '') {
+        e.preventDefault();
+        alert('Por favor, configure o raio de cobertura no Passo 1.');
+        backToStep1();
+    }
+});
+</script>
+{% endblock %}

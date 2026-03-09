@@ -1,160 +1,132 @@
 """
-Solver Genérico para Máxima Cobertura (MCLP)
-Baseado na formulação de Church e ReVelle (1974)
+Solver para Máxima Cobertura (MCLP) - Padrão Logístico (CDs e Clientes)
+Baseado na abordagem simples do p-Centros
 """
 import pandas as pd
 from pulp import LpProblem, LpMaximize, LpVariable, lpSum, LpStatus, value
 
-def resolver_maxcobertura(df, p, raio_cobertura=None):
-    """
-    Resolve o Problema de Máxima Cobertura (MCLP) de forma genérica
-    
-    Parâmetros:
-    - df: DataFrame com matriz de distâncias e pesos
-    - p: número de instalações que podem ser abertas
-    - raio_cobertura: distância máxima para considerar um ponto coberto (None para matriz binária)
-    
-    Retorna:
-    - Dicionário com resultados da otimização
-    """
+def resolver_maxcobertura(df, p, raio_cobertura=0.0):
     try:
         print(f"=== INICIANDO OTIMIZAÇÃO MÁXIMA COBERTURA (p={p}, raio={raio_cobertura}) ===")
         print(f"Shape do DataFrame: {df.shape}")
         print(f"Colunas: {list(df.columns)}")
         print(f"Primeiras linhas:\n{df.head()}")
         
-        # 1. TRATAMENTO DOS DADOS GENÉRICOS
-        pontos = df.columns[1:].tolist()
+        # 1. TRATAMENTO DOS DADOS (mesma abordagem do p-Centros)
         ultima_linha_nome = str(df.iloc[-1, 0]).strip().lower()
         
-        # Aceita 'peso', 'demanda', 'peso / demanda', 'população', etc.
-        if ultima_linha_nome in ['demanda', 'peso', 'peso / demanda', 'população']:
-            pesos = {ponto: float(df.iloc[-1][ponto]) for ponto in pontos}
-            instalacoes = df.iloc[:-1, 0].tolist()
+        if ultima_linha_nome in ['demanda', 'demanda total', 'peso']:
+            print("✅ Linha de demanda encontrada")
+            demanda = {cliente: float(df.iloc[-1][cliente]) for cliente in df.columns[1:]}
+            cds = df.iloc[:-1, 0].tolist()
             matriz_valores = df.iloc[:-1]
         else:
-            # Se não tiver linha de peso, assume peso = 1 para todos
-            pesos = {ponto: 1.0 for ponto in pontos}
-            instalacoes = df.iloc[:, 0].tolist()
+            print("❌ Linha de demanda NÃO encontrada, usando peso = 1.0")
+            demanda = {cliente: 1.0 for cliente in df.columns[1:]}
+            cds = df.iloc[:, 0].tolist()
             matriz_valores = df
         
-        print(f"Instalações encontradas: {instalacoes}")
-        print(f"Pontos encontrados: {pontos}")
-        print(f"Pesos extraídos: {pesos}")
+        clientes = df.columns[1:].tolist()
         
-        # Criar matriz de valores (distâncias ou binário)
+        print(f"CDs encontrados: {cds}")
+        print(f"Clientes encontrados: {clientes}")
+        print(f"Demanda extraída: {demanda}")
+        
+        # 2. MATRIZ DE DISTÂNCIAS (mesma abordagem do p-Centros)
         distancias = {}
-        for idx, inst in enumerate(instalacoes):
-            distancias[inst] = {}
-            for ponto in pontos:
-                try:
-                    distancias[inst][ponto] = float(matriz_valores.iloc[idx][ponto])
-                except (ValueError, TypeError):
-                    distancias[inst][ponto] = float('inf')  # Distância infinita se não for número
+        for idx, cd in enumerate(cds):
+            distancias[cd] = {}
+            for cliente in clientes:
+                distancias[cd][cliente] = float(matriz_valores.iloc[idx][cliente])
         
-        print(f"Matriz de valores criada")
+        print(f"Matriz de distâncias criada com {len(distancias)} CDs e {len(clientes)} clientes")
         
-        # 2. CONJUNTO DE COBERTURA
-        # Para cada ponto, lista quais instalações podem cobri-lo
-        N_alcance = {ponto: [] for ponto in pontos}
-        for inst in instalacoes:
-            for ponto in pontos:
-                val = distancias[inst][ponto]
+        # 3. CONJUNTO DE COBERTURA (quais CDs podem atender quais clientes dentro do raio)
+        N_alcance = {cliente: [] for cliente in clientes}
+        
+        for cd in cds:
+            for cliente in clientes:
+                val = distancias[cd][cliente]
                 
-                if raio_cobertura is not None and raio_cobertura > 0:
-                    # Modo com raio de cobertura
-                    if val <= raio_cobertura:
-                        N_alcance[ponto].append(inst)
+                # Raio normal ou Matriz Binária
+                if raio_cobertura > 0:
+                    if val <= raio_cobertura: 
+                        N_alcance[cliente].append(cd)
+                        print(f"✅ {cliente} coberto por {cd} (distância: {val} <= raio: {raio_cobertura})")
                 else:
-                    # Modo matriz binária (1 = cobre, 0 = não cobre)
-                    if val > 0:
-                        N_alcance[ponto].append(inst)
+                    if val > 0: 
+                        N_alcance[cliente].append(cd)
+                        print(f"✅ {cliente} coberto por {cd} (binário: {val} > 0)")
         
-        print(f"Conjuntos de alcance criados")
+        print(f"Conjuntos de alcance: {N_alcance}")
+
+        # 4. MODELO MATEMÁTICO
+        prob = LpProblem("Maxima_Cobertura", LpMaximize)
         
-        # 3. MODELO MATEMÁTICO
-        prob = LpProblem("Maxima_Cobertura_Geral", LpMaximize)
+        # 5. VARIÁVEIS DE DECISÃO
+        Y = LpVariable.dicts("Y", cds, cat='Binary')  # 1 se CD aberto, 0 se fechado
+        Z = LpVariable.dicts("Z", clientes, cat='Binary')  # 1 se cliente coberto, 0 se não
         
-        # 4. VARIÁVEIS DE DECISÃO
-        Y = LpVariable.dicts("Y", instalacoes, cat='Binary')  # 1 se instalação aberta, 0 se fechada
-        Z = LpVariable.dicts("Z", pontos, cat='Binary')      # 1 se ponto coberto, 0 se não
+        # 6. FUNÇÃO OBJETIVO: Maximizar demanda coberta
+        prob += lpSum(demanda[cliente] * Z[cliente] for cliente in clientes), "Max_Demanda_Coberta"
         
-        # 5. FUNÇÃO OBJETIVO: Maximizar peso total coberto
-        prob += lpSum(pesos[ponto] * Z[ponto] for ponto in pontos), "Maximizar_Peso_Coberto"
+        # 7. RESTRIÇÕES
+        # R1: Abrir exatamente 'p' CDs
+        prob += lpSum(Y[cd] for cd in cds) == p, "Qtd_CDs"
         
-        # 6. RESTRIÇÕES
-        # R1: Abrir exatamente 'p' instalações
-        prob += lpSum(Y[inst] for inst in instalacoes) == p, "Qtd_Instalacoes"
-        
-        # R2: Lógica de cobertura - ponto só é coberto se alguma instalação dentro do raio estiver aberta
-        for ponto in pontos:
-            if len(N_alcance[ponto]) == 0:
-                # Se nenhuma instalação pode cobrir o ponto, força Z[ponto] = 0
-                prob += Z[ponto] == 0, f"Sem_Cobertura_{ponto}"
+        # R2: Lógica de cobertura - cliente só é coberto se algum CD dentro do raio estiver aberto
+        for cliente in clientes:
+            if len(N_alcance[cliente]) == 0:
+                # Se nenhum CD pode cobrir o cliente, força Z[cliente] = 0
+                prob += Z[cliente] == 0, f"Sem_Cobertura_{cliente}"
             else:
-                prob += Z[ponto] <= lpSum(Y[inst] for inst in N_alcance[ponto]), f"Cobertura_{ponto}"
-        
-        # 7. RESOLUÇÃO
+                prob += Z[cliente] <= lpSum(Y[cd] for cd in N_alcance[cliente]), f"Cobertura_{cliente}"
+                
+        # 8. RESOLUÇÃO
         prob.solve()
         
         if LpStatus[prob.status] != 'Optimal':
-            return {"status": "Erro", "mensagem": "Não foi possível encontrar uma solução ótima."}
+            return {"status": "Erro", "mensagem": "Solução ótima não encontrada."}
             
-        # 8. EXTRAÇÃO DE RESULTADOS
-        instalacoes_selecionadas = [inst for inst in instalacoes if value(Y[inst]) > 0.5]
-        pontos_cobertos = [ponto for ponto in pontos if value(Z[ponto]) > 0.5]
-        pontos_nao_cobertos = [ponto for ponto in pontos if value(Z[ponto]) <= 0.5]
+        # 9. EXTRAÇÃO DE RESULTADOS
+        cds_selecionados = [cd for cd in cds if value(Y[cd]) > 0.5]
+        clientes_cobertos = [cliente for cliente in clientes if value(Z[cliente]) > 0.5]
         
-        # Calcular métricas
-        peso_total = sum(pesos.values())
-        peso_coberto = sum(pesos[ponto] for ponto in pontos_cobertos)
-        percentual_cobertura = (peso_coberto / peso_total * 100) if peso_total > 0 else 0
+        demanda_coberta = sum(demanda[cliente] for cliente in clientes_cobertos)
+        demanda_total = sum(demanda.values())
+        percentual_cobertura = (demanda_coberta / demanda_total * 100) if demanda_total > 0 else 0
         
         # Detalhar atribuições
         atribuicoes = []
-        for ponto in pontos_cobertos:
-            # Encontrar qual instalação atende o ponto (primeiro que encontrar dentro do raio)
-            for inst in instalacoes_selecionadas:
-                if inst in N_alcance[ponto]:
-                    atribuicoes.append({
-                        "instalacao": inst,
-                        "ponto": ponto,
-                        "distancia": distancias[inst][ponto],
-                        "peso": pesos[ponto],
-                        "coberto": True
-                    })
-                    break
         
-        # Pontos não cobertos
-        for ponto in pontos_nao_cobertos:
-            # Encontrar instalação mais próxima (mesmo que fora do raio)
-            inst_mais_proxima = min(instalacoes, key=lambda i: distancias[i][ponto])
+        for cliente in clientes:
+            coberto = value(Z[cliente]) > 0.5
+            if coberto:
+                # Encontrar qual CD atende o cliente (primeiro que encontrar dentro do raio)
+                cd_atendente = [cd for cd in cds_selecionados if cd in N_alcance[cliente]][0]
+                dist = distancias[cd_atendente][cliente]
+            else:
+                cd_atendente = "-"
+                dist = "-"
+                
             atribuicoes.append({
-                "instalacao": inst_mais_proxima,
-                "ponto": ponto,
-                "distancia": distancias[inst_mais_proxima][ponto],
-                "peso": pesos[ponto],
-                "coberto": False
+                "cliente": cliente,
+                "cd": cd_atendente,
+                "demanda": demanda[cliente],
+                "distancia": dist,
+                "coberto": coberto
             })
-        
+                    
         return {
             "status": "Sucesso",
-            "modelo": "Máxima Cobertura (MCLP)",
             "p": p,
-            "raio_cobertura": raio_cobertura,
-            "instalacoes_selecionadas": instalacoes_selecionadas,
-            "num_instalacoes_selecionadas": len(instalacoes_selecionadas),
-            "pontos_cobertos": pontos_cobertos,
-            "pontos_nao_cobertos": pontos_nao_cobertos,
-            "num_pontos_cobertos": len(pontos_cobertos),
-            "num_pontos_nao_cobertos": len(pontos_nao_cobertos),
-            "peso_total": peso_total,
-            "peso_coberto": peso_coberto,
+            "raio_cobertura": raio_cobertura if raio_cobertura > 0 else "Binário",
+            "demanda_coberta": demanda_coberta,
             "percentual_cobertura": percentual_cobertura,
-            "atribuicoes": atribuicoes,
-            "total_pontos": len(pontos)
+            "cds_selecionados": cds_selecionados,
+            "atribuicoes": atribuicoes
         }
         
     except Exception as e:
         print(f"ERRO na otimização: {str(e)}")
-        return {"status": "Erro", "mensagem": f"Erro durante a otimização: {str(e)}"}
+        return {"status": "Erro", "mensagem": f"Erro interno: {str(e)}"}
