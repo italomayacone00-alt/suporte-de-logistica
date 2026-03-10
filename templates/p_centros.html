@@ -67,6 +67,32 @@
                     <input type="number" id="p_cds" name="p_cds" min="1" max="10" required placeholder="3">
                     <small>Número exato de CDs que serão abertos</small>
                 </div>
+                
+                <div class="input-group">
+                    <label for="tipo_dado" class="label-with-icon">
+                        <span class="material-symbols-outlined">swap_horiz</span>
+                        <span class="label-text">Matriz de Otimização</span>
+                        <span class="label-badge">Obrigatório</span>
+                    </label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_dado" value="distancia" checked>
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <div class="radio-title">📍 Distâncias</div>
+                                <div class="radio-desc">Kilômetros, tempo de viagem ou outras métricas de distância</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_dado" value="custo">
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <div class="radio-title">💰 Custos Financeiros</div>
+                                <div class="radio-desc">Custos de transporte por unidade (R$/ton, R$/unidade)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary btn-large" onclick="mostrarPasso2()">
@@ -90,8 +116,9 @@
         </div>
         
         <form action="/resolver_pcentros" method="POST" enctype="multipart/form-data" id="uploadForm">
-            <!-- Campo oculto para passar o valor de p -->
+            <!-- Campos ocultos para passar os valores -->
             <input type="hidden" id="p_cds_hidden" name="p_cds" value="">
+            <input type="hidden" id="tipo_dado_hidden" name="tipo_dado" value="">
             
             <div class="upload-area" id="dropZone">
                 <input type="file" id="arquivo_planilha" name="file" accept=".xlsx" required>
@@ -122,21 +149,57 @@
         </div>
         <div class="info-content">
             <h3>Sobre os p-Centros</h3>
-            <p>Este modelo seleciona exatamente <strong>p</strong> localizações para minimizar a <strong>maior distância</strong> de atendimento. Cada cliente é atendido por um único CD, garantindo equidade máxima no tempo de resposta.</p>
+            <p>Este modelo seleciona exatamente <strong>p</strong> localizações para minimizar a <strong>maior distância</strong> ou <strong>maior custo</strong> entre qualquer cliente e o CD que o atende. Ideal para serviços emergenciais onde o tempo máximo de resposta é crítico.</p>
+        </div>
+    </div>
+
+    <!-- Examples Card -->
+    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
+        <div class="card-header">
+            <h4>🌍 Exemplos de Aplicação</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
+                <h5 style="color: #1F4E78; margin-bottom: 10px;">🚑 Serviços de Emergência</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Hospitais, bombeiros</li>
+                    <li><strong>Pontos:</strong> Bairros da cidade</li>
+                    <li><strong>Objetivo:</strong> Minimizar tempo máximo de resposta</li>
+                    <li><strong>Métrica:</strong> Tempo em minutos</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                <h5 style="color: #28a745; margin-bottom: 10px;">🚚 Serviços de Taxi</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Bases de táxi</li>
+                    <li><strong>Pontos:</strong> Pontos de demanda</li>
+                    <li><strong>Objetivo:</strong> Reduzir espera máxima</li>
+                    <li><strong>Métrica:</strong> Tempo em minutos</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                <h5 style="color: #dc3545; margin-bottom: 10px;">📦 Entregas Urgentes</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Centros de distribuição</li>
+                    <li><strong>Pontos:</strong> Clientes prioritários</li>
+                    <li><strong>Objetivo:</strong> Garantir entrega rápida</li>
+                    <li><strong>Métrica:</strong> Custo por entrega</li>
+                </ul>
+            </div>
         </div>
     </div>
 
     <!-- Comparison Card -->
     <div class="card" style="margin-top: 20px; background: #f8f9fa;">
         <div class="card-header">
-            <h4>🔄 p-Centros vs p-Medianas</h4>
+            <h4>🔄 p-Centros vs Outros Modelos</h4>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
             <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
                 <h5 style="color: #1F4E78; margin-bottom: 10px;">p-Centros (Min-Max)</h5>
                 <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    <li>Minimiza maior distância</li>
-                    <li>Foco em equidade</li>
+                    <li>Minimiza maior distância/custo</li>
+                    <li>Foco em equidade máxima</li>
                     <li>Sem demanda ou custo fixo</li>
                     <li>Atendimento emergencial</li>
                 </ul>
@@ -145,7 +208,7 @@
                 <h5 style="color: #28a745; margin-bottom: 10px;">p-Medianas (Min-Sum)</h5>
                 <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
                     <li>Minimiza soma total</li>
-                    <li>Foco em eficiência</li>
+                    <li>Foco em eficiência global</li>
                     <li>Com demanda ponderada</li>
                     <li>Atendimento otimizado</li>
                 </ul>
@@ -196,9 +259,11 @@ function mostrarPasso2() {
     document.getElementById('step1Indicator').classList.remove('active');
     document.getElementById('step2Indicator').classList.add('active');
     
-    // Salvar o valor de p no campo oculto
+    // Salvar os valores nos campos ocultos
     const pCds = document.getElementById('p_cds').value;
+    const tipoDado = document.querySelector('input[name="tipo_dado"]:checked').value;
     document.getElementById('p_cds_hidden').value = pCds;
+    document.getElementById('tipo_dado_hidden').value = tipoDado;
 }
 
 function backToStep1() {
@@ -215,6 +280,34 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         e.preventDefault();
         alert('Por favor, configure o número de CDs a abrir (p) primeiro.');
         backToStep1();
+    }
+});
+
+// Adicionar evento para atualizar visualização dos radio buttons
+document.querySelectorAll('input[name="tipo_dado"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Remove a classe selecionada de todas as opções
+        document.querySelectorAll('.radio-option').forEach(option => {
+            option.style.borderColor = 'var(--border-color)';
+            option.style.background = 'white';
+            option.style.boxShadow = 'none';
+        });
+        
+        // Adiciona a classe selecionada à opção clicada
+        const selectedOption = this.closest('.radio-option');
+        if (selectedOption) {
+            selectedOption.style.borderColor = 'var(--primary-color)';
+            selectedOption.style.background = 'var(--bg-light)';
+            selectedOption.style.boxShadow = '0 2px 8px rgba(31, 78, 120, 0.15)';
+        }
+    });
+});
+
+// Inicializar com o estado correto do radio selecionado
+document.addEventListener('DOMContentLoaded', function() {
+    const checkedRadio = document.querySelector('input[name="tipo_dado"]:checked');
+    if (checkedRadio) {
+        checkedRadio.dispatchEvent(new Event('change'));
     }
 });
 </script>

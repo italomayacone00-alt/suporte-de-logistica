@@ -11,7 +11,10 @@
         </div>
         <div class="result-info">
             <h1>Solução Ótima p-Centros (Min-Max)</h1>
-            <p>{{ resultado.p }} CDs selecionados para minimizar a maior distância (equidade máxima)</p>
+            <p>{{ resultado.p }} CDs selecionados para minimizar a maior {{ resultado.tipo_valor if resultado.tipo_valor else 'distância' }} (equidade máxima)</p>
+            {% if resultado.tipo_valor %}
+            <small>Tipo de análise: {% if resultado.tipo_valor == 'distancia' %}📍 Distâncias{% else %}💰 Custos Financeiros{% endif %}</small>
+            {% endif %}
         </div>
     </section>
 
@@ -22,11 +25,12 @@
         <div class="metrics-grid">
             <div class="metric-card main">
                 <div class="metric-icon">
-                    <span class="material-symbols-outlined">straighten</span>
+                    <span class="material-symbols-outlined">{% if resultado.tipo_valor == 'custo' %}payments{% else %}straighten{% endif %}</span>
                 </div>
                 <div class="metric-content">
-                    <span class="metric-label">Distância Máxima</span>
-                    <span class="metric-value">{{ "{:,.2f}".format(resultado.distancia_maxima).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.distancia_maxima is not none else '0,00' }}</span>
+                    <span class="metric-label">{% if resultado.tipo_valor == 'custo' %}Custo Máximo{% else %}Distância Máxima{% endif %}</span>
+                    <span class="metric-value">{{ "{:,.2f}".format(resultado.valor_maximo).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.valor_maximo is not none else '0,00' }}</span>
+                    <span class="metric-subtitle">{% if resultado.tipo_valor == 'custo' %}R$ por unidade{% else %}km ou tempo{% endif %}</span>
                 </div>
             </div>
             
@@ -65,7 +69,7 @@
                     <span class="material-symbols-outlined">calculate</span>
                     <span>Função Objetivo</span>
                 </div>
-                <div class="info-value">Minimizar Max(d_ij × X_ij) onde X_ij = atendimento binário</div>
+                <div class="info-value">Minimizar Max({% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %}_ij × X_ij) onde X_ij = atendimento binário</div>
             </div>
             
             <div class="info-item">
@@ -76,7 +80,7 @@
                 <div class="info-value">
                     • Σ Y_i = p (exatamente p CDs)<br>
                     • Σ X_ij = 1 (atendimento completo)<br>
-                    • Z ≥ d_ij × X_ij (distância máxima)
+                    • Z ≥ {% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %}_ij × X_ij ({% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} máxima)
                 </div>
             </div>
             
@@ -98,20 +102,192 @@
         </div>
         
         <div class="cds-list">
+            {% set total_clientes = resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 %}
             {% for cd in resultado.cds_selecionados %}
+                {% set clientes_cd = resultado.clientes_por_cd[cd] if resultado.clientes_por_cd and cd in resultado.clientes_por_cd else 0 %}
+                {% set percentual = (clientes_cd / total_clientes * 100) if total_clientes > 0 else 0 %}
             <div class="cd-item">
                 <div class="cd-info">
                     <div class="cd-name">{{ cd }}</div>
                     <div class="cd-details">
-                        <span>Clientes atendidos: {{ resultado.clientes_por_cd[cd] if resultado.clientes_por_cd and cd in resultado.clientes_por_cd else 0 }}</span>
+                        <span>Clientes atendidos: {{ clientes_cd }} ({{ "%.1f"|format(percentual) }}%)</span>
+                        {% if resultado.tipo_valor == 'custo' %}
+                        <span>Custo médio: R$ {{ "%.2f"|format(resultado.valor_maximo) if resultado.valor_maximo is not none else '0,00' }}</span>
+                        {% else %}
+                        <span>Distância média: {{ "%.2f"|format(resultado.valor_maximo) if resultado.valor_maximo is not none else '0,00' }} km</span>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="cd-progress-container">
-                    <div class="cd-progress" style="width: 100%"></div>
-                    <span class="cd-percent">Ativo</span>
+                    <div class="cd-progress" style="width: {{ percentual }}%"></div>
+                    <span class="cd-percent">{{ "%.1f"|format(percentual) }}%</span>
                 </div>
             </div>
             {% endfor %}
+        </div>
+        
+        <!-- Resumo dos CDs -->
+        <div class="cd-summary">
+            <div class="summary-item">
+                <span class="summary-label">Taxa de Utilização:</span>
+                <span class="summary-value">{{ "%.1f"|format((resultado.num_cds_selecionados / resultado.p * 100) if resultado.p > 0 else 0) }}%</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Média por CD:</span>
+                <span class="summary-value">{{ "%.1f"|format((resultado.atribuicoes|length / resultado.num_cds_selecionados) if resultado.atribuicoes and resultado.num_cds_selecionados > 0 else 0) }} clientes</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Análises Gráficas -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Análises Gráficas</h2>
+            <div class="badge">4 visualizações</div>
+        </div>
+        
+        <div class="charts-grid">
+            <!-- Gráfico 1: Distribuição de Clientes por CD -->
+            <div class="chart-container">
+                <h3>Distribuição de Clientes por CD</h3>
+                <div class="chart-wrapper">
+                    <canvas id="clientesPorCDChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> {% if resultado.clientes_por_cd %}{% set max_clientes = resultado.clientes_por_cd.values()|max %}{% set total_clientes = resultado.atribuicoes|length %}O CD mais movimentado atende {{ max_clientes }} clientes ({{ "%.1f"|format((max_clientes / total_clientes * 100)) }}% do total). {% if max_clientes > (total_clientes / resultado.num_cds_selecionados * 1.2) %}Este CD está sobrecarregado e pode beneficiar-se de redistribuição.{% else %}A distribuição está relativamente equilibrada.{% endif %}{% else %}Nenhum cliente alocado no momento.{% endif %}</p>
+                </div>
+            </div>
+
+            <!-- Gráfico 2: Análise de Distâncias/Custos -->
+            <div class="chart-container">
+                <h3>Análise de {% if resultado.tipo_valor == 'custo' %}Custos{% else %}Distâncias{% endif %}</h3>
+                <div class="chart-wrapper">
+                    <canvas id="distanciasChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> {% if resultado.valor_maximo %}{% if resultado.tipo_valor == 'custo' %}O maior custo de atendimento é R$ {{ "%.2f"|format(resultado.valor_maximo) }}.{% else %}A maior distância de atendimento é {{ "%.2f"|format(resultado.valor_maximo) }} km.{% endif %} Clientes com valores em vermelho representam os casos críticos que devem ser priorizados para otimização.{% else %}Sem dados para análise de {% if resultado.tipo_valor == 'custo' %}custos{% else %}distâncias{% endif %}.{% endif %}</p>
+                </div>
+            </div>
+
+            <!-- Gráfico 3: Mapa de Calor -->
+            <div class="chart-container">
+                <h3>Mapa de Calor - {% if resultado.tipo_valor == 'custo' %}Custos{% else %}Distâncias{% endif %}</h3>
+                <div class="chart-wrapper">
+                    <canvas id="heatmapChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> Este mapa visualiza a intensidade de {% if resultado.tipo_valor == 'custo' %}custos{% else %}distâncias{% endif %} entre CDs e clientes. Linhas mais altas indicam {% if resultado.tipo_valor == 'custo' %}custos elevados{% else %}distâncias longas{% endif %}, ajudando a identificar rotas que precisam de atenção especial.</p>
+                </div>
+            </div>
+
+            <!-- Gráfico 4: Análise de Eficiência -->
+            <div class="chart-container">
+                <h3>Índice de Eficiência por CD</h3>
+                <div class="chart-wrapper">
+                    <canvas id="eficienciaChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> O índice mede o balanceamento entre número de clientes e {% if resultado.tipo_valor == 'custo' %}custo médio{% else %}distância média{% endif %} por CD. Valores mais altos indicam melhor eficiência (mais clientes com {% if resultado.tipo_valor == 'custo' %}custos menores{% else %}distâncias menores{% endif %}). Use esta análise para identificar CDs de melhor e pior performance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Análises Estatísticas -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Análises Estatísticas Avançadas</h2>
+            <div class="badge">Indicadores Chave</div>
+        </div>
+        
+        <div class="stats-grid">
+            <!-- Estatísticas 1 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">trending_up</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Desvio Padrão</h4>
+                    <p class="stat-value">0.00</p>
+                    <p class="stat-desc">Variação nas {% if resultado.tipo_valor == 'custo' %}custos{% else %}distâncias{% endif %}</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas 2 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">balance</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Índice de Balanceamento</h4>
+                    <p class="stat-value">{{ "%.1f"|format((100 - (resultado.clientes_por_cd.values()|max - resultado.clientes_por_cd.values()|min) / (resultado.atribuicoes|length / resultado.num_cds_selecionados) * 100) if resultado.clientes_por_cd and resultado.atribuicoes and resultado.num_cds_selecionados > 0 else 0) }}%</p>
+                    <p class="stat-desc">Equidade na distribuição</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas 3 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">speed</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Performance do Sistema</h4>
+                    <p class="stat-value">{{ "%.1f"|format((resultado.num_cds_selecionados / resultado.p * 100) if resultado.p > 0 else 0) }}%</p>
+                    <p class="stat-desc">Utilização da capacidade</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas 4 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">assessment</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Densidade de Clientes</h4>
+                    <p class="stat-value">{{ "%.2f"|format((resultado.atribuicoes|length / resultado.num_cds_selecionados) if resultado.atribuicoes and resultado.num_cds_selecionados > 0 else 0) }}</p>
+                    <p class="stat-desc">Média por CD ativo</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recomendações -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Recomendações Estratégicas</h2>
+            <div class="badge green">Análise Avançada</div>
+        </div>
+        
+        <div class="recommendations-list">
+            <div class="recommendation-item">
+                <div class="rec-icon">
+                    <span class="material-symbols-outlined">lightbulb</span>
+                </div>
+                <div class="rec-content">
+                    <h4>Otimização de Capacidade</h4>
+                    <p>Considere redistribuir {{ resultado.clientes_por_cd.values()|max - (resultado.atribuicoes|length / resultado.num_cds_selecionados) if resultado.clientes_por_cd and resultado.atribuicoes and resultado.num_cds_selecionados > 0 else 0 }} clientes do CD mais sobrecarregado para balancear o sistema.</p>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="rec-icon">
+                    <span class="material-symbols-outlined">trending_down</span>
+                </div>
+                <div class="rec-content">
+                    <h4>Redução de {% if resultado.tipo_valor == 'custo' %}Custos{% else %}Distâncias{% endif %}</h4>
+                    <p>Analise rotas com {% if resultado.tipo_valor == 'custo' %}custos{% else %}distâncias{% endif %} acima da média para possíveis otimizações logísticas.</p>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="rec-icon">
+                    <span class="material-symbols-outlined">add_location</span>
+                </div>
+                <div class="rec-content">
+                    <h4>Expansão Estratégica</h4>
+                    <p>Identifique regiões com alta concentração de clientes para possíveis novos CDs ou pontos de distribuição.</p>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -128,17 +304,17 @@
                     <tr>
                         <th>CD Selecionado</th>
                         <th>Cliente Atendido</th>
-                        <th>Distância (d_ij)</th>
+                        <th>{% if resultado.tipo_valor == 'custo' %}Custo{% else %}Distância{% endif %} (d_ij)</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% if resultado.atribuicoes %}
                     {% for atrib in resultado.atribuicoes %}
-                    <tr {% if atrib.distancia == resultado.distancia_maxima %} style="background-color: #ffebee;" title="Esta é a distância máxima do sistema!" {% endif %}>
+                    <tr {% if atrib.valor == resultado.valor_maximo %} style="background-color: #ffebee;" title="Este é o {% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} máximo do sistema!" {% endif %}>
                         <td><span class="tag">{{ atrib.cd }}</span></td>
                         <td>{{ atrib.cliente }}</td>
-                        <td>{{ "%.2f"|format(atrib.distancia) if atrib.distancia is not none else '0,00' }}</td>
+                        <td>{{ "%.2f"|format(atrib.valor) if atrib.valor is not none else '0,00' }}</td>
                         <td><span class="badge success">Atendido</span></td>
                     </tr>
                     {% endfor %}
@@ -162,6 +338,10 @@
                 <span class="material-symbols-outlined">print</span>
                 Imprimir Relatório
             </button>
+            <button class="btn btn-success" onclick="exportResults()">
+                <span class="material-symbols-outlined">download</span>
+                Baixar Resultados
+            </button>
             <a href="{{ url_for('p_centros') }}" class="btn btn-primary">
                 <span class="material-symbols-outlined">refresh</span>
                 Nova Análise
@@ -183,4 +363,228 @@
     </section>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function exportResults() {
+    // Redirecionar para rota de exportação
+    window.location.href = "{{ url_for('exportar_resultados_pcentros') }}";
+}
+
+// Gráficos e Análises
+document.addEventListener('DOMContentLoaded', function() {
+    const resultado = {{ resultado|tojson|safe }};
+    
+    // 1. Gráfico de Distribuição de Clientes por CD
+    const clientesCtx = document.getElementById('clientesPorCDChart');
+    if (clientesCtx && resultado.clientes_por_cd) {
+        new Chart(clientesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(resultado.clientes_por_cd),
+                datasets: [{
+                    data: Object.values(resultado.clientes_por_cd),
+                    backgroundColor: [
+                        '#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.parsed} clientes (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Gráfico de Análise de Distâncias/Custos
+    const distanciasCtx = document.getElementById('distanciasChart');
+    if (distanciasCtx && resultado.atribuicoes) {
+        const valores = resultado.atribuicoes.map(a => a.valor || 0);
+        new Chart(distanciasCtx, {
+            type: 'bar',
+            data: {
+                labels: resultado.atribuicoes.map(a => a.cliente),
+                datasets: [{
+                    label: resultado.tipo_valor === 'custo' ? 'Custo (R$)' : 'Distância (km)',
+                    data: valores,
+                    backgroundColor: valores.map(v => v === resultado.valor_maximo ? '#ef4444' : '#2563eb'),
+                    borderColor: valores.map(v => v === resultado.valor_maximo ? '#dc2626' : '#1d4ed8'),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: resultado.tipo_valor === 'custo' ? 'Custo (R$)' : 'Distância (km)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Clientes'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = resultado.tipo_valor === 'custo' ? 'Custo' : 'Distância';
+                                return `${label}: ${context.parsed.y.toFixed(2)} ${resultado.tipo_valor === 'custo' ? 'R$' : 'km'}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 3. Mapa de Calor
+    const heatmapCtx = document.getElementById('heatmapChart');
+    if (heatmapCtx && resultado.atribuicoes) {
+        // Agrupar dados por CD
+        const dadosPorCD = {};
+        resultado.atribuicoes.forEach(atrib => {
+            if (!dadosPorCD[atrib.cd]) {
+                dadosPorCD[atrib.cd] = [];
+            }
+            dadosPorCD[atrib.cd].push(atrib.valor || 0);
+        });
+
+        const labelsCDs = Object.keys(dadosPorCD);
+        const datasets = labelsCDs.map((cd, index) => ({
+            label: cd,
+            data: dadosPorCD[cd],
+            backgroundColor: `hsla(${index * 60}, 70%, 50%, 0.6)`,
+            borderColor: `hsla(${index * 60}, 70%, 50%, 1)`,
+            borderWidth: 1
+        }));
+
+        new Chart(heatmapCtx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: Math.max(...Object.values(dadosPorCD).map(arr => arr.length))}, (_, i) => `Cliente ${i + 1}`),
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: resultado.tipo_valor === 'custo' ? 'Custo (R$)' : 'Distância (km)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Índice de Clientes'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 10,
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            }
+        });
+    }
+
+    // 4. Gráfico de Eficiência
+    const eficienciaCtx = document.getElementById('eficienciaChart');
+    if (eficienciaCtx && resultado.clientes_por_cd && resultado.atribuicoes) {
+        const eficienciaData = [];
+        const labels = [];
+        
+        Object.keys(resultado.clientes_por_cd).forEach(cd => {
+            const clientes = resultado.clientes_por_cd[cd];
+            const atribuicoesCD = resultado.atribuicoes.filter(a => a.cd === cd);
+            const mediaValor = atribuicoesCD.reduce((sum, a) => sum + (a.valor || 0), 0) / atribuicoesCD.length;
+            
+            // Índice de eficiência = (clientes / mediaValor) * 100
+            const eficiencia = (clientes / mediaValor) * 100;
+            
+            labels.push(cd);
+            eficienciaData.push(eficiencia.toFixed(2));
+        });
+
+        new Chart(eficienciaCtx, {
+            type: 'radar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Índice de Eficiência',
+                    data: eficienciaData,
+                    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(37, 99, 235, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Índice de Eficiência'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

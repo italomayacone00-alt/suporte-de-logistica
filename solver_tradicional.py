@@ -6,7 +6,7 @@ Otimização de CDs com custos fixos e capacidades
 import pandas as pd
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus, value
 
-def resolver_problema_logistica(df):
+def resolver_problema_logistica(df, tipo_dado='custo'):
     """
     Resolve o problema de localização-alocação capacitada.
     
@@ -17,6 +17,7 @@ def resolver_problema_logistica(df):
     
     Parâmetros:
     - df: DataFrame com dados da planilha
+    - tipo_dado: 'custo' ou 'distancia' para tipo de transporte
     
     Retorna:
     - Dicionário com solução ótima
@@ -26,6 +27,7 @@ def resolver_problema_logistica(df):
         print(f"Shape do DataFrame: {df.shape}")
         print(f"Colunas: {list(df.columns)}")
         print(f"Primeiras linhas:\n{df.head()}")
+        print(f"Tipo de dado: {tipo_dado}")
         
         # 1. Separar a linha de Demanda dos CDs candidatos
         nome_primeira_coluna = df.columns[0] 
@@ -62,13 +64,17 @@ def resolver_problema_logistica(df):
             capacidades[cd_atual] = pd.to_numeric(row['Capacidade'])
         print(f"Capacidades: {capacidades}")
         
-        # Extrair Custos de Transporte
+        # Extrair Custos de Transporte (ou Distâncias)
         custos_transporte = {}
         for index, row in df_cds.iterrows():
             cd_atual = str(row[nome_primeira_coluna])
             for cliente in clientes:
                 custos_transporte[(cd_atual, cliente)] = pd.to_numeric(row[cliente])
         print(f"Custos de transporte (primeiros 5): {dict(list(custos_transporte.items())[:5])}")
+        
+        # Identificar o tipo de transporte nos logs
+        tipo_transporte = "Custos" if tipo_dado == 'custo' else "Distâncias"
+        print(f"Usando {tipo_transporte} de transporte")
         
         # ==========================================
         # MODELAGEM MATEMÁTICA - LOCALIZAÇÃO CAPACITADA
@@ -140,7 +146,8 @@ def resolver_problema_logistica(df):
         
         resultado_final = {
             "status": "Sucesso",
-            "modelo": "Localização Capacitada",
+            "modelo": f"Localização Capacitada - {tipo_transporte}",
+            "tipo_transporte": tipo_dado,
             "custo_total": value(prob.objective),
             "custo_fixo_total": value(custo_fixo_total),
             "custo_transporte_total": value(custo_transporte_total),

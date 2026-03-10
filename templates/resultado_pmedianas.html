@@ -12,7 +12,10 @@
         </div>
         <div class="result-info">
             <h1>Solução Ótima p-Medianas Clássico</h1>
-            <p>{{ resultado.p }} CDs selecionados para minimizar o custo total (sem restrições de capacidade)</p>
+            <p>{{ resultado.p }} CDs selecionados para minimizar o custo total ponderado (eficiência global)</p>
+            {% if resultado.tipo_valor %}
+            <small>Tipo de análise: {% if resultado.tipo_valor == 'distancia' %}📍 Distâncias{% else %}💰 Custos Financeiros{% endif %}</small>
+            {% endif %}
         </div>
     </section>
 
@@ -23,11 +26,12 @@
         <div class="metrics-grid">
             <div class="metric-card main">
                 <div class="metric-icon">
-                    <span class="material-symbols-outlined">trending_down</span>
+                    <span class="material-symbols-outlined">{% if resultado.tipo_valor == 'custo' %}payments{% else %}trending_down{% endif %}</span>
                 </div>
                 <div class="metric-content">
-                    <span class="metric-label">Custo Total</span>
+                    <span class="metric-label">{% if resultado.tipo_valor == 'custo' %}Custo Total{% else %}Custo Total Ponderado{% endif %}</span>
                     <span class="metric-value">{{ "{:,.2f}".format(resultado.custo_total_ponderado).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_total_ponderado is not none else '0,00' }}</span>
+                    <span class="metric-subtitle">{% if resultado.tipo_valor == 'custo' %}R$ totais{% else %}unidades × {% if resultado.tipo_valor == 'distancia' %}distância{% else %}custo{% endif %}{% endif %}</span>
                 </div>
             </div>
             
@@ -47,7 +51,7 @@
                 </div>
                 <div class="metric-content">
                     <span class="metric-label">Total Clientes</span>
-                    <span class="metric-value">{{ resultado.total_clientes }}</span>
+                    <span class="metric-value">{{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }}</span>
                 </div>
             </div>
         </div>
@@ -66,7 +70,7 @@
                     <span class="material-symbols-outlined">calculate</span>
                     <span>Função Objetivo</span>
                 </div>
-                <div class="info-value">Minimizar Σ (d_ij × X_ij) onde X_ij = quantidade atendida</div>
+                <div class="info-value">Minimizar Σ ({% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %}_ij × X_ij) onde X_ij = quantidade atendida</div>
             </div>
             
             <div class="info-item">
@@ -86,7 +90,7 @@
                     <span class="material-symbols-outlined">data_usage</span>
                     <span>Dimensões</span>
                 </div>
-                <div class="info-value">{{ resultado.total_cds if resultado.total_cds is not none else 0 }} CDs × {{ resultado.total_clientes if resultado.total_clientes is not none else 0 }} Clientes</div>
+                <div class="info-value">{{ resultado.total_cds if resultado.total_cds is not none else 0 }} CDs × {{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }} Clientes</div>
             </div>
         </div>
     </section>
@@ -99,20 +103,194 @@
         </div>
         
         <div class="cds-list">
+            {% set total_clientes = resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 %}
             {% for cd in resultado.cds_selecionados %}
+                {% set clientes_cd = resultado.clientes_por_cd[cd] if resultado.clientes_por_cd and cd in resultado.clientes_por_cd else 0 %}
+                {% set percentual = (clientes_cd / total_clientes * 100) if total_clientes > 0 else 0 %}
+                {% set atribuicoes_cd = resultado.atribuicoes|selectattr('cd', 'equalto', cd)|list if resultado.atribuicoes is not none else [] %}
+                {% set media_custo = (atribuicoes_cd|sum(attribute='custo_ponderado') / atribuicoes_cd|length) if atribuicoes_cd and atribuicoes_cd|length > 0 else 0 %}
             <div class="cd-item">
                 <div class="cd-info">
                     <div class="cd-name">{{ cd }}</div>
                     <div class="cd-details">
-                        <span>Clientes atendidos: {{ resultado.clientes_por_cd[cd] if resultado.clientes_por_cd and cd in resultado.clientes_por_cd else 0 }}</span>
+                        <span>Clientes atendidos: {{ clientes_cd }} ({{ "%.1f"|format(percentual) }}%)</span>
+                        {% if resultado.tipo_valor == 'custo' %}
+                        <span>Custo médio: R$ {{ "%.2f"|format(media_custo) if media_custo > 0 else '0,00' }}</span>
+                        {% else %}
+                        <span>Distância média: {{ "%.2f"|format(media_custo) if media_custo > 0 else '0,00' }}</span>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="cd-progress-container">
-                    <div class="cd-progress" style="width: 100%"></div>
-                    <span class="cd-percent">Ativo</span>
+                    <div class="cd-progress" style="width: {{ percentual }}%"></div>
+                    <span class="cd-percent">{{ "%.1f"|format(percentual) }}%</span>
                 </div>
             </div>
             {% endfor %}
+        </div>
+        
+        <!-- Resumo dos CDs -->
+        <div class="cd-summary">
+            <div class="summary-item">
+                <span class="summary-label">Taxa de Utilização:</span>
+                <span class="summary-value">{{ "%.1f"|format((resultado.num_cds_selecionados / resultado.p * 100) if resultado.p > 0 else 0) }}%</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Média por CD:</span>
+                <span class="summary-value">{{ "%.1f"|format((total_clientes / resultado.num_cds_selecionados) if total_clientes > 0 and resultado.num_cds_selecionados > 0 else 0) }} clientes</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Análises Gráficas -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Análises Gráficas</h2>
+            <div class="badge">4 visualizações</div>
+        </div>
+        
+        <div class="charts-grid">
+            <!-- Gráfico 1: Distribuição de Clientes por CD -->
+            <div class="chart-container">
+                <h3>Distribuição de Clientes por CD</h3>
+                <div class="chart-wrapper">
+                    <canvas id="clientesPorCDChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> {% if resultado.clientes_por_cd %}{% set max_clientes = resultado.clientes_por_cd.values()|max %}{% set total_clientes = resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 %}O CD mais movimentado atende {{ max_clientes }} clientes ({{ "%.1f"|format((max_clientes / total_clientes * 100)) }}% do total). {% if max_clientes > (total_clientes / resultado.num_cds_selecionados * 1.2) %}Este CD está sobrecarregado e pode beneficiar-se de redistribuição.{% else %}A distribuição está relativamente equilibrada.{% endif %}{% else %}Nenhum cliente alocado no momento.{% endif %}</p>
+                </div>
+            </div>
+
+            <!-- Gráfico 2: Análise de Custos Ponderados -->
+            <div class="chart-container">
+                <h3>Análise de Custos Ponderados</h3>
+                <div class="chart-wrapper">
+                    <canvas id="custosChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> {% if resultado.custo_total_ponderado %}O custo total ponderado é R$ {{ "%.2f"|format(resultado.custo_total_ponderado) }}. Este gráfico mostra como os custos são distribuídos entre os CDs, ajudando a identificar quais contribuem mais para o total.{% else %}Sem dados para análise de custos ponderados.{% endif %}</p>
+                </div>
+            </div>
+
+            <!-- Gráfico 3: Demanda vs Custo -->
+            <div class="chart-container">
+                <h3>Demanda vs {% if resultado.tipo_valor == 'custo' %}Custo{% else %}Distância{% endif %} por CD</h3>
+                <div class="chart-wrapper">
+                    <canvas id="demandaCustoChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> Este gráfico compara o volume de demanda com os {% if resultado.tipo_valor == 'custo' %}custos{% else %}distâncias{% endif %} de cada CD. CDs com alta demanda e baixo {% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} são os mais eficientes.</p>
+                </div>
+            </div>
+
+            <!-- Gráfico 4: Eficiência Operacional -->
+            <div class="chart-container">
+                <h3>Índice de Eficiência Operacional</h3>
+                <div class="chart-wrapper">
+                    <canvas id="eficienciaChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> O índice mede a relação entre demanda atendida e {% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} médio por CD. Valores mais altos indicam CDs mais eficientes (servem mais clientes com menor {% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %}).</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Análises Estatísticas -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Análises Estatísticas Avançadas</h2>
+            <div class="badge">Indicadores Chave</div>
+        </div>
+        
+        <div class="stats-grid">
+            <!-- Estatísticas 1 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">trending_up</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Custo Médio por Cliente</h4>
+                    <p class="stat-value">{{ "%.2f"|format((resultado.custo_total_ponderado / resultado.atribuicoes|length) if resultado.custo_total_ponderado and resultado.atribuicoes and resultado.atribuicoes|length > 0 else 0) }}</p>
+                    <p class="stat-desc">{% if resultado.tipo_valor == 'custo' %}R$ por cliente{% else %}Unidades por cliente{% endif %}</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas 2 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">balance</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Índice de Balanceamento</h4>
+                    <p class="stat-value">{{ "%.1f"|format((100 - (resultado.clientes_por_cd.values()|max - resultado.clientes_por_cd.values()|min) / (resultado.atribuicoes|length / resultado.num_cds_selecionados) * 100) if resultado.clientes_por_cd and resultado.atribuicoes and resultado.atribuicoes|length > 0 and resultado.num_cds_selecionados > 0 else 0) }}%</p>
+                    <p class="stat-desc">Equidade na distribuição</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas 3 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">speed</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Performance do Sistema</h4>
+                    <p class="stat-value">{{ "%.1f"|format((resultado.num_cds_selecionados / resultado.p * 100) if resultado.p > 0 else 0) }}%</p>
+                    <p class="stat-desc">Utilização da capacidade</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas 4 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">assessment</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Densidade de Clientes</h4>
+                    <p class="stat-value">{{ "%.2f"|format((resultado.atribuicoes|length / resultado.num_cds_selecionados) if resultado.atribuicoes and resultado.num_cds_selecionados > 0 else 0) }}</p>
+                    <p class="stat-desc">Média por CD ativo</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recomendações -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Recomendações Estratégicas</h2>
+            <div class="badge green">Análise Avançada</div>
+        </div>
+        
+        <div class="recommendations-list">
+            <div class="recommendation-item">
+                <div class="rec-icon">
+                    <span class="material-symbols-outlined">lightbulb</span>
+                </div>
+                <div class="rec-content">
+                    <h4>Otimização de Custos</h4>
+                    <p>Considere redistribuir {{ resultado.clientes_por_cd.values()|max - (resultado.atribuicoes|length / resultado.num_cds_selecionados) if resultado.clientes_por_cd and resultado.atribuicoes and resultado.num_cds_selecionados > 0 else 0 }} clientes do CD mais caro para CDs mais eficientes.</p>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="rec-icon">
+                    <span class="material-symbols-outlined">trending_down</span>
+                </div>
+                <div class="rec-content">
+                    <h4>Redução de {% if resultado.tipo_valor == 'custo' %}Custos Totais{% else %}Distâncias Totais{% endif %}</h4>
+                    <p>Analise CDs com {% if resultado.tipo_valor == 'custo' %}custos{% else %}distâncias{% endif %} acima da média para possíveis otimizações logísticas e redução do custo total ponderado.</p>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="rec-icon">
+                    <span class="material-symbols-outlined">add_location</span>
+                </div>
+                <div class="rec-content">
+                    <h4>Expansão Estratégica</h4>
+                    <p>Identifique regiões com alta demanda e baixo {% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} para possíveis novos CDs ou otimização de rotas existentes.</p>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -129,7 +307,7 @@
                     <tr>
                         <th>CD Selecionado</th>
                         <th>Cliente Atendido</th>
-                        <th>Distância (d_ij)</th>
+                        <th>{% if resultado.tipo_valor == 'custo' %}Custo{% else %}Distância{% endif %} (d_ij)</th>
                         <th>Quantidade Atendida</th>
                         <th>Custo Ponderado</th>
                         <th>Status</th>
@@ -141,7 +319,7 @@
                     <tr>
                         <td><span class="tag">{{ atrib.cd }}</span></td>
                         <td>{{ atrib.cliente }}</td>
-                        <td>{{ "%.2f"|format(atrib.distancia) if atrib.distancia is not none else '0,00' }}</td>
+                        <td>{{ "%.2f"|format(atrib.valor) if atrib.valor is not none else '0,00' }}</td>
                         <td>{{ "%.2f"|format(atrib.demanda_atendida) if atrib.demanda_atendida is not none else '0,00' }}</td>
                         <td>{{ "%.2f"|format(atrib.custo_ponderado) if atrib.custo_ponderado is not none else '0,00' }}</td>
                         <td><span class="badge success">Atendido</span></td>
@@ -161,21 +339,24 @@
     </section>
 
     <!-- Actions -->
-    <section class="actions-section">
-        <button class="btn btn-outline" onclick="window.print()">
-            <span class="material-symbols-outlined">print</span>
-            Imprimir Relatório
-        </button>
-        
-        <a href="{{ url_for('p_medianas') }}" class="btn btn-primary">
-            <span class="material-symbols-outlined">refresh</span>
-            Nova Análise
-        </a>
-        
-        <button class="btn btn-success" onclick="exportResults()">
-            <span class="material-symbols-outlined">download</span>
-            Exportar Resultados
-        </button>
+    <section class="card">
+        <div class="card-header">
+            <h2>Ações</h2>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-outline" onclick="window.print()">
+                <span class="material-symbols-outlined">print</span>
+                Imprimir Relatório
+            </button>
+            <button class="btn btn-success" onclick="exportResults()">
+                <span class="material-symbols-outlined">download</span>
+                Baixar Resultados
+            </button>
+            <a href="{{ url_for('p_medianas') }}" class="btn btn-primary">
+                <span class="material-symbols-outlined">refresh</span>
+                Nova Análise
+            </a>
+        </div>
     </section>
 
     {% else %}
@@ -200,10 +381,218 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function exportResults() {
-    // Função para exportar resultados
-    alert('Função de exportação será implementada em breve!');
+    // Redirecionar para rota de exportação
+    window.location.href = "{{ url_for('exportar_resultados_pmedianas') }}";
 }
+
+// Gráficos e Análises
+document.addEventListener('DOMContentLoaded', function() {
+    const resultado = {{ resultado|tojson|safe }};
+    
+    // 1. Gráfico de Distribuição de Clientes por CD
+    const clientesCtx = document.getElementById('clientesPorCDChart');
+    if (clientesCtx && resultado.clientes_por_cd) {
+        new Chart(clientesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(resultado.clientes_por_cd),
+                datasets: [{
+                    data: Object.values(resultado.clientes_por_cd),
+                    backgroundColor: [
+                        '#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.parsed} clientes (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Gráfico de Custos Ponderados
+    const custosCtx = document.getElementById('custosChart');
+    if (custosCtx && resultado.atribuicoes) {
+        const custosPorCD = {};
+        resultado.atribuicoes.forEach(atrib => {
+            if (!custosPorCD[atrib.cd]) {
+                custosPorCD[atrib.cd] = 0;
+            }
+            custosPorCD[atrib.cd] += atrib.custo_ponderado || 0;
+        });
+
+        new Chart(custosCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(custosPorCD),
+                datasets: [{
+                    label: 'Custo Ponderado',
+                    data: Object.values(custosPorCD),
+                    backgroundColor: '#2563eb',
+                    borderColor: '#1d4ed8',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Custo Ponderado'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // 3. Gráfico Demanda vs Custo
+    const demandaCustoCtx = document.getElementById('demandaCustoChart');
+    if (demandaCustoCtx && resultado.atribuicoes) {
+        const dadosPorCD = {};
+        resultado.atribuicoes.forEach(atrib => {
+            if (!dadosPorCD[atrib.cd]) {
+                dadosPorCD[atrib.cd] = { demanda: 0, custo: 0, count: 0 };
+            }
+            dadosPorCD[atrib.cd].demanda += atrib.demanda_atendida || 0;
+            dadosPorCD[atrib.cd].custo += atrib.valor || 0;
+            dadosPorCD[atrib.cd].count += 1;
+        });
+
+        const labels = Object.keys(dadosPorCD);
+        const demandaData = labels.map(cd => dadosPorCD[cd].demanda);
+        const custoData = labels.map(cd => dadosPorCD[cd].custo / dadosPorCD[cd].count);
+
+        new Chart(demandaCustoCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'CDs',
+                    data: labels.map((cd, index) => ({
+                        x: demandaData[index],
+                        y: custoData[index],
+                        label: cd
+                    })),
+                    backgroundColor: '#2563eb',
+                    borderColor: '#1d4ed8',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Demanda Total'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Custo Médio'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.raw.label}: Demanda=${context.parsed.x}, Custo=${context.parsed.y.toFixed(2)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 4. Gráfico de Eficiência Operacional
+    const eficienciaCtx = document.getElementById('eficienciaChart');
+    if (eficienciaCtx && resultado.clientes_por_cd && resultado.atribuicoes) {
+        const eficienciaData = [];
+        const labels = [];
+        
+        Object.keys(resultado.clientes_por_cd).forEach(cd => {
+            const clientes = resultado.clientes_por_cd[cd];
+            const atribuicoesCD = resultado.atribuicoes.filter(a => a.cd === cd);
+            const mediaCusto = atribuicoesCD.reduce((sum, a) => sum + (a.custo_ponderado || 0), 0) / atribuicoesCD.length;
+            
+            // Índice de eficiência = (clientes / mediaCusto) * 100
+            const eficiencia = mediaCusto > 0 ? (clientes / mediaCusto) * 100 : 0;
+            
+            labels.push(cd);
+            eficienciaData.push(eficiencia.toFixed(2));
+        });
+
+        new Chart(eficienciaCtx, {
+            type: 'radar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Eficiência Operacional',
+                    data: eficienciaData,
+                    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(37, 99, 235, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Índice de Eficiência'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

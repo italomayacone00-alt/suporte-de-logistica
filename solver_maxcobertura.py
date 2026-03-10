@@ -5,9 +5,9 @@ Baseado na abordagem simples do p-Centros
 import pandas as pd
 from pulp import LpProblem, LpMaximize, LpVariable, lpSum, LpStatus, value
 
-def resolver_maxcobertura(df, p, raio_cobertura=0.0):
+def resolver_maxcobertura(df, p, raio_cobertura=0.0, tipo_dado='distancia'):
     try:
-        print(f"=== INICIANDO OTIMIZAÇÃO MÁXIMA COBERTURA (p={p}, raio={raio_cobertura}) ===")
+        print(f"=== INICIANDO OTIMIZAÇÃO MÁXIMA COBERTURA (p={p}, raio={raio_cobertura}, tipo={tipo_dado}) ===")
         print(f"Shape do DataFrame: {df.shape}")
         print(f"Colunas: {list(df.columns)}")
         print(f"Primeiras linhas:\n{df.head()}")
@@ -32,27 +32,27 @@ def resolver_maxcobertura(df, p, raio_cobertura=0.0):
         print(f"Clientes encontrados: {clientes}")
         print(f"Demanda extraída: {demanda}")
         
-        # 2. MATRIZ DE DISTÂNCIAS (mesma abordagem do p-Centros)
-        distancias = {}
+        # 2. MATRIZ DE VALORES (mesma abordagem do p-Centros)
+        valores = {}
         for idx, cd in enumerate(cds):
-            distancias[cd] = {}
+            valores[cd] = {}
             for cliente in clientes:
-                distancias[cd][cliente] = float(matriz_valores.iloc[idx][cliente])
+                valores[cd][cliente] = float(matriz_valores.iloc[idx][cliente])
         
-        print(f"Matriz de distâncias criada com {len(distancias)} CDs e {len(clientes)} clientes")
+        print(f"Matriz de {tipo_dado}s criada com {len(valores)} CDs e {len(clientes)} clientes")
         
         # 3. CONJUNTO DE COBERTURA (quais CDs podem atender quais clientes dentro do raio)
         N_alcance = {cliente: [] for cliente in clientes}
         
         for cd in cds:
             for cliente in clientes:
-                val = distancias[cd][cliente]
+                val = valores[cd][cliente]
                 
                 # Raio normal ou Matriz Binária
                 if raio_cobertura > 0:
                     if val <= raio_cobertura: 
                         N_alcance[cliente].append(cd)
-                        print(f"✅ {cliente} coberto por {cd} (distância: {val} <= raio: {raio_cobertura})")
+                        print(f"✅ {cliente} coberto por {cd} ({tipo_dado}: {val} <= raio: {raio_cobertura})")
                 else:
                     if val > 0: 
                         N_alcance[cliente].append(cd)
@@ -104,16 +104,17 @@ def resolver_maxcobertura(df, p, raio_cobertura=0.0):
             if coberto:
                 # Encontrar qual CD atende o cliente (primeiro que encontrar dentro do raio)
                 cd_atendente = [cd for cd in cds_selecionados if cd in N_alcance[cliente]][0]
-                dist = distancias[cd_atendente][cliente]
+                val = valores[cd_atendente][cliente]
             else:
                 cd_atendente = "-"
-                dist = "-"
+                val = "-"
                 
             atribuicoes.append({
                 "cliente": cliente,
                 "cd": cd_atendente,
                 "demanda": demanda[cliente],
-                "distancia": dist,
+                "valor": val,
+                "tipo_valor": tipo_dado,
                 "coberto": coberto
             })
                     
@@ -121,6 +122,7 @@ def resolver_maxcobertura(df, p, raio_cobertura=0.0):
             "status": "Sucesso",
             "p": p,
             "raio_cobertura": raio_cobertura if raio_cobertura > 0 else "Binário",
+            "tipo_valor": tipo_dado,
             "demanda_coberta": demanda_coberta,
             "percentual_cobertura": percentual_cobertura,
             "cds_selecionados": cds_selecionados,

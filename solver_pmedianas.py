@@ -6,9 +6,9 @@ Regras: Soma Custo Fixo + Distâncias Simples (Não Ponderadas), Respeitando a C
 import pandas as pd
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus, value
 
-def resolver_pmedianas(df, p):
+def resolver_pmedianas(df, p, tipo_dado='distancia'):
     try:
-        print(f"=== INICIANDO OTIMIZAÇÃO (ALVO: 9581) ===")
+        print(f"=== INICIANDO OTIMIZAÇÃO p-MEDIANAS (p={p}, tipo={tipo_dado}) ===")
         
         # 1. TRATAMENTO DOS DADOS
         cds = df.iloc[:-1, 0].tolist()
@@ -23,11 +23,11 @@ def resolver_pmedianas(df, p):
             custos_fixos[cd] = float(df.iloc[idx]['Custo Fixo'])
             capacidades[cd] = float(df.iloc[idx]['Capacidade'])
             
-        custos = {}
+        valores = {}
         for idx, cd in enumerate(cds):
-            custos[cd] = {}
+            valores[cd] = {}
             for cliente in clientes:
-                custos[cd][cliente] = float(df.iloc[idx][cliente])
+                valores[cd][cliente] = float(df.iloc[idx][cliente])
 
         # 2. MODELO
         prob = LpProblem("Modelo_Excel_Original", LpMinimize)
@@ -36,8 +36,8 @@ def resolver_pmedianas(df, p):
         Y = LpVariable.dicts("Y", cds, cat='Binary') 
         X = LpVariable.dicts("X", [(i, j) for i in cds for j in clientes], cat='Binary')
         
-        # 4. FUNÇÃO OBJETIVO: Distância Simples + Custo Fixo 
-        prob += lpSum(custos[i][j] * X[i, j] for i in cds for j in clientes) + \
+        # 4. FUNÇÃO OBJETIVO: Valores + Custo Fixo 
+        prob += lpSum(valores[i][j] * X[i, j] for i in cds for j in clientes) + \
                 lpSum(custos_fixos[i] * Y[i] for i in cds)
         
         # 5. RESTRIÇÕES
@@ -76,17 +76,19 @@ def resolver_pmedianas(df, p):
                     atribuicoes.append({
                         "cd": i,
                         "cliente": j,
-                        "distancia": custos[i][j],
+                        "valor": valores[i][j],
                         "demanda_atendida": demanda[j],
-                        "custo_ponderado": custos[i][j] # Mandando a distância simples para tela
+                        "tipo_valor": tipo_dado,
+                        "custo_ponderado": valores[i][j] # Mantendo compatibilidade
                     })
                     total_clientes_por_cd[i] += 1
                     
         return {
             "status": "Sucesso",
-            "modelo": "Capacitado com Custo Fixo (Regras do Excel)",
+            "modelo": f"Capacitado com Custo Fixo - {tipo_dado}s",
             "p": p,
-            "custo_total_ponderado": custo_total, # Mantendo o nome para o HTML não quebrar
+            "custo_total_ponderado": custo_total, # Mantendo compatibilidade
+            "tipo_valor": tipo_dado,
             "cds_selecionados": cds_selecionados,
             "num_cds_selecionados": len(cds_selecionados),
             "atribuicoes": atribuicoes,

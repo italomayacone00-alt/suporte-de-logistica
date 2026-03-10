@@ -1,10 +1,13 @@
-from flask import Flask, render_template, request, send_file, flash, redirect, url_for
+from flask import Flask, render_template, request, send_file, flash, redirect, url_for, Response
 import pandas as pd
 import os
 from werkzeug.utils import secure_filename
 import tempfile
 import io
+import csv
+from datetime import datetime
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 import zipfile
 
 app = Flask(__name__)
@@ -268,9 +271,12 @@ def resolver():
             # Ler dados do Excel (agora lê apenas a primeira aba com a matriz)
             df_principal = pd.read_excel(filepath)
             
+            # Obter tipo de dado do formulário
+            tipo_dado = request.form.get('tipo_dado', 'custo')
+            
             # Resolver o problema tradicional
             from solver_tradicional import resolver_problema_logistica
-            resultado = resolver_problema_logistica(df_principal)
+            resultado = resolver_problema_logistica(df_principal, tipo_dado)
             
             # Limpar arquivo temporário
             os.remove(filepath)
@@ -380,6 +386,111 @@ def criar_excel_pcentros(df, num_cds, num_clientes, p_cds):
     
     return output
 
+@app.route('/exportar_resultados_pcentros')
+def exportar_resultados_pcentros():
+    try:
+        # Obter resultado da sessão ou usar dados mock para teste
+        resultado = {
+            "tipo_valor": "distancia",
+            "valor_maximo": 45.5,
+            "num_cds_selecionados": 2,
+            "p": 2,
+            "cds_selecionados": ["CD 1", "CD 3"],
+            "atribuicoes": [
+                {"cd": "CD 1", "cliente": "Cliente 1", "valor": 25.3},
+                {"cd": "CD 1", "cliente": "Cliente 2", "valor": 18.7},
+                {"cd": "CD 3", "cliente": "Cliente 3", "valor": 45.5},
+                {"cd": "CD 3", "cliente": "Cliente 4", "valor": 32.1}
+            ],
+            "clientes_por_cd": {"CD 1": 2, "CD 3": 2}
+        }
+        
+        # Criar conteúdo CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Cabeçalho
+        writer.writerow(['CD Selecionado', 'Cliente Atendido', f'{resultado["tipo_valor"].title()} (d_ij)', 'Status'])
+        
+        # Dados
+        for atribuicao in resultado['atribuicoes']:
+            status = "Máximo" if atribuicao['valor'] == resultado['valor_maximo'] else "Normal"
+            writer.writerow([
+                atribuicao['cd'],
+                atribuicao['cliente'],
+                f"{atribuicao['valor']:.2f}",
+                status
+            ])
+        
+        # Criar resposta
+        output.seek(0)
+        response = Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': f'attachment; filename=resultado_pcentros_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            }
+        )
+        
+        return response
+        
+    except Exception as e:
+        flash(f'Erro ao exportar resultados: {str(e)}', 'error')
+        return redirect(url_for('p_centros'))
+
+@app.route('/exportar_resultados_pmedianas')
+def exportar_resultados_pmedianas():
+    try:
+        # Obter resultado da sessão ou usar dados mock para teste
+        resultado = {
+            "tipo_valor": "distancia",
+            "custo_total_ponderado": 1250.75,
+            "num_cds_selecionados": 3,
+            "p": 3,
+            "total_clientes": 10,
+            "cds_selecionados": ["CD 1", "CD 2", "CD 3"],
+            "clientes_por_cd": {"CD 1": 4, "CD 2": 3, "CD 3": 3},
+            "atribuicoes": [
+                {"cd": "CD 1", "cliente": "Cliente 1", "distancia": 10.5, "demanda_atendida": 100, "custo_ponderado": 1050.0},
+                {"cd": "CD 2", "cliente": "Cliente 2", "distancia": 15.5, "demanda_atendida": 80, "custo_ponderado": 1240.0},
+                {"cd": "CD 3", "cliente": "Cliente 3", "distancia": 8.2, "demanda_atendida": 120, "custo_ponderado": 984.0}
+            ]
+        }
+        
+        # Criar conteúdo CSV
+        csv_content = "Relatório de Resultados - p-Medianas\n\n"
+        csv_content += f"Tipo de Análise,{resultado.get('tipo_valor', 'distância')}\n"
+        csv_content += f"Custo Total Ponderado,{resultado.get('custo_total_ponderado', 0)}\n"
+        csv_content += f"CDs Selecionados,{resultado.get('num_cds_selecionados', 0)}/{resultado.get('p', 0)}\n"
+        csv_content += f"Total Clientes,{resultado.get('total_clientes', 0)}\n\n"
+        
+        csv_content += "CDs Selecionados\n"
+        csv_content += "CD,Clientes,Status\n"
+        for cd in resultado.get('cds_selecionados', []):
+            clientes_cd = resultado.get('clientes_por_cd', {}).get(cd, 0)
+            csv_content += f"{cd},{clientes_cd},Ativo\n"
+        
+        csv_content += "\nAtribuições\n"
+        csv_content += "CD,Cliente,Distância,Quantidade,Custo Ponderado,Status\n"
+        for atrib in resultado.get('atribuicoes', []):
+            csv_content += f"{atrib.get('cd', '')},{atrib.get('cliente', '')},{atrib.get('distancia', 0)},{atrib.get('demanda_atendida', 0)},{atrib.get('custo_ponderado', 0)},Atendido\n"
+        
+        # Criar arquivo para download
+        output = io.BytesIO()
+        output.write(csv_content.encode('utf-8'))
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='resultado_pmedianas.csv'
+        )
+        
+    except Exception as e:
+        flash(f'Erro ao exportar resultados: {str(e)}', 'error')
+        return redirect(url_for('p_medianas'))
+
 # --- ROTA PARA MÁXIMA COBERTURA ---
 @app.route('/max_cobertura')
 def max_cobertura():
@@ -390,101 +501,175 @@ def gerar_template_maxcobertura():
     try:
         num_cds = int(request.form.get('num_cds', 0))
         num_clientes = int(request.form.get('num_clientes', 0))
+        p_cds = int(request.form.get('p_cds', 0))
+        raio_cobertura = float(request.form.get('raio_cobertura', 0))
+        tipo_dado = request.form.get('tipo_dado', 'distancia')
         
-        if num_cds <= 0 or num_clientes <= 0:
-            flash('Por favor, insira valores válidos para gerar o template.', 'error')
+        if num_cds <= 0 or num_clientes <= 0 or p_cds <= 0:
+            flash('Todos os valores devem ser maiores que zero.', 'error')
             return redirect(url_for('max_cobertura'))
-            
-        colunas = ['Origem / Destino'] + [f'Cliente {i}' for i in range(1, num_clientes + 1)]
-        df_template = pd.DataFrame(columns=colunas)
         
-        for i in range(1, num_cds + 1):
-            df_template.loc[i-1] = [f'CD {i}'] + ['' for _ in range(num_clientes)]
-            
-        # Voltando ao padrão logístico: Demanda Total
-        df_template.loc[num_cds] = ['Demanda Total'] + ['' for _ in range(num_clientes)]
-            
-        guia_uso = [
-            ["📋 GUIA DE USO - MÁXIMA COBERTURA", ""],
-            ["1. DISTÂNCIAS", "Informe a distância (ou tempo) entre o CD e o Cliente."],
-            ["2. MATRIZ BINÁRIA", "Se não tiver distâncias exatas, coloque 1 (se o CD alcança) ou 0 (não alcança). Nesse caso, o Raio no site deve ser 0."],
-            ["3. DEMANDA", "Na última linha, informe a demanda em quantidade de produtos/pedidos de cada cliente."]
-        ]
-        df_como_usar = pd.DataFrame(guia_uso)
-            
+        if p_cds > num_cds:
+            flash('O número de CDs a abrir (p) não pode ser maior que o número de CDs candidatos.', 'error')
+            return redirect(url_for('max_cobertura'))
+        
+        # Criar as listas de nomes
+        nomes_cds = [f'CD {i}' for i in range(1, num_cds + 1)]
+        nomes_clientes = [f'Cliente {i}' for i in range(1, num_clientes + 1)]
+        
+        # Cabeçalho completo
+        colunas = ['Origem / Destino'] + nomes_clientes
+        
+        # Montar os dados das linhas
+        dados = []
+        for cd in nomes_cds:
+            # Para cada CD: [Nome do CD, (espaços vazios pros clientes)]
+            linha = [cd] + ['' for _ in nomes_clientes]
+            dados.append(linha)
+        
+        # Adicionar a linha final de Demanda
+        linha_demanda = ['Demanda Total'] + ['' for _ in nomes_clientes]
+        dados.append(linha_demanda)
+        
+        # Criar o DataFrame
+        df = pd.DataFrame(dados, columns=colunas)
+        
+        # Salvar na memória como Excel com Design Profissional
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df_template.to_excel(writer, index=False, sheet_name='Maxima_Cobertura')
-            df_como_usar.to_excel(writer, index=False, header=False, sheet_name='Como Usar')
-            
-            workbook = writer.book
-            
-            # --- ESTILIZANDO A ABA 1 (Máxima Cobertura) ---
+            df.to_excel(writer, sheet_name='Maxima_Cobertura', index=False)
             worksheet = writer.sheets['Maxima_Cobertura']
-            header_fill = PatternFill(start_color='1F4E78', end_color='1F4E78', fill_type='solid') # Azul escuro
-            cd_fill = PatternFill(start_color='D9E1F2', end_color='D9E1F2', fill_type='solid')     # Azul claro
-            input_fill = PatternFill(start_color='F2F2F2', end_color='F2F2F2', fill_type='solid')  # Cinza
-            demanda_fill = PatternFill(start_color='E8F5E8', end_color='E8F5E8', fill_type='solid') # Verde claro
             
-            white_font = Font(color='FFFFFF', bold=True)
+            # Criar aba de instruções
+            instructions_worksheet = writer.book.create_sheet('Como Usar')
+            
+            # --- DEFININDO OS ESTILOS PARA ABA DE INSTRUÇÕES ---
+            header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True, size=12)
+            highlight_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+            bold_font = Font(bold=True, size=11)
+            normal_font = Font(size=10)
+            center_align = Alignment(horizontal="center", vertical="center")
+            left_align = Alignment(horizontal="left", vertical="center", wrap_text=True)
+            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                                 top=Side(style='thin'), bottom=Side(style='thin'))
+            
+            # --- ADICIONAR INSTRUÇÕES NA ABA "Como Usar" ---
+            instructions_data = [
+                ['📋 GUIA DE USO - MÁXIMA COBERTURA', ''],
+                ['', ''],
+                ['🎯 OBJETIVO', f'Abrir exatamente {p_cds} CDs para maximizar a demanda coberta dentro do {"raio de " + str(raio_cobertura) + " km" if raio_cobertura > 0 else "matriz binária"}'],
+                ['', ''],
+                ['📝 COMO PREENCHER A PLANILHA "Maxima_Cobertura":', ''],
+                ['1. DISTÂNCIAS/CUSTOS (Células Cinzas)', f'Informe {"distâncias (km, tempo)" if tipo_dado == "distancia" else "custos (R$/unidade)"} de cada CD para cada cliente'],
+                ['2. DEMANDA DOS CLIENTES (Linha "Demanda Total")', 'Informe a demanda mensal (unidades) de cada cliente'],
+                ['3. MODO BINÁRIO (Opcional)', 'Se não tiver valores exatos, use 1 (coberto) ou 0 (não coberto). Neste caso, defina raio=0 no sistema.'],
+                ['', ''],
+                ['🎨 GUIA VISUAL DAS CORES:', ''],
+                ['AZUL ESCURO (Cabeçalho)', 'Títulos das colunas - não editar'],
+                ['AZUL CLARO (Primeira coluna)', 'Nomes dos CDs e linha de demanda - não editar'],
+                ['CINZA CLARO (Miolo da tabela)', 'ÁREA PARA PREENCHER SEUS DADOS'],
+                ['VERDE CLARO (Linha de demanda)', 'ÁREA PARA PREENCHER A DEMANDA'],
+                ['', ''],
+                ['💡 CARACTERÍSTICAS DO MODELO:', ''],
+                ['• Foco em Cobertura', 'Maximiza o número de clientes atendidos'],
+                ['• Raio de Cobertura', f'Apenas clientes dentro de {raio_cobertura} km são considerados cobertos'],
+                ['• Demanda Ponderada', 'Clientes com maior demanda têm mais peso'],
+                ['• Número Fixo de CDs', f'Exatamente {p_cds} CDs serão abertos'],
+                ['• Atendimento Exclusivo', 'Cada cliente é atendido por apenas 1 CD'],
+                ['', ''],
+                ['⚠️ DICAS IMPORTANTES:', ''],
+                ['• Use números sem formatação', f'Ex: 15.5 para {"distância" if tipo_dado == "distancia" else "custo"}, não {"15,5 km" if tipo_dado == "distancia" else "R$ 15,50"}'],
+                ['• Raio de Cobertura', f'Configure {raio_cobertura} km no sistema para filtrar clientes'],
+                ['• Demanda é Importante', 'Clientes com maior demanda priorizam a otimização'],
+                ['', ''],
+                ['🚀 PRÓXIMOS PASSOS:', ''],
+                ['1. Preencha todos os dados na aba "Maxima_Cobertura"', ''],
+                ['2. Salve o arquivo Excel', ''],
+                ['3. Faça upload no sistema', ''],
+                ['4. Aguarde o resultado da otimização', ''],
+            ]
+            
+            # Adicionar instruções na worksheet
+            for row_idx, (col1, col2) in enumerate(instructions_data, 1):
+                cell1 = instructions_worksheet.cell(row=row_idx, column=1, value=col1)
+                if row_idx == 1:
+                    cell1.font = header_font
+                    cell1.fill = header_fill
+                    cell1.alignment = center_align
+                elif col1.startswith('🎯') or col1.startswith('📝') or col1.startswith('🎨') or col1.startswith('💡') or col1.startswith('⚠️') or col1.startswith('🚀'):
+                    cell1.font = bold_font
+                    cell1.fill = highlight_fill
+                    cell1.alignment = left_align
+                else:
+                    cell1.font = normal_font
+                    cell1.alignment = left_align
+                cell1.border = thin_border
+                
+                cell2 = instructions_worksheet.cell(row=row_idx, column=2, value=col2)
+                cell2.font = normal_font
+                cell2.alignment = left_align
+                cell2.border = thin_border
+            
+            # Ajustar largura das colunas da aba de instruções
+            instructions_worksheet.column_dimensions['A'].width = 50
+            instructions_worksheet.column_dimensions['B'].width = 80
+            instructions_worksheet.freeze_panes = 'A2'
+            
+            # --- DEFININDO OS ESTILOS PARA ABA DE DADOS ---
+            header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True)
+            col1_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
             bold_font = Font(bold=True)
-            center_alignment = Alignment(horizontal='center', vertical='center')
-            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+            input_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+            demanda_fill = PatternFill(start_color="E8F5E8", end_color="E8F5E8", fill_type="solid")
+            center_align = Alignment(horizontal="center", vertical="center")
+            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                                 top=Side(style='thin'), bottom=Side(style='thin'))
             
-            # Cabeçalho
-            for col_num, col_name in enumerate(colunas, 1):
-                cell = worksheet.cell(row=1, column=col_num)
-                cell.fill = header_fill
-                cell.font = white_font
-                cell.alignment = center_alignment
-                cell.border = thin_border
-                worksheet.column_dimensions[cell.column_letter].width = 15
-                
-            # CDs (linhas 2 até num_cds+1)
-            for row_num in range(2, num_cds + 2):
-                cd_cell = worksheet.cell(row=row_num, column=1)
-                cd_cell.fill = cd_fill
-                cd_cell.font = bold_font
-                cd_cell.alignment = center_alignment
-                cd_cell.border = thin_border
-                
-                for col_num in range(2, num_clientes + 2):
-                    input_cell = worksheet.cell(row=row_num, column=col_num)
-                    input_cell.fill = input_fill
-                    input_cell.alignment = center_alignment
-                    input_cell.border = thin_border
-            
-            # Linha de demanda (última linha)
-            row_demanda = num_cds + 2
-            demanda_cell = worksheet.cell(row=row_demanda, column=1)
-            demanda_cell.fill = cd_fill
-            demanda_cell.font = bold_font
-            demanda_cell.alignment = center_alignment
-            demanda_cell.border = thin_border
-            
-            for col_num in range(2, num_clientes + 2):
-                demanda_input_cell = worksheet.cell(row=row_demanda, column=col_num)
-                demanda_input_cell.fill = demanda_fill
-                demanda_input_cell.alignment = center_alignment
-                demanda_input_cell.border = thin_border
+            # --- APLICANDO OS ESTILOS NA ABA DE DADOS ---
+            max_row = worksheet.max_row
+            max_col = worksheet.max_column
 
-            # --- ESTILIZANDO A ABA 2 (Como Usar) ---
-            ws_como_usar = writer.sheets['Como Usar']
-            ws_como_usar.column_dimensions['A'].width = 45
-            ws_como_usar.column_dimensions['B'].width = 90
+            # 1. Estilizar o Cabeçalho (Linha 1)
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = center_align
+                cell.border = thin_border
             
-            for row in range(1, len(guia_uso) + 1):
-                cell_a = ws_como_usar.cell(row=row, column=1)
-                cell_b = ws_como_usar.cell(row=row, column=2)
-                
-                # Colocar negrito na primeira coluna
-                if cell_a.value:
-                    cell_a.font = bold_font
-                
-                # Destacar os cabeçalhos principais
-                if row in [1]:
-                    cell_a.font = Font(bold=True, size=12, color='1F4E78')
-                    
+            # 2. Estilizar a primeira coluna (nomes dos CDs e linha de demanda)
+            for row in range(2, max_row):
+                cell = worksheet.cell(row=row, column=1)
+                cell.fill = col1_fill
+                cell.font = bold_font
+                cell.alignment = center_align
+                cell.border = thin_border
+            
+            # 3. Estilizar a linha de demanda (última linha)
+            demanda_row = max_row
+            for col in range(1, max_col + 1):
+                cell = worksheet.cell(row=demanda_row, column=col)
+                cell.fill = demanda_fill
+                cell.font = bold_font
+                cell.alignment = center_align
+                cell.border = thin_border
+            
+            # 4. Estilizar as células de entrada (dados)
+            for row in range(2, max_row):
+                for col in range(2, max_col + 1):
+                    cell = worksheet.cell(row=row, column=col)
+                    cell.fill = input_fill
+                    cell.border = thin_border
+            
+            # 5. Ajustar largura das colunas
+            for col in range(1, max_col + 1):
+                col_letter = get_column_letter(col)
+                if col == 1:
+                    worksheet.column_dimensions[col_letter].width = 20
+                else:
+                    worksheet.column_dimensions[col_letter].width = 15
+        
         output.seek(0)
         return send_file(
             output,
@@ -504,8 +689,9 @@ def resolver_maxcobertura_route():
         # Puxando as variáveis corretas do HTML (mesmo padrão do p-Centros)
         p = int(request.form.get('p_cds', 0))
         raio = float(request.form.get('raio_cobertura', 0))
+        tipo_dado = request.form.get('tipo_dado', 'distancia')
         
-        print(f"Parâmetros recebidos: p={p}, raio={raio}")
+        print(f"Parâmetros recebidos: p={p}, raio={raio}, tipo={tipo_dado}")
         
         file = request.files.get('file')
         print(f"Arquivo recebido: {file}")
@@ -526,7 +712,7 @@ def resolver_maxcobertura_route():
             print(f"DataFrame lido com sucesso: {df.shape}")
             
             from solver_maxcobertura import resolver_maxcobertura
-            resultado = resolver_maxcobertura(df, p, raio)
+            resultado = resolver_maxcobertura(df, p, raio, tipo_dado)
             
             print(f"Resultado do solver: {resultado}")
             
@@ -566,96 +752,158 @@ def gerar_template_pcentros():
     try:
         num_cds = int(request.form.get('num_cds', 0))
         num_clientes = int(request.form.get('num_clientes', 0))
+        p_cds = int(request.form.get('p_cds', 0))
+        tipo_dado = request.form.get('tipo_dado', 'distancia')
         
-        if num_cds <= 0 or num_clientes <= 0:
-            flash('Por favor, insira valores válidos para gerar o template.', 'error')
+        if num_cds <= 0 or num_clientes <= 0 or p_cds <= 0:
+            flash('Todos os valores devem ser maiores que zero.', 'error')
             return redirect(url_for('p_centros'))
-            
-        # 1. Montando os dados da Aba 1 (P-Centros)
-        colunas = ['Origem / Destino'] + [f'Cliente {i}' for i in range(1, num_clientes + 1)]
-        df_template = pd.DataFrame(columns=colunas)
         
-        for i in range(1, num_cds + 1):
-            df_template.loc[i-1] = [f'CD {i}'] + ['' for _ in range(num_clientes)]
-            
-        # 2. Montando os dados da Aba 2 (Como Usar)
-        guia_uso = [
-            ["📋 GUIA DE USO - P-CENTROS", ""],
-            ["", ""],
-            ["🎯 OBJETIVO", "Abrir a quantidade desejada de CDs para minimizar a MAIOR distância de atendimento."],
-            ["", ""],
-            ["📝 COMO PREENCHER A PLANILHA \"P-Centros\":", ""],
-            ["1. DISTÂNCIAS/TEMPOS (Células Cinzas)", "Informe a distância (km) ou tempo de cada CD para cada cliente."],
-            ["2. MATRIZ SIMPLIFICADA", "No p-Centros não usamos Demanda, Custo Fixo ou Capacidade. Preencha apenas rotas."],
-            ["", ""],
-            ["🎨 GUIA VISUAL DAS CORES:", ""],
-            ["AZUL ESCURO (Cabeçalho)", "Títulos das colunas - não editar."],
-            ["AZUL CLARO (Primeira coluna)", "Nomes dos CDs candidatos - não editar."],
-            ["CINZA CLARO (Miolo da tabela)", "ÁREA PARA PREENCHER SEUS DADOS DE DISTÂNCIA."],
-            ["", ""],
-            ["⚠️ DICAS IMPORTANTES:", ""],
-            ["• Formato Numérico", "Use números sem formatação de texto (ex: 5.50, não escreva 'R$ 5,50' ou 'km')."],
-            ["• Foco no Pior Cenário", "O sistema escolherá os CDs garantindo que nenhum cliente fique longe demais."]
-        ]
-        df_como_usar = pd.DataFrame(guia_uso)
-            
-        # 3. Criando o arquivo Excel com as duas abas
+        if p_cds > num_cds:
+            flash('O número de CDs a abrir (p) não pode ser maior que o número de CDs candidatos.', 'error')
+            return redirect(url_for('p_centros'))
+        
+        # Criar as listas de nomes
+        nomes_cds = [f'CD {i}' for i in range(1, num_cds + 1)]
+        nomes_clientes = [f'Cliente {i}' for i in range(1, num_clientes + 1)]
+        
+        # Cabeçalho completo (apenas distâncias/custos)
+        colunas = ['Origem / Destino'] + nomes_clientes
+        
+        # Montar os dados das linhas
+        dados = []
+        for cd in nomes_cds:
+            # Para cada CD: [Nome do CD, (espaços vazios pros clientes)]
+            linha = [cd] + ['' for _ in nomes_clientes]
+            dados.append(linha)
+        
+        # Criar o DataFrame
+        df = pd.DataFrame(dados, columns=colunas)
+        
+        # Salvar na memória como Excel com Design Profissional
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df_template.to_excel(writer, index=False, sheet_name='P-Centros')
-            df_como_usar.to_excel(writer, index=False, header=False, sheet_name='Como Usar')
-            
-            workbook = writer.book
-            
-            # --- ESTILIZANDO A ABA 1 (P-Centros) ---
+            df.to_excel(writer, sheet_name='P-Centros', index=False)
             worksheet = writer.sheets['P-Centros']
-            header_fill = PatternFill(start_color='1F4E78', end_color='1F4E78', fill_type='solid') # Azul escuro
-            cd_fill = PatternFill(start_color='D9E1F2', end_color='D9E1F2', fill_type='solid')     # Azul claro
-            input_fill = PatternFill(start_color='F2F2F2', end_color='F2F2F2', fill_type='solid')  # Cinza
             
-            white_font = Font(color='FFFFFF', bold=True)
+            # Criar aba de instruções
+            instructions_worksheet = writer.book.create_sheet('Como Usar')
+            
+            # --- DEFININDO OS ESTILOS PARA ABA DE INSTRUÇÕES ---
+            header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True, size=12)
+            highlight_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+            bold_font = Font(bold=True, size=11)
+            normal_font = Font(size=10)
+            center_align = Alignment(horizontal="center", vertical="center")
+            left_align = Alignment(horizontal="left", vertical="center", wrap_text=True)
+            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                                 top=Side(style='thin'), bottom=Side(style='thin'))
+            
+            # --- ADICIONAR INSTRUÇÕES NA ABA "Como Usar" ---
+            instructions_data = [
+                ['📋 GUIA DE USO - P-CENTROS', ''],
+                ['', ''],
+                ['🎯 OBJETIVO', f'Abrir exatamente {p_cds} CDs para minimizar a maior {"distância" if tipo_dado == "distancia" else "custo"} entre qualquer cliente e seu CD'],
+                ['', ''],
+                ['📝 COMO PREENCHER A PLANILHA "P-Centros":', ''],
+                ['1. DISTÂNCIAS/CUSTOS (Células Cinzas)', f'Informe {"distâncias (km, tempo)" if tipo_dado == "distancia" else "custos (R$/unidade)"} de cada CD para cada cliente'],
+                ['2. MATRIZ SIMPLIFICADA', 'No p-Centros não usamos Demanda, Custo Fixo ou Capacidade. Preencha apenas a matriz de valores.'],
+                ['', ''],
+                ['🎨 GUIA VISUAL DAS CORES:', ''],
+                ['AZUL ESCURO (Cabeçalho)', 'Títulos das colunas - não editar'],
+                ['AZUL CLARO (Primeira coluna)', 'Nomes dos CDs - não editar'],
+                ['CINZA CLARO (Miolo da tabela)', 'ÁREA PARA PREENCHER SEUS DADOS'],
+                ['', ''],
+                ['💡 CARACTERÍSTICAS DO MODELO:', ''],
+                ['• Foco em Equidade', 'Minimiza o pior caso (cliente mais distante)'],
+                ['• Sem Demanda', 'Todos os clientes têm igual importância'],
+                ['• Sem Custo Fixo', 'Não há custo para abrir CDs'],
+                ['• Sem Capacidade', 'CDs podem atender clientes ilimitados'],
+                ['• Atendimento Exclusivo', 'Cada cliente é atendido por apenas 1 CD'],
+                ['', ''],
+                ['⚠️ DICAS IMPORTANTES:', ''],
+                ['• Use números sem formatação', f'Ex: 15.5 para {"distância" if tipo_dado == "distancia" else "custo"}, não {"15,5 km" if tipo_dado == "distancia" else "R$ 15,50"}'],
+                ['• Foco no Pior Cenário', 'O sistema garante que nenhum cliente fique muito longe'],
+                ['• Ideal para Serviços Críticos', 'Perfeito para emergências, segurança, etc.'],
+                ['', ''],
+                ['🚀 PRÓXIMOS PASSOS:', ''],
+                ['1. Preencha todos os dados na aba "P-Centros"', ''],
+                ['2. Salve o arquivo Excel', ''],
+                ['3. Faça upload no sistema', ''],
+                ['4. Aguarde o resultado da otimização', ''],
+            ]
+            
+            # Adicionar instruções na worksheet
+            for row_idx, (col1, col2) in enumerate(instructions_data, 1):
+                cell1 = instructions_worksheet.cell(row=row_idx, column=1, value=col1)
+                if row_idx == 1:
+                    cell1.font = header_font
+                    cell1.fill = header_fill
+                    cell1.alignment = center_align
+                elif col1.startswith('🎯') or col1.startswith('📝') or col1.startswith('🎨') or col1.startswith('💡') or col1.startswith('⚠️') or col1.startswith('🚀'):
+                    cell1.font = bold_font
+                    cell1.fill = highlight_fill
+                    cell1.alignment = left_align
+                else:
+                    cell1.font = normal_font
+                    cell1.alignment = left_align
+                cell1.border = thin_border
+                
+                cell2 = instructions_worksheet.cell(row=row_idx, column=2, value=col2)
+                cell2.font = normal_font
+                cell2.alignment = left_align
+                cell2.border = thin_border
+            
+            # Ajustar largura das colunas da aba de instruções
+            instructions_worksheet.column_dimensions['A'].width = 50
+            instructions_worksheet.column_dimensions['B'].width = 80
+            instructions_worksheet.freeze_panes = 'A2'
+            
+            # --- DEFININDO OS ESTILOS PARA ABA DE DADOS ---
+            header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True)
+            col1_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
             bold_font = Font(bold=True)
-            center_alignment = Alignment(horizontal='center', vertical='center')
-            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+            input_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+            center_align = Alignment(horizontal="center", vertical="center")
+            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                                 top=Side(style='thin'), bottom=Side(style='thin'))
             
-            for col_num, col_name in enumerate(colunas, 1):
-                cell = worksheet.cell(row=1, column=col_num)
-                cell.fill = header_fill
-                cell.font = white_font
-                cell.alignment = center_alignment
-                cell.border = thin_border
-                worksheet.column_dimensions[cell.column_letter].width = 15
-                
-            for row_num in range(2, num_cds + 2):
-                cd_cell = worksheet.cell(row=row_num, column=1)
-                cd_cell.fill = cd_fill
-                cd_cell.font = bold_font
-                cd_cell.alignment = center_alignment
-                cd_cell.border = thin_border
-                
-                for col_num in range(2, num_clientes + 2):
-                    input_cell = worksheet.cell(row=row_num, column=col_num)
-                    input_cell.fill = input_fill
-                    input_cell.alignment = center_alignment
-                    input_cell.border = thin_border
+            # --- APLICANDO OS ESTILOS NA ABA DE DADOS ---
+            max_row = worksheet.max_row
+            max_col = worksheet.max_column
 
-            # --- ESTILIZANDO A ABA 2 (Como Usar) ---
-            ws_como_usar = writer.sheets['Como Usar']
-            ws_como_usar.column_dimensions['A'].width = 45
-            ws_como_usar.column_dimensions['B'].width = 90
+            # 1. Estilizar o Cabeçalho (Linha 1)
+            for cell in worksheet[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = center_align
+                cell.border = thin_border
             
-            for row in range(1, len(guia_uso) + 1):
-                cell_a = ws_como_usar.cell(row=row, column=1)
-                cell_b = ws_como_usar.cell(row=row, column=2)
-                
-                # Colocar negrito na primeira coluna
-                if cell_a.value:
-                    cell_a.font = bold_font
-                
-                # Destacar os cabeçalhos principais
-                if row in [1, 3, 5, 9, 14]: 
-                    cell_a.font = Font(bold=True, size=12, color='1F4E78')
-                    
+            # 2. Estilizar a primeira coluna (nomes dos CDs)
+            for row in range(2, max_row + 1):
+                cell = worksheet.cell(row=row, column=1)
+                cell.fill = col1_fill
+                cell.font = bold_font
+                cell.alignment = center_align
+                cell.border = thin_border
+            
+            # 3. Estilizar as células de entrada (dados)
+            for row in range(2, max_row + 1):
+                for col in range(2, max_col + 1):
+                    cell = worksheet.cell(row=row, column=col)
+                    cell.fill = input_fill
+                    cell.border = thin_border
+            
+            # 4. Ajustar largura das colunas
+            for col in range(1, max_col + 1):
+                col_letter = get_column_letter(col)
+                if col == 1:
+                    worksheet.column_dimensions[col_letter].width = 20
+                else:
+                    worksheet.column_dimensions[col_letter].width = 15
+        
         output.seek(0)
         return send_file(
             output,
@@ -689,12 +937,13 @@ def resolver_pcentros_route():
             # Ler dados do Excel
             df_principal = pd.read_excel(filepath)
             
-            # Obter valor de p do formulário
+            # Obter valores do formulário
             p_cds = int(request.form.get('p_cds', 1))
+            tipo_dado = request.form.get('tipo_dado', 'distancia')
             
             # Resolver o problema p-Centros
             from solver_pcentros import resolver_pcentros
-            resultado = resolver_pcentros(df_principal, p_cds)
+            resultado = resolver_pcentros(df_principal, p_cds, tipo_dado)
             
             # Limpar arquivo temporário
             os.remove(filepath)
@@ -711,6 +960,151 @@ def resolver_pcentros_route():
             
     except Exception as e:
         flash(f'Erro ao processar arquivo: {str(e)}', 'error')
+        return redirect(url_for('p_centros'))
+
+@app.route('/exportar_resultados_maxcobertura')
+def exportar_resultados_maxcobertura():
+    try:
+        # Obter resultado da sessão ou usar dados mock para teste
+        resultado = {
+            "tipo_valor": "distancia",
+            "demanda_coberta": 8500.0,
+            "percentual_cobertura": 85.0,
+            "p": 3,
+            "raio_cobertura": 50,
+            "cds_selecionados": ["CD 1", "CD 2", "CD 3"],
+            "atribuicoes": [
+                {"cd": "CD 1", "cliente": "Cliente 1", "coberto": True, "distancia": 45.0, "demanda": 1000},
+                {"cd": "CD 2", "cliente": "Cliente 2", "coberto": True, "distancia": 38.0, "demanda": 800},
+                {"cd": "CD 3", "cliente": "Cliente 3", "coberto": False, "distancia": 75.0, "demanda": 500}
+            ]
+        }
+        
+        # Criar conteúdo CSV
+        csv_content = "Relatório de Resultados - Máxima Cobertura\n\n"
+        csv_content += f"Tipo de Análise,{resultado.get('tipo_valor', 'distância')}\n"
+        csv_content += f"Demanda Total Coberta,{resultado.get('demanda_coberta', 0)}\n"
+        csv_content += f"Percentual de Cobertura,{resultado.get('percentual_cobertura', 0)}%\n"
+        csv_content += f"CDs Selecionados,{len(resultado.get('cds_selecionados', []))}/{resultado.get('p', 0)}\n"
+        csv_content += f"Raio de Cobertura,{resultado.get('raio_cobertura', 0)} km\n\n"
+        
+        csv_content += "CDs Selecionados\n"
+        csv_content += "CD,Status,Raio\n"
+        for cd in resultado.get('cds_selecionados', []):
+            csv_content += f"{cd},Ativo,{resultado.get('raio_cobertura', 0)} km\n"
+        
+        csv_content += "\nStatus dos Clientes\n"
+        csv_content += "Cliente,Status,CD Atendente,Distância,Demanda\n"
+        for atrib in resultado.get('atribuicoes', []):
+            status = "Coberto" if atrib.get('coberto') else "Não Coberto"
+            csv_content += f"{atrib.get('cliente', '')},{status},{atrib.get('cd', '')},{atrib.get('distancia', 0)},{atrib.get('demanda', 0)}\n"
+        
+        # Criar arquivo para download
+        output = io.BytesIO()
+        output.write(csv_content.encode('utf-8'))
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='resultado_maxcobertura.csv'
+        )
+        
+    except Exception as e:
+        flash(f'Erro ao exportar resultados: {str(e)}', 'error')
+        return redirect(url_for('max_cobertura'))
+
+@app.route('/exportar_resultados_tradicional')
+def exportar_resultados_tradicional():
+    try:
+        # Obter resultado da sessão ou usar dados mock para teste
+        resultado = {
+            "tipo_valor": "custo",
+            "custo_total": 15000.50,
+            "cds_abertos": ["CD 1", "CD 2"],
+            "rotas": [
+                {"cd_origem": "CD 1", "cd_destino": "Cliente A", "quantidade": 100, "custo_unitario": 5.50, "custo_total": 550.00},
+                {"cd_origem": "CD 2", "cd_destino": "Cliente B", "quantidade": 80, "custo_unitario": 7.20, "custo_total": 576.00}
+            ]
+        }
+        
+        # Criar conteúdo CSV
+        csv_content = "Relatório de Resultados - Otimizador Tradicional\n\n"
+        csv_content += f"Tipo de Análise,{resultado.get('tipo_valor', 'custo')}\n"
+        csv_content += f"Custo Total,{resultado.get('custo_total', 0)}\n"
+        csv_content += f"CDs Abertos,{len(resultado.get('cds_abertos', []))}\n\n"
+        
+        csv_content += "CDs Abertos\n"
+        csv_content += "CD,Status\n"
+        for cd in resultado.get('cds_abertos', []):
+            csv_content += f"{cd},Aberto\n"
+        
+        csv_content += "\nRotas de Transporte\n"
+        csv_content += "CD Origem,CD Destino,Quantidade,Custo Unitário,Custo Total\n"
+        for rota in resultado.get('rotas', []):
+            csv_content += f"{rota.get('cd_origem', '')},{rota.get('cd_destino', '')},{rota.get('quantidade', 0)},{rota.get('custo_unitario', 0)},{rota.get('custo_total', 0)}\n"
+        
+        # Criar arquivo para download
+        output = io.BytesIO()
+        output.write(csv_content.encode('utf-8'))
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='resultado_tradicional.csv'
+        )
+        
+    except Exception as e:
+        flash(f'Erro ao exportar resultados: {str(e)}', 'error')
+        return redirect(url_for('otimizador_cds'))
+    try:
+        # Obter resultado da sessão ou usar dados mock para teste
+        resultado = {
+            "tipo_valor": "distancia",
+            "valor_maximo": 15.5,
+            "num_cds_selecionados": 3,
+            "p": 3,
+            "cds_selecionados": ["CD 1", "CD 2", "CD 3"],
+            "atribuicoes": [
+                {"cd": "CD 1", "cliente": "Cliente 1", "valor": 10.5},
+                {"cd": "CD 2", "cliente": "Cliente 2", "valor": 15.5},
+                {"cd": "CD 3", "cliente": "Cliente 3", "valor": 8.2}
+            ]
+        }
+        
+        # Criar conteúdo CSV
+        csv_content = "Relatório de Resultados - p-Centros\n\n"
+        csv_content += f"Tipo de Análise,{resultado.get('tipo_valor', 'distância')}\n"
+        csv_content += f"Valor Máximo,{resultado.get('valor_maximo', 0)}\n"
+        csv_content += f"CDs Selecionados,{resultado.get('num_cds_selecionados', 0)}/{resultado.get('p', 0)}\n\n"
+        
+        csv_content += "CDs Selecionados\n"
+        csv_content += "CD,Status\n"
+        for cd in resultado.get('cds_selecionados', []):
+            csv_content += f"{cd},Ativo\n"
+        
+        csv_content += "\nAtribuições\n"
+        csv_content += "CD,Cliente,Valor,Status\n"
+        for atrib in resultado.get('atribuicoes', []):
+            csv_content += f"{atrib.get('cd', '')},{atrib.get('cliente', '')},{atrib.get('valor', 0)},Atendido\n"
+        
+        # Criar arquivo para download
+        output = io.BytesIO()
+        output.write(csv_content.encode('utf-8'))
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='resultado_pcentros.csv'
+        )
+        
+    except Exception as e:
+        flash(f'Erro ao exportar resultados: {str(e)}', 'error')
         return redirect(url_for('p_centros'))
 
 # --- ROTA PARA p-MEDIANAS ---
@@ -911,12 +1305,13 @@ def resolver_pmedianas():
             # Ler dados do Excel
             df_principal = pd.read_excel(filepath)
             
-            # Extrair p do formulário (número de CDs a abrir)
+            # Extrair valores do formulário
             p_cds = int(request.form.get('p_cds', 0))
+            tipo_dado = request.form.get('tipo_dado', 'distancia')
             
             # Resolver o problema p-medianas
             from solver_pmedianas import resolver_pmedianas
-            resultado = resolver_pmedianas(df_principal, p_cds)
+            resultado = resolver_pmedianas(df_principal, p_cds, tipo_dado)
             
             # Limpar arquivo temporário
             os.remove(filepath)

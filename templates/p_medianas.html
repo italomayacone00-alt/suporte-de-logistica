@@ -68,6 +68,32 @@
                     <input type="number" id="p_cds" name="p_cds" min="1" max="10" required placeholder="3">
                     <small>Número exato de CDs que serão abertos</small>
                 </div>
+                
+                <div class="input-group">
+                    <label for="tipo_dado" class="label-with-icon">
+                        <span class="material-symbols-outlined">swap_horiz</span>
+                        <span class="label-text">Matriz de Otimização</span>
+                        <span class="label-badge">Obrigatório</span>
+                    </label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_dado" value="distancia" checked>
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <div class="radio-title">📍 Distâncias</div>
+                                <div class="radio-desc">Kilômetros, tempo de viagem ou outras métricas de distância</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_dado" value="custo">
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <div class="radio-title">💰 Custos Financeiros</div>
+                                <div class="radio-desc">Custos de transporte por unidade (R$/ton, R$/unidade)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary btn-large" onclick="mostrarPasso2()">
@@ -91,8 +117,9 @@
         </div>
         
         <form action="/resolver_pmedianas" method="POST" enctype="multipart/form-data" id="uploadForm">
-            <!-- Campo oculto para passar o valor de p -->
+            <!-- Campos ocultos para passar os valores -->
             <input type="hidden" id="p_cds_hidden" name="p_cds" value="">
+            <input type="hidden" id="tipo_dado_hidden" name="tipo_dado" value="">
             
             <div class="upload-area" id="dropZone">
                 <input type="file" id="arquivo_planilha" name="arquivo_planilha" accept=".xlsx" required>
@@ -123,7 +150,43 @@
         </div>
         <div class="info-content">
             <h3>Sobre as p-Medianas</h3>
-            <p>Este modelo seleciona exatamente <strong>p</strong> localizações para minimizar a distância total ponderada pela demanda. Cada cliente é atendido por um único CD mais próximo.</p>
+            <p>Este modelo seleciona exatamente <strong>p</strong> localizações para minimizar a <strong>soma ponderada</strong> de distâncias ou custos. Cada cliente é atendido pelo CD mais próximo, considerando a demanda. Ideal para otimização global de custos.</p>
+        </div>
+    </div>
+
+    <!-- Examples Card -->
+    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
+        <div class="card-header">
+            <h4>🌍 Exemplos de Aplicação</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
+                <h5 style="color: #1F4E78; margin-bottom: 10px;">🏪 Logística de Distribuição</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Centros de distribuição</li>
+                    <li><strong>Pontos:</strong> Lojas e clientes</li>
+                    <li><strong>Objetivo:</strong> Minimizar custo total de transporte</li>
+                    <li><strong>Métrica:</strong> Custo por unidade transportada</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                <h5 style="color: #28a745; margin-bottom: 10px;">🏢 Indústria e Manufatura</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Armazéns e fábricas</li>
+                    <li><strong>Pontos:</strong> Centros de distribuição</li>
+                    <li><strong>Objetivo:</strong> Otimizar cadeia de suprimentos</li>
+                    <li><strong>Métrica:</strong> Distância em km</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                <h5 style="color: #dc3545; margin-bottom: 10px;">🚚 Serviços de Entrega</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Hubs de entrega</li>
+                    <li><strong>Pontos:</strong> Endereços de clientes</li>
+                    <li><strong>Objetivo:</strong> Reduzir tempo médio de entrega</li>
+                    <li><strong>Métrica:</strong> Tempo em minutos</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -140,6 +203,7 @@
                     <li>Sem custo fixo</li>
                     <li>Capacidade infinita</li>
                     <li>Atendimento exclusivo</li>
+                    <li>Foco em eficiência global</li>
                 </ul>
             </div>
             <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
@@ -149,6 +213,7 @@
                     <li>Com custo fixo</li>
                     <li>Com capacidade limitada</li>
                     <li>Atendimento flexível</li>
+                    <li>Foco em custo total</li>
                 </ul>
             </div>
         </div>
@@ -177,9 +242,11 @@ function mostrarPasso2() {
     document.getElementById('step1Indicator').classList.remove('active');
     document.getElementById('step2Indicator').classList.add('active');
     
-    // Salvar o valor de p no campo oculto
+    // Salvar os valores nos campos ocultos
     const pCds = document.getElementById('p_cds').value;
+    const tipoDado = document.querySelector('input[name="tipo_dado"]:checked').value;
     document.getElementById('p_cds_hidden').value = pCds;
+    document.getElementById('tipo_dado_hidden').value = tipoDado;
 }
 
 function backToStep1() {
@@ -196,6 +263,34 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         e.preventDefault();
         alert('Por favor, configure o número de CDs a abrir (p) primeiro.');
         backToStep1();
+    }
+});
+
+// Adicionar evento para atualizar visualização dos radio buttons
+document.querySelectorAll('input[name="tipo_dado"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Remove a classe selecionada de todas as opções
+        document.querySelectorAll('.radio-option').forEach(option => {
+            option.style.borderColor = 'var(--border-color)';
+            option.style.background = 'white';
+            option.style.boxShadow = 'none';
+        });
+        
+        // Adiciona a classe selecionada à opção clicada
+        const selectedOption = this.closest('.radio-option');
+        if (selectedOption) {
+            selectedOption.style.borderColor = 'var(--primary-color)';
+            selectedOption.style.background = 'var(--bg-light)';
+            selectedOption.style.boxShadow = '0 2px 8px rgba(31, 78, 120, 0.15)';
+        }
+    });
+});
+
+// Inicializar com o estado correto do radio selecionado
+document.addEventListener('DOMContentLoaded', function() {
+    const checkedRadio = document.querySelector('input[name="tipo_dado"]:checked');
+    if (checkedRadio) {
+        checkedRadio.dispatchEvent(new Event('change'));
     }
 });
 </script>

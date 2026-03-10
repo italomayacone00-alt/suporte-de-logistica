@@ -76,6 +76,32 @@
                     <input type="number" id="raio_cobertura" name="raio_cobertura" min="0" step="0.1" required placeholder="15.0">
                     <small>Distância máxima para cobertura (0 = matriz binária)</small>
                 </div>
+                
+                <div class="input-group">
+                    <label for="tipo_dado" class="label-with-icon">
+                        <span class="material-symbols-outlined">swap_horiz</span>
+                        <span class="label-text">Matriz de Cobertura</span>
+                        <span class="label-badge">Obrigatório</span>
+                    </label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_dado" value="distancia" checked>
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <div class="radio-title">📍 Distâncias</div>
+                                <div class="radio-desc">Kilômetros, tempo de viagem ou outras métricas de distância</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_dado" value="custo">
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <div class="radio-title">💰 Custos Financeiros</div>
+                                <div class="radio-desc">Custos de transporte por unidade (R$/ton, R$/unidade)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </div>
             
             <button type="button" class="btn btn-primary btn-large" onclick="mostrarPasso2()">
@@ -99,9 +125,10 @@
         </div>
         
         <form action="/resolver_maxcobertura" method="POST" enctype="multipart/form-data" id="uploadForm">
-            <!-- Campo oculto para passar o valor de p -->
+            <!-- Campos ocultos para passar os valores -->
             <input type="hidden" id="p_cds_hidden" name="p_cds" value="">
             <input type="hidden" id="raio_cobertura_hidden" name="raio_cobertura" value="">
+            <input type="hidden" id="tipo_dado_hidden" name="tipo_dado" value="">
             
             <div class="upload-area" id="dropZone">
                 <input type="file" id="arquivo_planilha" name="file" accept=".xlsx" required>
@@ -194,14 +221,16 @@ function mostrarPasso2() {
     const numClientes = document.getElementById('num_clientes').value;
     const pCds = document.getElementById('p_cds').value;
     const raioCobertura = document.getElementById('raio_cobertura').value;
+    const tipoDado = document.querySelector('input[name="tipo_dado"]:checked').value;
 
     console.log("=== DEBUG - MOSTRAR PASSO 2 ===");
     console.log(`numCds: ${numCds}`);
     console.log(`numClientes: ${numClientes}`);
     console.log(`pCds: ${pCds}`);
     console.log(`raioCobertura: ${raioCobertura}`);
+    console.log(`tipoDado: ${tipoDado}`);
 
-    if (!numCds || !numClientes || !pCds || raioCobertura === '') {
+    if (!numCds || !numClientes || !pCds || raioCobertura === '' || !tipoDado) {
         alert("Por favor, preencha todos os campos antes de avançar.");
         return;
     }
@@ -214,10 +243,12 @@ function mostrarPasso2() {
     // Salvar os valores nos campos ocultos do formulário de upload
     document.getElementById('p_cds_hidden').value = pCds;
     document.getElementById('raio_cobertura_hidden').value = raioCobertura;
+    document.getElementById('tipo_dado_hidden').value = tipoDado;
     
     console.log("Valores salvos nos campos ocultos:");
     console.log(`p_cds_hidden.value: ${document.getElementById('p_cds_hidden').value}`);
     console.log(`raio_cobertura_hidden.value: ${document.getElementById('raio_cobertura_hidden').value}`);
+    console.log(`tipo_dado_hidden.value: ${document.getElementById('tipo_dado_hidden').value}`);
 
     // Submeter o formulário de template para baixar o Excel
     const form = document.querySelector('form[action="/gerar_template_maxcobertura"]');
@@ -266,6 +297,34 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         e.preventDefault();
         alert('Por favor, configure o raio de cobertura no Passo 1.');
         backToStep1();
+    }
+});
+
+// Adicionar evento para atualizar visualização dos radio buttons
+document.querySelectorAll('input[name="tipo_dado"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Remove a classe selecionada de todas as opções
+        document.querySelectorAll('.radio-option').forEach(option => {
+            option.style.borderColor = 'var(--border-color)';
+            option.style.background = 'white';
+            option.style.boxShadow = 'none';
+        });
+        
+        // Adiciona a classe selecionada à opção clicada
+        const selectedOption = this.closest('.radio-option');
+        if (selectedOption) {
+            selectedOption.style.borderColor = 'var(--primary-color)';
+            selectedOption.style.background = 'var(--bg-light)';
+            selectedOption.style.boxShadow = '0 2px 8px rgba(31, 78, 120, 0.15)';
+        }
+    });
+});
+
+// Inicializar com o estado correto do radio selecionado
+document.addEventListener('DOMContentLoaded', function() {
+    const checkedRadio = document.querySelector('input[name="tipo_dado"]:checked');
+    if (checkedRadio) {
+        checkedRadio.dispatchEvent(new Event('change'));
     }
 });
 </script>

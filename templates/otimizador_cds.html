@@ -59,6 +59,32 @@
                     <input type="number" id="num_clientes" name="num_clientes" min="1" max="200" required placeholder="20">
                     <small>Número de pontos de entrega a atender</small>
                 </div>
+                
+                <div class="input-group">
+                    <label for="tipo_dado" class="label-with-icon">
+                        <span class="material-symbols-outlined">swap_horiz</span>
+                        <span class="label-text">Tipo de Custo de Transporte</span>
+                        <span class="label-badge">Obrigatório</span>
+                    </label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_dado" value="custo" checked>
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <div class="radio-title">💰 Custos Financeiros</div>
+                                <div class="radio-desc">Custos reais de transporte por unidade (R$/ton, R$/unidade)</div>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="tipo_dado" value="distancia">
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <div class="radio-title">📍 Distâncias como Proxy</div>
+                                <div class="radio-desc">Usar distâncias (km) como aproximação de custos</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary btn-large" onclick="mostrarPasso2()">
@@ -82,6 +108,9 @@
         </div>
         
         <form action="/resolver" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <!-- Campo oculto para passar o tipo de dado -->
+            <input type="hidden" id="tipo_dado_hidden" name="tipo_dado" value="">
+            
             <div class="upload-area" id="dropZone">
                 <input type="file" id="arquivo_planilha" name="arquivo_planilha" accept=".xlsx" required>
                 <div class="upload-content">
@@ -111,7 +140,71 @@
         </div>
         <div class="info-content">
             <h3>Sobre o Método</h3>
-            <p>Este sistema utiliza <strong>Programação Linear Inteira</strong> com o solver PuLP para encontrar a configuração ótima de CDs que minimiza os custos totais (fixos + transporte) enquanto atende toda a demanda.</p>
+            <p>Este sistema utiliza <strong>Programação Linear Inteira</strong> com o solver PuLP para encontrar a configuração ótima de CDs que minimiza os custos totais (fixos + transporte) enquanto atende toda a demanda. Determina automaticamente o número ideal de CDs a abrir.</p>
+        </div>
+    </div>
+
+    <!-- Examples Card -->
+    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
+        <div class="card-header">
+            <h4>🌍 Exemplos de Aplicação</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                <h5 style="color: #ffc107; margin-bottom: 10px;">🏭 Varejo e Supermercados</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Centros de distribuição</li>
+                    <li><strong>Pontos:</strong> Lojas e supermercados</li>
+                    <li><strong>Objetivo:</strong> Minimizar custo logístico total</li>
+                    <li><strong>Métrica:</strong> Custo por produto entregue</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+                <h5 style="color: #17a2b8; margin-bottom: 10px;">🏭 Indústria de Bebidas</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Fábricas e depósitos</li>
+                    <li><strong>Pontos:</strong> Distribuidores e varejistas</li>
+                    <li><strong>Objetivo:</strong> Otimizar rede de distribuição</li>
+                    <li><strong>Métrica:</strong> Custo por litro transportado</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                <h5 style="color: #28a745; margin-bottom: 10px;">📦 E-commerce e Marketplaces</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li><strong>Instalações:</strong> Centros de fulfillment</li>
+                    <li><strong>Pontos:</strong> Clientes finais</li>
+                    <li><strong>Objetivo:</strong> Reduzir custos de última milha</li>
+                    <li><strong>Métrica:</strong> Custo por pedido entregue</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Card -->
+    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
+        <div class="card-header">
+            <h4>🔄 Problema Tradicional vs Outros Modelos</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                <h5 style="color: #ffc107; margin-bottom: 10px;">Problema Tradicional</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li>Número variável de CDs</li>
+                    <li>Com custo fixo</li>
+                    <li>Com capacidade limitada</li>
+                    <li>Atendimento flexível</li>
+                    <li>Foco em custo mínimo total</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
+                <h5 style="color: #1F4E78; margin-bottom: 10px;">Modelos com p fixo</h5>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                    <li>Número fixo de instalações</li>
+                    <li>Restrição de orçamento</li>
+                    <li>Atendimento exclusivo</li>
+                    <li>Foco em equidade ou eficiência</li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
@@ -119,4 +212,62 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+// Funções de navegação entre passos
+function mostrarPasso2() {
+    document.getElementById('step1').classList.add('hidden');
+    document.getElementById('step2').classList.remove('hidden');
+    document.getElementById('step1Indicator').classList.remove('active');
+    document.getElementById('step2Indicator').classList.add('active');
+    
+    // Salvar o tipo de dado no campo oculto
+    const tipoDado = document.querySelector('input[name="tipo_dado"]:checked').value;
+    document.getElementById('tipo_dado_hidden').value = tipoDado;
+}
+
+function backToStep1() {
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step1').classList.remove('hidden');
+    document.getElementById('step2Indicator').classList.remove('active');
+    document.getElementById('step1Indicator').classList.add('active');
+}
+
+// Garantir que o tipo de dado seja salvo antes do upload
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const tipoDado = document.getElementById('tipo_dado_hidden').value;
+    if (!tipoDado) {
+        e.preventDefault();
+        alert('Por favor, configure o tipo de custo de transporte primeiro.');
+        backToStep1();
+    }
+});
+
+// Adicionar evento para atualizar visualização dos radio buttons
+document.querySelectorAll('input[name="tipo_dado"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Remove a classe selecionada de todas as opções
+        document.querySelectorAll('.radio-option').forEach(option => {
+            option.style.borderColor = 'var(--border-color)';
+            option.style.background = 'white';
+            option.style.boxShadow = 'none';
+        });
+        
+        // Adiciona a classe selecionada à opção clicada
+        const selectedOption = this.closest('.radio-option');
+        if (selectedOption) {
+            selectedOption.style.borderColor = 'var(--primary-color)';
+            selectedOption.style.background = 'var(--bg-light)';
+            selectedOption.style.boxShadow = '0 2px 8px rgba(31, 78, 120, 0.15)';
+        }
+    });
+});
+
+// Inicializar com o estado correto do radio selecionado
+document.addEventListener('DOMContentLoaded', function() {
+    const checkedRadio = document.querySelector('input[name="tipo_dado"]:checked');
+    if (checkedRadio) {
+        checkedRadio.dispatchEvent(new Event('change'));
+    }
+});
+</script>
 {% endblock %}

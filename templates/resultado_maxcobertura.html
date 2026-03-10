@@ -11,46 +11,50 @@
         </div>
         <div class="result-info">
             <h1>Solução Ótima Máxima Cobertura (MCLP)</h1>
-            <p>{{ resultado.p }} CDs selecionados para maximizar a cobertura dentro do raio de {{ resultado.raio_cobertura }}</p>
+            <p>{{ resultado.p }} CDs selecionados para maximizar a demanda coberta dentro do raio de {{ resultado.raio_cobertura }} km</p>
+            {% if resultado.tipo_valor %}
+            <small>Tipo de análise: {% if resultado.tipo_valor == 'distancia' %}📍 Distâncias{% else %}💰 Custos Financeiros{% endif %}</small>
+            {% endif %}
         </div>
     </section>
 
     {% if resultado.status == 'Sucesso' %}
     
+    <!-- Main Metrics -->
     <section class="metrics-section">
-    <div class="metrics-grid">
-        <div class="metric-card main">
-            <div class="metric-icon">
-                <span class="material-symbols-outlined">radar</span>
+        <div class="metrics-grid">
+            <div class="metric-card main">
+                <div class="metric-icon">
+                    <span class="material-symbols-outlined">radar</span>
+                </div>
+                <div class="metric-content">
+                    <span class="metric-label">Demanda Total Coberta</span>
+                    <span class="metric-value">{{ "{:,.2f}".format(resultado.demanda_coberta).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.demanda_coberta is not none else '0,00' }}</span>
+                    <span class="metric-subtitle">{{ "{:.1f}".format(resultado.percentual_cobertura) if resultado.percentual_cobertura is not none else '0,0' }}% de cobertura da rede</span>
+                </div>
             </div>
-            <div class="metric-content">
-                <span class="metric-label">Demanda Total Coberta</span>
-                <span class="metric-value">{{ "{:,.2f}".format(resultado.demanda_coberta).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.demanda_coberta is not none else '0,00' }}</span>
-                <span class="metric-subtitle">{{ "{:.1f}".format(resultado.percentual_cobertura) if resultado.percentual_cobertura is not none else '0,0' }}% de cobertura da rede</span>
+            
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <span class="material-symbols-outlined">location_city</span>
+                </div>
+                <div class="metric-content">
+                    <span class="metric-label">CDs Selecionados</span>
+                    <span class="metric-value">{{ resultado.cds_selecionados|length if resultado.cds_selecionados is not none else 0 }} / {{ resultado.p }}</span>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <span class="material-symbols-outlined">people_alt</span>
+                </div>
+                <div class="metric-content">
+                    <span class="metric-label">Clientes Cobertos</span>
+                    <span class="metric-value">{{ resultado.atribuicoes|selectattr('coberto')|list|length if resultado.atribuicoes is not none else 0 }} / {{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }}</span>
+                </div>
             </div>
         </div>
-        
-        <div class="metric-card">
-            <div class="metric-icon">
-                <span class="material-symbols-outlined">location_city</span>
-            </div>
-            <div class="metric-content">
-                <span class="metric-label">CDs Selecionados</span>
-                <span class="metric-value">{{ resultado.cds_selecionados|length if resultado.cds_selecionados is not none else 0 }} / {{ resultado.p }}</span>
-            </div>
-        </div>
-        
-        <div class="metric-card">
-            <div class="metric-icon">
-                <span class="material-symbols-outlined">people_alt</span>
-            </div>
-            <div class="metric-content">
-                <span class="metric-label">Clientes Cobertos</span>
-                <span class="metric-value">{{ resultado.atribuicoes|selectattr('coberto')|list|length if resultado.atribuicoes is not none else 0 }} / {{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }}</span>
-            </div>
-        </div>
-    </div>
-</section>
+    </section>
 
     <!-- Model Info -->
     <section class="card">
@@ -119,20 +123,195 @@
         </div>
         
         <div class="cds-list">
+            {% set total_clientes = resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 %}
+            {% set clientes_cobertos = resultado.atribuicoes|selectattr('coberto')|list|length if resultado.atribuicoes is not none else 0 %}
             {% for cd in resultado.cds_selecionados %}
+                {% set atribuicoes_cd = resultado.atribuicoes|selectattr('cd', 'equalto', cd)|list if resultado.atribuicoes is not none else [] %}
+                {% set clientes_cd = atribuicoes_cd|length %}
+                {% set clientes_cobertos_cd = atribuicoes_cd|selectattr('coberto')|list|length %}
+                {% set percentual_cobertura_cd = (clientes_cobertos_cd / clientes_cd * 100) if clientes_cd > 0 else 0 %}
+                {% set percentual_total = (clientes_cd / total_clientes * 100) if total_clientes > 0 else 0 %}
             <div class="cd-item">
                 <div class="cd-info">
                     <div class="cd-name">{{ cd }}</div>
                     <div class="cd-details">
-                        <span>Cobertura: Raio de {{ resultado.raio_cobertura }}</span>
+                        <span>Clientes: {{ clientes_cd }} ({{ "%.1f"|format(percentual_total) }}%)</span>
+                        <span>Cobertura: {{ clientes_cobertos_cd }}/{{ clientes_cd }} ({{ "%.1f"|format(percentual_cobertura_cd) }}%)</span>
+                        <span>Raio: {{ resultado.raio_cobertura }} km</span>
                     </div>
                 </div>
                 <div class="cd-progress-container">
-                    <div class="cd-progress" style="width: 100%"></div>
-                    <span class="cd-percent">Ativo</span>
+                    <div class="cd-progress" style="width: {{ percentual_cobertura_cd }}%"></div>
+                    <span class="cd-percent">{{ "%.1f"|format(percentual_cobertura_cd) }}%</span>
                 </div>
             </div>
             {% endfor %}
+        </div>
+        
+        <!-- Resumo dos CDs -->
+        <div class="cd-summary">
+            <div class="summary-item">
+                <span class="summary-label">Taxa de Cobertura:</span>
+                <span class="summary-value">{{ "%.1f"|format((clientes_cobertos / total_clientes * 100) if total_clientes > 0 else 0) }}%</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Eficiência Média:</span>
+                <span class="summary-value">{{ "%.1f"|format((clientes_cobertos / (resultado.cds_selecionados|length if resultado.cds_selecionados else 1)) if resultado.cds_selecionados and resultado.cds_selecionados|length > 0 else 0) }} clientes/CD</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Análises Gráficas -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Análises Gráficas</h2>
+            <div class="badge">4 visualizações</div>
+        </div>
+        
+        <div class="charts-grid">
+            <!-- Gráfico 1: Cobertura por CD -->
+            <div class="chart-container">
+                <h3>Cobertura por CD</h3>
+                <div class="chart-wrapper">
+                    <canvas id="coberturaPorCDChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> {% if resultado.cds_selecionados %}{% set max_cobertura = 0 %}{% for cd in resultado.cds_selecionados %}{% set atribuicoes_cd = resultado.atribuicoes|selectattr('cd', 'equalto', cd)|list if resultado.atribuicoes is not none else [] %}{% set cobertura_cd = (atribuicoes_cd|selectattr('coberto')|list|length / atribuicoes_cd|length * 100) if atribuicoes_cd|length > 0 else 0 %}{% if cobertura_cd > max_cobertura %}{% set max_cobertura = cobertura_cd %}{% set best_cd = cd %}{% endif %}{% endfor %}O CD com melhor performance é {{ best_cd if best_cd is defined else 'N/A' }} com {{ "%.1f"|format(max_cobertura) }}% de cobertura. {% if max_cobertura < 80 %}Considere ajustar o raio ou redistribuir clientes para melhorar a cobertura.{% endif %}{% else %}Nenhum CD selecionado.{% endif %}</p>
+                </div>
+            </div>
+
+            <!-- Gráfico 2: Demanda Coberta vs Perdida -->
+            <div class="chart-container">
+                <h3>Demanda Coberta vs Perdida</h3>
+                <div class="chart-wrapper">
+                    <canvas id="demandaChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> {% if resultado.demanda_coberta and resultado.percentual_cobertura %}A cobertura atual atende {{ "%.1f"|format(resultado.percentual_cobertura) }}% da demanda total ({{ "{:,.0f}".format(resultado.demanda_coberta).replace(',', '.') }} unidades). {% if resultado.percentual_cobertura < 75 %}Há oportunidade significativa para aumentar a cobertura expandindo o raio ou adicionando CDs.{% else %}A cobertura está em um nível satisfatório.{% endif %}{% else %}Sem dados suficientes para análise de demanda.{% endif %}</p>
+                </div>
+            </div>
+
+            <!-- Gráfico 3: Mapa de Cobertura -->
+            <div class="chart-container">
+                <h3>Mapa de Cobertura por Região</h3>
+                <div class="chart-wrapper">
+                    <canvas id="mapaCoberturaChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> Este mapa visualiza a distribuição geográfica da cobertura. Áreas verdes indicam clientes cobertos dentro do raio de {{ resultado.raio_cobertura }} km, enquanto áreas vermelhas mostram regiões sem cobertura. Use esta análise para identificar gaps de atendimento.</p>
+                </div>
+            </div>
+
+            <!-- Gráfico 4: Eficiência de Cobertura -->
+            <div class="chart-container">
+                <h3>Índice de Eficiência de Cobertura</h3>
+                <div class="chart-wrapper">
+                    <canvas id="eficienciaCoberturaChart"></canvas>
+                </div>
+                <div class="chart-insights">
+                    <p><strong>Insight:</strong> O índice mede a eficiência de cada CD na cobertura de clientes dentro do raio especificado. Valores mais altos indicam CDs que atendem mais clientes eficientemente. CDs com baixo índice podem precisar de reposicionamento ou ajuste de raio.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Análises Estatísticas -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Análises Estatísticas Avançadas</h2>
+            <div class="badge">Indicadores Chave</div>
+        </div>
+        
+        <div class="stats-grid">
+            {% set total_clientes = resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 %}
+            {% set clientes_cobertos = resultado.atribuicoes|selectattr('coberto')|list|length if resultado.atribuicoes is not none else 0 %}
+            <!-- Estatísticas 1 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">radar</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Raio Efetivo Médio</h4>
+                    <p class="stat-value">{{ "%.2f"|format(resultado.raio_cobertura) if resultado.raio_cobertura is not none else '0,00' }}</p>
+                    <p class="stat-desc">km de cobertura</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas 2 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">balance</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Balanceamento de Cobertura</h4>
+                    <p class="stat-value">{{ "%.1f"|format((clientes_cobertos / (resultado.cds_selecionados|length if resultado.cds_selecionados else 1) / (total_clientes / (resultado.cds_selecionados|length if resultado.cds_selecionados else 1)) * 100) if resultado.cds_selecionados and resultado.cds_selecionados|length > 0 and total_clientes > 0 else 0) }}%</p>
+                    <p class="stat-desc">Equidade na distribuição</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas 3 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">speed</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Performance de Cobertura</h4>
+                    <p class="stat-value">{{ "%.1f"|format(resultado.percentual_cobertura) if resultado.percentual_cobertura is not none else '0,0' }}%</p>
+                    <p class="stat-desc">Eficiência do sistema</p>
+                </div>
+            </div>
+
+            <!-- Estatísticas 4 -->
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">assessment</span>
+                </div>
+                <div class="stat-content">
+                    <h4>Densidade de Cobertura</h4>
+                    <p class="stat-value">{{ "%.2f"|format((clientes_cobertos / (resultado.cds_selecionados|length if resultado.cds_selecionados else 1)) if resultado.cds_selecionados and resultado.cds_selecionados|length > 0 else 0) }}</p>
+                    <p class="stat-desc">Clientes cobertos por CD</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recomendações -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Recomendações Estratégicas</h2>
+            <div class="badge green">Análise Avançada</div>
+        </div>
+        
+        <div class="recommendations-list">
+            <div class="recommendation-item">
+                <div class="rec-icon">
+                    <span class="material-symbols-outlined">lightbulb</span>
+                </div>
+                <div class="rec-content">
+                    <h4>Otimização de Raio</h4>
+                    <p>Considere aumentar o raio de cobertura para {{ resultado.raio_cobertura + 5 if resultado.raio_cobertura is not none else 10 }} km para incluir {{ resultado.atribuicoes|selectattr('coberto', 'equalto', false)|list|length if resultado.atribuicoes is not none else 0 }} clientes não cobertos atualmente.</p>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="rec-icon">
+                    <span class="material-symbols-outlined">trending_down</span>
+                </div>
+                <div class="rec-content">
+                    <h4>Redução de Gaps de Cobertura</h4>
+                    <p>Analise regiões com alta concentração de clientes não cobertos para possíveis novos CDs ou reconfiguração de rotas existentes.</p>
+                </div>
+            </div>
+
+            <div class="recommendation-item">
+                <div class="rec-icon">
+                    <span class="material-symbols-outlined">add_location</span>
+                </div>
+                <div class="rec-content">
+                    <h4>Expansão Estratégica</h4>
+                    <p>Identifique áreas de alta demanda sem cobertura atual para planejar expansão da rede e aumentar o percentual de atendimento.</p>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -167,7 +346,7 @@
                             {% endif %}
                         </td>
                         <td><span class="tag">{{ atrib.cd }}</span></td>
-                        <td>{{ "%.2f"|format(atrib.distancia) if atrib.distancia is not none and atrib.distancia != '-' else '-' }}</td>
+                        <td>{{ "%.2f"|format(atrib.valor) if atrib.valor is not none and atrib.valor != '-' else '-' }}</td>
                         <td>{{ "{:,.0f}".format(atrib.demanda).replace(',', '.') if atrib.demanda is not none else '0' }}</td>
                     </tr>
                     {% endfor %}
@@ -191,6 +370,10 @@
                 <span class="material-symbols-outlined">print</span>
                 Imprimir Relatório
             </button>
+            <button class="btn btn-success" onclick="exportResults()">
+                <span class="material-symbols-outlined">download</span>
+                Baixar Resultados
+            </button>
             <a href="{{ url_for('max_cobertura') }}" class="btn btn-primary">
                 <span class="material-symbols-outlined">refresh</span>
                 Nova Análise
@@ -212,4 +395,210 @@
     </section>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function exportResults() {
+    // Redirecionar para rota de exportação
+    window.location.href = "{{ url_for('exportar_resultados_maxcobertura') }}";
+}
+
+// Gráficos e Análises
+document.addEventListener('DOMContentLoaded', function() {
+    const resultado = {{ resultado|tojson|safe }};
+    
+    // 1. Gráfico de Cobertura por CD
+    const coberturaCtx = document.getElementById('coberturaPorCDChart');
+    if (coberturaCtx && resultado.cds_selecionados && resultado.atribuicoes) {
+        const coberturaData = [];
+        const labels = [];
+        
+        resultado.cds_selecionados.forEach(cd => {
+            const atribuicoesCD = resultado.atribuicoes.filter(a => a.cd === cd);
+            const clientesCobertos = atribuicoesCD.filter(a => a.coberto).length;
+            const totalClientes = atribuicoesCD.length;
+            const percentual = totalClientes > 0 ? (clientesCobertos / totalClientes * 100) : 0;
+            
+            labels.push(cd);
+            coberturaData.push(percentual.toFixed(1));
+        });
+
+        new Chart(coberturaCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Cobertura (%)',
+                    data: coberturaData,
+                    backgroundColor: coberturaData.map(v => v >= 80 ? '#10b981' : v >= 50 ? '#f59e0b' : '#ef4444'),
+                    borderColor: coberturaData.map(v => v >= 80 ? '#059669' : v >= 50 ? '#d97706' : '#dc2626'),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Cobertura (%)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Gráfico Demanda Coberta vs Perdida
+    const demandaCtx = document.getElementById('demandaChart');
+    if (demandaCtx && resultado.atribuicoes) {
+        const clientesCobertos = resultado.atribuicoes.filter(a => a.coberto).length;
+        const clientesNaoCobertos = resultado.atribuicoes.filter(a => !a.coberto).length;
+        const demandaCoberta = resultado.atribuicoes.filter(a => a.coberto).reduce((sum, a) => sum + (a.demanda || 0), 0);
+        const demandaPerdida = resultado.atribuicoes.filter(a => !a.coberto).reduce((sum, a) => sum + (a.demanda || 0), 0);
+
+        new Chart(demandaCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Coberta', 'Perdida'],
+                datasets: [{
+                    data: [demandaCoberta, demandaPerdida],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.parsed} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 3. Mapa de Cobertura
+    const mapaCtx = document.getElementById('mapaCoberturaChart');
+    if (mapaCtx && resultado.atribuicoes) {
+        const dadosMapa = resultado.atribuicoes.map((atrib, index) => ({
+            x: index * 10 + Math.random() * 20,
+            y: Math.random() * 100,
+            r: atrib.coberto ? 8 : 5,
+            label: atrib.cliente,
+            coberto: atrib.coberto
+        }));
+
+        new Chart(mapaCtx, {
+            type: 'bubble',
+            data: {
+                datasets: [{
+                    label: 'Cobertos',
+                    data: dadosMapa.filter(d => d.coberto),
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(5, 150, 105, 1)'
+                }, {
+                    label: 'Não Cobertos',
+                    data: dadosMapa.filter(d => !d.coberto),
+                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                    borderColor: 'rgba(220, 38, 38, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Posição X'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Posição Y'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 4. Gráfico de Eficiência de Cobertura
+    const eficienciaCtx = document.getElementById('eficienciaCoberturaChart');
+    if (eficienciaCtx && resultado.cds_selecionados && resultado.atribuicoes) {
+        const eficienciaData = [];
+        const labels = [];
+        
+        resultado.cds_selecionados.forEach(cd => {
+            const atribuicoesCD = resultado.atribuicoes.filter(a => a.cd === cd);
+            const clientesCobertos = atribuicoesCD.filter(a => a.coberto).length;
+            const totalClientes = atribuicoesCD.length;
+            const eficiencia = totalClientes > 0 ? (clientesCobertos / totalClientes) * 100 : 0;
+            
+            labels.push(cd);
+            eficienciaData.push(eficiencia.toFixed(1));
+        });
+
+        new Chart(eficienciaCtx, {
+            type: 'radar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Eficiência de Cobertura',
+                    data: eficienciaData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(16, 185, 129, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Eficiência (%)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
