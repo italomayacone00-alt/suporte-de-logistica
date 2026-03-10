@@ -1,5 +1,5 @@
-// JavaScript para Otimização de CDs - MetriQ
-// Sistema de Otimização de CDs - MetriQ
+// JavaScript para Otimização de CDs - NexusNode
+// Sistema de Otimização de CDs - NexusNode
 // Versão: Formato Matriz Única (Solver Excel)
 
 // Função para mostrar passo 2 após download
