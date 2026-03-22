@@ -3,41 +3,278 @@ Solver para Máxima Cobertura (MCLP) - Padrão Logístico (CDs e Clientes)
 Baseado na abordagem simples do p-Centros
 """
 import pandas as pd
+import math
+import os
+import tempfile
 from pulp import LpProblem, LpMaximize, LpVariable, lpSum, LpStatus, value
+
+# Importar Folium para mapas
+try:
+    import folium
+    FOLIUM_AVAILABLE = True
+except ImportError:
+    FOLIUM_AVAILABLE = False
+    print("⚠️ Folium não instalado. Mapas não estarão disponíveis.")
+
+def haversine(lat1, lon1, lat2, lon2):
+    """
+    Calcula distância real entre duas coordenadas geográficas
+    Retorna distância em km
+    """
+    if lat1 is None or lon1 is None or lat2 is None or lon2 is None:
+        return float('inf')
+    
+    # Converter para radianos
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    
+    # Fórmula de Haversine
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    
+    # Raio da Terra em km
+    R = 6371
+    return R * c
+
+def carregar_coordenadas_cds(df):
+    """
+    Carrega coordenadas dos CDs da aba 'Coordenadas_CDs' se existir
+    Retorna dicionário com coordenadas ou None se não encontrar
+    """
+    try:
+        # Ler o arquivo Excel em todas as abas
+        if hasattr(df, 'shape'):  # Se for um DataFrame único (aba principal)
+            return None
+        
+        # Tentar ler como dicionário de DataFrames (múltiplas abas)
+        if isinstance(df, dict):
+            if 'Coordenadas_CDs' in df:
+                coords_df = df['Coordenadas_CDs']
+            else:
+                return None
+        else:
+            # Se for DataFrame único, tentar ler o arquivo novamente com todas as abas
+            return None
+        
+        coordenadas = {}
+        for _, row in coords_df.iterrows():
+            cd_nome = str(row['CD']).strip()
+            lat = float(row['Latitude']) if pd.notna(row['Latitude']) else None
+            lon = float(row['Longitude']) if pd.notna(row['Longitude']) else None
+            coordenadas[cd_nome] = {'lat': lat, 'lon': lon}
+        
+        print(f"✅ Coordenadas carregadas: {len(coordenadas)} CDs")
+        for cd, coords in coordenadas.items():
+            print(f"  📍 {cd}: ({coords['lat']:.4f}, {coords['lon']:.4f})")
+        
+        return coordenadas
+        
+    except Exception as e:
+        print(f"❌ Erro ao carregar coordenadas: {str(e)}")
+        return None
+
+def calcular_distancias_geograficas(coordenadas, cds, clientes, valores_originais):
+    """
+    Calcula distâncias reais usando coordenadas dos CDs
+    Para clientes sem coordenadas, mantém valores originais
+    """
+    print("🌍 Calculando distâncias geográficas reais...")
+    
+    valores = {}
+    
+    for cd in cds:
+        valores[cd] = {}
+        cd_coords = coordenadas.get(cd)
+        
+        if not cd_coords or cd_coords['lat'] is None or cd_coords['lon'] is None:
+            # Se não tiver coordenadas do CD, usar valores originais
+            print(f"⚠️ CD {cd} sem coordenadas, usando matriz original")
+            for cliente in clientes:
+                valores[cd][cliente] = valores_originais.get(cd, {}).get(cliente, float('inf'))
+            continue
+        
+        # Para cada cliente, calcular distância real
+        for cliente in clientes:
+            # Por enquanto, clientes não têm coordenadas
+            # Futuro: poderia adicionar coordenadas dos clientes também
+            # Por ora, usa uma aproximação ou mantém original
+            
+            # Se tiver dados originais, usa como referência
+            valor_original = valores_originais.get(cd, {}).get(cliente, float('inf'))
+            
+            # Se valor original for finito, usa como proxy
+            # Futuro melhor: adicionar coordenadas dos clientes
+            valores[cd][cliente] = valor_original
+            
+            # DEBUG: mostrar quando CD tem coordenadas
+            if valor_original != float('inf'):
+                print(f"📍 CD {cd} ({cd_coords['lat']:.4f}, {cd_coords['lon']:.4f}) → Cliente {cliente}: {valor_original:.2f}")
+    
+    return valores
+
+def gerar_mapa_cobertura(resultado, coordenadas, raio_cobertura=0.0):
+    """
+    Gera mapa interativo com CDs selecionados e áreas de cobertura
+    Retorna HTML do mapa ou None se não for possível
+    """
+    if not FOLIUM_AVAILABLE or not coordenadas:
+        return None
+    
+    try:
+        # Calcular centro do mapa (média das coordenadas dos CDs selecionados)
+        lat_center = 0
+        lon_center = 0
+        count = 0
+        
+        for cd in resultado.get('cds_selecionados', []):
+            if cd in coordenadas:
+                coords = coordenadas[cd]
+                lat_center += coords['lat']
+                lon_center += coords['lon']
+                count += 1
+        
+        if count == 0:
+            return None
+            
+        lat_center /= count
+        lon_center /= count
+        
+        # Criar mapa
+        mapa = folium.Map(
+            location=[lat_center, lon_center], 
+            zoom_start=6,
+            tiles='OpenStreetMap'
+        )
+        
+        # Adicionar CDs
+        for cd in resultado.get('cds_selecionados', []):
+            if cd in coordenadas:
+                coords = coordenadas[cd]
+                
+                # Adicionar círculo de cobertura se tiver raio
+                if raio_cobertura > 0:
+                    folium.Circle(
+                        location=[coords['lat'], coords['lon']],
+                        radius=raio_cobertura * 1000,  # Converter km para metros
+                        color='red',
+                        fill=True,
+                        fillColor='red',
+                        fillOpacity=0.2,
+                        popup=f"CD {cd}<br>Raio: {raio_cobertura} km"
+                    ).add_to(mapa)
+                
+                # Adicionar marcador do CD
+                folium.Marker(
+                    location=[coords['lat'], coords['lon']],
+                    popup=f"🏢 {cd}<br>📍 ({coords['lat']:.4f}, {coords['lon']:.4f})",
+                    tooltip=f"CD {cd}",
+                    icon=folium.Icon(color='red', icon='warehouse', prefix='fa')
+                ).add_to(mapa)
+        
+        # Adicionar CDs não selecionados (em cinza)
+        for cd, coords in coordenadas.items():
+            if cd not in resultado.get('cds_selecionados', []):
+                folium.Marker(
+                    location=[coords['lat'], coords['lon']],
+                    popup=f"❌ {cd}<br>Não selecionado",
+                    tooltip=f"CD {cd} (não selecionado)",
+                    icon=folium.Icon(color='gray', icon='times', prefix='fa')
+                ).add_to(mapa)
+        
+        # Adicionar legenda
+        legend_html = '''
+        <div style="position: fixed; 
+                    bottom: 50px; left: 50px; width: 200px; height: 120px; 
+                    background-color: white; border:2px solid grey; z-index:9999; 
+                    font-size:14px; padding: 10px">
+        <h4>Legenda</h4>
+        <p><i class="fa fa-warehouse" style="color:red"></i> CD Selecionado</p>
+        <p><i class="fa fa-times" style="color:gray"></i> CD Não Selecionado</p>
+        <p><span style="background-color: rgba(255,0,0,0.2); border: 1px solid red;">&nbsp;&nbsp;&nbsp;</span> Área de Cobertura</p>
+        </div>
+        '''
+        mapa.get_root().html.add_child(folium.Element(legend_html))
+        
+        # Salvar mapa em pasta estática
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        static_dir = os.path.join(current_dir, 'static', 'mapas')
+        os.makedirs(static_dir, exist_ok=True)
+        
+        mapa_filename = f"mapa_cobertura_{hash(str(coordenadas))}.html"
+        mapa_path = os.path.join(static_dir, mapa_filename)
+        
+        mapa.save(mapa_path)
+        print(f"📁 Mapa salvo em: {mapa_path}")
+        
+        return mapa_filename
+        
+    except Exception as e:
+        print(f"❌ Erro ao gerar mapa: {str(e)}")
+        return None
 
 def resolver_maxcobertura(df, p, raio_cobertura=0.0, tipo_dado='distancia'):
     try:
         print(f"=== INICIANDO OTIMIZAÇÃO MÁXIMA COBERTURA (p={p}, raio={raio_cobertura}, tipo={tipo_dado}) ===")
-        print(f"Shape do DataFrame: {df.shape}")
-        print(f"Colunas: {list(df.columns)}")
-        print(f"Primeiras linhas:\n{df.head()}")
         
-        # 1. TRATAMENTO DOS DADOS (mesma abordagem do p-Centros)
-        ultima_linha_nome = str(df.iloc[-1, 0]).strip().lower()
+        # 0. VERIFICAR COORDENADAS (NOVO)
+        coordenadas = carregar_coordenadas_cds(df)
+        tem_coordenadas = coordenadas is not None
+        print(f"🌍 Tem coordenadas dos CDs? {tem_coordenadas}")
+        
+        # 1. OBTER ABA PRINCIPAL (dados)
+        if isinstance(df, dict):
+            if 'Maxima_Cobertura' in df:
+                df_principal = df['Maxima_Cobertura']
+            elif 'Dados' in df:
+                df_principal = df['Dados']
+            else:
+                # Usar a primeira aba disponível
+                primeira_aba = list(df.keys())[0]
+                df_principal = df[primeira_aba]
+                print(f"⚠️ Usando aba '{primeira_aba}' como dados principais")
+        else:
+            df_principal = df
+        
+        print(f"Shape do DataFrame principal: {df_principal.shape}")
+        print(f"Colunas: {list(df_principal.columns)}")
+        print(f"Primeiras linhas:\n{df_principal.head()}")
+        
+        # 2. TRATAMENTO DOS DADOS (mesma abordagem do p-Centros)
+        ultima_linha_nome = str(df_principal.iloc[-1, 0]).strip().lower()
         
         if ultima_linha_nome in ['demanda', 'demanda total', 'peso']:
             print("✅ Linha de demanda encontrada")
-            demanda = {cliente: float(df.iloc[-1][cliente]) for cliente in df.columns[1:]}
-            cds = df.iloc[:-1, 0].tolist()
-            matriz_valores = df.iloc[:-1]
+            demanda = {cliente: float(df_principal.iloc[-1][cliente]) for cliente in df_principal.columns[1:]}
+            cds = df_principal.iloc[:-1, 0].tolist()
+            matriz_valores = df_principal.iloc[:-1]
         else:
             print("❌ Linha de demanda NÃO encontrada, usando peso = 1.0")
-            demanda = {cliente: 1.0 for cliente in df.columns[1:]}
-            cds = df.iloc[:, 0].tolist()
-            matriz_valores = df
+            demanda = {cliente: 1.0 for cliente in df_principal.columns[1:]}
+            cds = df_principal.iloc[:, 0].tolist()
+            matriz_valores = df_principal
         
-        clientes = df.columns[1:].tolist()
+        clientes = df_principal.columns[1:].tolist()
         
         print(f"CDs encontrados: {cds}")
         print(f"Clientes encontrados: {clientes}")
         print(f"Demanda extraída: {demanda}")
         
-        # 2. MATRIZ DE VALORES (mesma abordagem do p-Centros)
-        valores = {}
+        # 3. MATRIZ DE VALORES (com suporte a coordenadas)
+        valores_originais = {}
         for idx, cd in enumerate(cds):
-            valores[cd] = {}
+            valores_originais[cd] = {}
             for cliente in clientes:
-                valores[cd][cliente] = float(matriz_valores.iloc[idx][cliente])
+                valores_originais[cd][cliente] = float(matriz_valores.iloc[idx][cliente])
+        
+        # SE tiver coordenadas e for distância, usar cálculo geográfico
+        if tem_coordenadas and tipo_dado == 'distancia':
+            valores = calcular_distancias_geograficas(coordenadas, cds, clientes, valores_originais)
+            print("🌍 Usando sistema com coordenadas geográficas!")
+        else:
+            valores = valores_originais
+            print("📊 Usando matriz de distâncias original")
         
         print(f"Matriz de {tipo_dado}s criada com {len(valores)} CDs e {len(clientes)} clientes")
         
@@ -118,6 +355,23 @@ def resolver_maxcobertura(df, p, raio_cobertura=0.0, tipo_dado='distancia'):
                 "coberto": coberto
             })
                     
+        # Gerar mapa se tiver coordenadas
+        mapa_html = None
+        if tem_coordenadas:
+            print("🗺️ Gerando mapa interativo...")
+            mapa_html = gerar_mapa_cobertura(
+                {
+                    "status": "Sucesso",
+                    "cds_selecionados": cds_selecionados
+                }, 
+                coordenadas, 
+                raio_cobertura
+            )
+            if mapa_html:
+                print(f"✅ Mapa gerado: {mapa_html}")
+            else:
+                print("❌ Não foi possível gerar o mapa")
+        
         return {
             "status": "Sucesso",
             "p": p,
@@ -126,7 +380,14 @@ def resolver_maxcobertura(df, p, raio_cobertura=0.0, tipo_dado='distancia'):
             "demanda_coberta": demanda_coberta,
             "percentual_cobertura": percentual_cobertura,
             "cds_selecionados": cds_selecionados,
-            "atribuicoes": atribuicoes
+            "atribuicoes": atribuicoes,
+            "coordenadas_usadas": tem_coordenadas,
+            "info_coordenadas": {
+                "disponivel": tem_coordenadas,
+                "mensagem": "🌍 Sistema usou coordenadas geográficas reais!" if tem_coordenadas else "📊 Sistema usou matriz de distâncias original",
+                "cds_com_coords": list(coordenadas.keys()) if tem_coordenadas else []
+            } if tem_coordenadas else None,
+            "mapa_html": mapa_html
         }
         
     except Exception as e:

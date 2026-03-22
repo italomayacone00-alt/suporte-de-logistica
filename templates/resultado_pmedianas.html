@@ -1,7 +1,236 @@
-<!-- templates/resultado_pmedianas.html - Resultado p-Medianas -->
 {% extends "base.html" %}
 
 {% block title %}Resultado - p-Medianas{% endblock %}
+
+{% block head %}
+<style>
+/* Estilos para a seção de mapa */
+.mapa-section {
+    margin: 30px 0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border: 1px solid #e1e5e9;
+}
+
+.mapa-header {
+    background: linear-gradient(135deg, #28a745 0%, #1e8e3e 100%);
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mapa-title h2 {
+    margin: 0 0 4px 0;
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.mapa-subtitle {
+    color: #e3f2fd;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.mapa-wrapper {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    padding: 24px;
+}
+
+.mapa-container {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #e1e5e9;
+}
+
+.mapa-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.mapa-stats {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.mapa-stats h3 {
+    margin: 0 0 16px 0;
+    color: #1e293b;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.stat-icon.selected {
+    background: #e8f5e8;
+    color: #28a745;
+}
+
+.stat-icon.total {
+    background: #e3f2fd;
+    color: #1e40af;
+}
+
+.stat-icon.performance {
+    background: #f3e5f5;
+    color: #28a745;
+}
+
+.stat-icon.cost {
+    background: #fef3c7;
+    color: #dc3545;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.mapa-legend {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.mapa-legend h3 {
+    margin: 0 0 16px 0;
+    color: #1e293b;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.legend-marker {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.legend-marker.selected {
+    background: #e8f5e8;
+    color: #28a745;
+}
+
+.legend-marker.not-selected {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.legend-marker.influence-area {
+    background: rgba(40, 167, 69, 0.2);
+    border: 2px solid #28a745;
+    border-radius: 4px;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+    .mapa-wrapper {
+        grid-template-columns: 1fr;
+    }
+    
+    .mapa-sidebar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .mapa-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .mapa-wrapper {
+        padding: 16px;
+    }
+    
+    .mapa-sidebar {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-item {
+        padding: 12px;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+    
+    .stat-value {
+        font-size: 18px;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
@@ -11,10 +240,24 @@
             <span class="material-symbols-outlined">location_city</span>
         </div>
         <div class="result-info">
-            <h1>Solução Ótima p-Medianas Clássico</h1>
-            <p>{{ resultado.p }} CDs selecionados para minimizar o custo total ponderado (eficiência global)</p>
+            <h1>Solução Ótima p-Medianas</h1>
+            <p>{{ resultado.p }} CDs selecionados para minimizar o custo total ponderado pela demanda</p>
             {% if resultado.tipo_valor %}
             <small>Tipo de análise: {% if resultado.tipo_valor == 'distancia' %}📍 Distâncias{% else %}💰 Custos Financeiros{% endif %}</small>
+            {% endif %}
+            {% if resultado.coordenadas_usadas is defined %}
+            <div class="coordenadas-info" style="margin-top: 10px; padding: 8px 12px; background: {% if resultado.coordenadas_usadas %}#e8f5e8{% else %}#fff3cd{% endif %}; border-radius: 6px; border-left: 4px solid {% if resultado.coordenadas_usadas %}#28a745{% else %}#ffc107{% endif %};">
+                <small style="font-weight: 500; color: {% if resultado.coordenadas_usadas %}#1e40af{% else %}#856404{% endif %};">
+                    {% if resultado.coordenadas_usadas %}
+                        🌍 Sistema usou coordenadas geográficas reais!
+                    {% else %}
+                        📊 Sistema usou matriz de distâncias original
+                    {% endif %}
+                </small>
+                {% if resultado.info_coordenadas and resultado.info_coordenadas.cds_com_coords %}
+                <br><small style="color: #666;">CDs com coordenadas: {{ resultado.info_coordenadas.cds_com_coords|length }}/{{ resultado.cds_selecionados|length if resultado.cds_selecionados is not none else 0 }}</small>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
     </section>
@@ -50,12 +293,109 @@
                     <span class="material-symbols-outlined">groups</span>
                 </div>
                 <div class="metric-content">
-                    <span class="metric-label">Total Clientes</span>
+                    <span class="metric-label">Total de Clientes</span>
                     <span class="metric-value">{{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }}</span>
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- Mapa Interativo (NOVO) -->
+    <!-- DEBUG: coordenadas_usadas = {{ resultado.coordenadas_usadas }} -->
+    <!-- DEBUG: mapa_html = {{ resultado.mapa_html }} -->
+    <!-- DEBUG: info_coordenadas = {{ resultado.info_coordenadas }} -->
+    {% if resultado.coordenadas_usadas and resultado.mapa_html %}
+    <section class="card mapa-section">
+        <div class="card-header mapa-header">
+            <div class="mapa-title">
+                <h2>🗺️ Mapa Interativo p-Medianas</h2>
+                <span class="mapa-subtitle">Visualização Geográfica da Solução Ótima</span>
+            </div>
+            <div class="badge green">Mapa Dinâmico</div>
+        </div>
+        <div class="card-content">
+            <div class="mapa-wrapper">
+                <div class="mapa-container">
+                    <iframe 
+                        src="{{ url_for('static', filename='mapas/' + resultado.mapa_html) }}" 
+                        width="100%" 
+                        height="500" 
+                        style="border: 1px solid #e1e5e9; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"
+                        frameborder="0">
+                    </iframe>
+                </div>
+                
+                <div class="mapa-sidebar">
+                    <div class="mapa-stats">
+                        <h3>📊 Estatísticas do Mapa</h3>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon selected">
+                                <span class="material-symbols-outlined">warehouse</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">CDs Selecionados</span>
+                                <span class="stat-value">{{ resultado.cds_selecionados|length if resultado.cds_selecionados is not none else 0 }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon total">
+                                <span class="material-symbols-outlined">location_on</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Total de CDs</span>
+                                <span class="stat-value">{{ resultado.info_coordenadas.cds_com_coords|length if resultado.info_coordenadas and resultado.info_coordenadas.cds_com_coords else 0 }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon cost">
+                                <span class="material-symbols-outlined">trending_up</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Custo Total</span>
+                                <span class="stat-value">{{ "{:,.2f}".format(resultado.custo_total_ponderado) if resultado.custo_total_ponderado is not none else '0,00' }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon performance">
+                                <span class="material-symbols-outlined">trending_up</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Performance</span>
+                                <span class="stat-value">{{ "%.1f"|format((resultado.num_cds_selecionados / resultado.p * 100) if resultado.p > 0 else 0) }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mapa-legend">
+                        <h3>🎨 Legenda do Mapa</h3>
+                        <div class="legend-items">
+                            <div class="legend-item">
+                                <div class="legend-marker selected">
+                                    <span class="material-symbols-outlined">warehouse</span>
+                                </div>
+                                <span>CD Selecionado (Ativo)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-marker not-selected">
+                                    <span class="material-symbols-outlined">close</span>
+                                </div>
+                                <span>CD Não Selecionado</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-marker influence-area"></div>
+                                <span>Área de Influência</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
 
     <!-- Model Info -->
     <section class="card">

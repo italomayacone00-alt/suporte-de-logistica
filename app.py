@@ -88,10 +88,53 @@ def gerar_template():
         # Salvar na memória como Excel com Design Profissional
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Localizacao_CDs', index=False)
-            worksheet = writer.sheets['Localizacao_CDs']
+            # 1. Aba Localização (dados principais)
+            df.to_excel(writer, sheet_name='Localização', index=False)
+            worksheet = writer.sheets['Localização']
             
-            # Criar aba de instruções
+            # 2. Criar aba de coordenadas dos CDs
+            coords_data = [['CD', 'Latitude', 'Longitude']]  # Header
+            
+            for i, cd in enumerate(nomes_cds):
+                # Coordenadas em branco para usuário preencher
+                coords_data.append([cd, '', ''])
+            
+            coords_df = pd.DataFrame(coords_data[1:], columns=coords_data[0])
+            coords_df.to_excel(writer, sheet_name='Coordenadas_CDs', index=False)
+            
+            # Aplicar formatação profissional na aba de coordenadas
+            coords_worksheet = writer.sheets['Coordenadas_CDs']
+            
+            # --- DEFININDO ESTILOS PARA COORDENADAS ---
+            coords_header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            coords_header_font = Font(color="FFFFFF", bold=True, size=12)
+            coords_border = Border(
+                left=Side(style='thin'), right=Side(style='thin'), 
+                top=Side(style='thin'), bottom=Side(style='thin')
+            )
+            coords_alignment = Alignment(horizontal='center', vertical='center')
+            
+            # Formatar header da aba de coordenadas
+            for col_num, column_title in enumerate(['CD', 'Latitude', 'Longitude'], 1):
+                cell = coords_worksheet.cell(row=1, column=col_num)
+                cell.fill = coords_header_fill
+                cell.font = coords_header_font
+                cell.border = coords_border
+                cell.alignment = coords_alignment
+            
+            # Ajustar largura das colunas
+            coords_worksheet.column_dimensions['A'].width = 25  # CD
+            coords_worksheet.column_dimensions['B'].width = 15  # Latitude  
+            coords_worksheet.column_dimensions['C'].width = 15  # Longitude
+            
+            # Adicionar bordas nas células de dados
+            for row_num in range(2, num_cds + 2):
+                for col_num in range(1, 4):
+                    cell = coords_worksheet.cell(row=row_num, column=col_num)
+                    cell.border = coords_border
+                    cell.alignment = coords_alignment
+            
+            # 3. Criar aba de instruções (por último)
             from openpyxl import Workbook
             instructions_worksheet = writer.book.create_sheet('Como Usar')
             
@@ -119,16 +162,22 @@ def gerar_template():
                 ['', ''],
                 ['🎯 OBJETIVO', 'Encontrar a configuração ótima de Centros de Distribuição que minimiza custos totais'],
                 ['', ''],
-                ['📝 COMO PREENCHER A PLANILHA "Localizacao_CDs":', ''],
+                ['📝 COMO PREENCHER A PLANILHA "Localização":', ''],
                 ['1. CUSTOS DE TRANSPORTE (Células Cinzas)', 'Nas células cinza, informe o custo unitário (R$/unidade) para transportar mercadorias de cada CD para cada cliente'],
                 ['2. CUSTO FIXO DOS CDs (Coluna "Custo Fixo")', 'Informe o custo mensal fixo (R$) para operar cada CD candidato'],
                 ['3. CAPACIDADE DOS CDs (Coluna "Capacidade")', 'Informe a capacidade máxima (unidades/mês) que cada CD pode processar'],
                 ['4. DEMANDA DOS CLIENTES (Linha "Demanda Total")', 'Informe a demanda mensal (unidades) que cada cliente precisa receber'],
                 ['', ''],
+                ['🗺️ COORDENADAS GEOGRÁFICAS (ABA "Coordenadas_CDs"):', ''],
+                ['5. LOCALIZAÇÃO DOS CDs (Opcional)', 'Na aba "Coordenadas_CDs", informe as coordenadas geográficas (latitude/longitude) de cada CD'],
+                ['6. SISTEMA DE MAPAS', 'Se preencher as coordenadas e selecionar "distância" como tipo, o sistema calculará distâncias geográficas reais e gerará um mapa interativo'],
+                ['7. MAPA INTERATIVO', 'O mapa mostrará CDs abertos (verde), fechados (vermelho) e áreas de atendimento com percentual de capacidade utilizada'],
+                ['', ''],
                 ['🎨 GUIA VISUAL DAS CORES:', ''],
                 ['AZUL ESCURO (Cabeçalho)', 'Títulos das colunas - não editar'],
                 ['AZUL CLARO (Primeira coluna)', 'Nomes dos CDs e linha de demanda - não editar'],
                 ['CINZA CLARO (Miolo da tabela)', 'ÁREA PARA PREENCHER SEUS DADOS'],
+                ['VERDE (Coordenadas)', 'Área para preencher coordenadas geográficas'],
                 ['', ''],
                 ['💡 EXEMPLO PRÁTICO:', ''],
                 ['Para 2 CDs (SP, RJ) e 3 Clientes (A, B, C):', ''],
@@ -136,18 +185,22 @@ def gerar_template():
                 ['• Custo Fixo SP: R$ 15.000/mês', ''],
                 ['• Capacidade SP: 1.000 unidades/mês', ''],
                 ['• Demanda Cliente A: 300 unidades/mês', ''],
+                ['• Coordenada SP: (-23.5505, -46.6333)', ''],
                 ['', ''],
                 ['⚠️ DICAS IMPORTANTES:', ''],
                 ['• Use números sem formatação (ex: 15000, não R$ 15.000)', ''],
                 ['• Verifique se a capacidade total ≥ demanda total', ''],
                 ['• Custos de transporte devem ser por unidade de produto', ''],
                 ['• O sistema decidirá quais CDs abrir e fechar automaticamente', ''],
+                ['• Com coordenadas, você terá mapas interativos detalhados', ''],
                 ['', ''],
                 ['🚀 PRÓXIMOS PASSOS:', ''],
-                ['1. Preencha todos os dados na aba "Localizacao_CDs"', ''],
-                ['2. Salve o arquivo Excel', ''],
-                ['3. Faça upload no sistema', ''],
-                ['4. Aguarde o resultado da otimização', ''],
+                ['1. Preencha todos os dados na aba "Localização"', ''],
+                ['2. Opcional: Preencha coordenadas na aba "Coordenadas_CDs"', ''],
+                ['3. Salve o arquivo Excel', ''],
+                ['4. Faça upload no sistema', ''],
+                ['5. Aguarde o resultado da otimização', ''],
+                ['6. Se usou coordenadas, visualize o mapa interativo nos resultados', ''],
             ]
             
             # Adicionar instruções na worksheet
@@ -235,6 +288,60 @@ def gerar_template():
                         pass
                 # Dá um respiro de tamanho (+4) para não ficar apertado
                 worksheet.column_dimensions[column].width = max_length + 4
+            
+            # --- ADICIONAR ABA DE COORDENADAS (NOVO) ---
+            coords_data = [['CD', 'Latitude', 'Longitude']]  # Header
+            
+            for i, cd in enumerate(nomes_cds):
+                # Coordenadas exemplo (São Paulo, Rio de Janeiro, Belo Horizonte, etc.)
+                coords_exemplo = [
+                    (-23.5505, -46.6333),  # São Paulo
+                    (-22.9068, -43.1729),  # Rio de Janeiro  
+                    (-19.9167, -43.9345),  # Belo Horizonte
+                    (-30.0346, -51.2177),  # Porto Alegre
+                    (-8.0476, -34.8770),  # Recife
+                    (-12.9714, -38.5014),  # Salvador
+                    (-15.8267, -47.9218),  # Brasília
+                    (-3.1190, -60.0217),  # Manaus
+                    (-5.0892, -42.8016),  # Teresina
+                    (-2.5307, -44.3068)    # São Luís
+                ]
+                coords_data.append([cd, '', ''])
+            
+            coords_df = pd.DataFrame(coords_data[1:], columns=coords_data[0])
+            coords_df.to_excel(writer, sheet_name='Coordenadas_CDs', index=False)
+            
+            # Aplicar formatação profissional na aba de coordenadas
+            coords_worksheet = writer.sheets['Coordenadas_CDs']
+            
+            # --- DEFININDO ESTILOS PARA COORDENADAS ---
+            coords_header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            coords_header_font = Font(color="FFFFFF", bold=True, size=12)
+            coords_border = Border(
+                left=Side(style='thin'), right=Side(style='thin'), 
+                top=Side(style='thin'), bottom=Side(style='thin')
+            )
+            coords_alignment = Alignment(horizontal='center', vertical='center')
+            
+            # Formatar header da aba de coordenadas
+            for col_num, column_title in enumerate(['CD', 'Latitude', 'Longitude'], 1):
+                cell = coords_worksheet.cell(row=1, column=col_num)
+                cell.fill = coords_header_fill
+                cell.font = coords_header_font
+                cell.border = coords_border
+                cell.alignment = coords_alignment
+            
+            # Ajustar largura das colunas
+            coords_worksheet.column_dimensions['A'].width = 25  # CD
+            coords_worksheet.column_dimensions['B'].width = 15  # Latitude  
+            coords_worksheet.column_dimensions['C'].width = 15  # Longitude
+            
+            # Adicionar bordas nas células de dados
+            for row_num in range(2, num_cds + 2):
+                for col_num in range(1, 4):
+                    cell = coords_worksheet.cell(row=row_num, column=col_num)
+                    cell.border = coords_border
+                    cell.alignment = coords_alignment
 
         output.seek(0)
         
@@ -293,7 +400,7 @@ def resolver():
             
     except Exception as e:
         flash(f'Erro ao processar arquivo: {str(e)}', 'error')
-        return redirect(url_for('p_centros'))
+        return redirect(url_for('p_medianas'))
 
 def criar_excel_pcentros(df, num_cds, num_clientes, p_cds):
     """Função para criar Excel estilizado para p-Centros"""
@@ -352,15 +459,55 @@ def criar_excel_pcentros(df, num_cds, num_clientes, p_cds):
             # Dá um respiro de tamanho (+4) para não ficar apertado
             worksheet.column_dimensions[column].width = max_length + 4
         
-        # 4. Adicionar aba de instruções
+        # 4. Adicionar aba de coordenadas (NOVO)
+        coords_data = [['CD', 'Latitude', 'Longitude']]
+        for i in range(1, num_cds + 1):
+            coords_data.append([f'CD {i}', '', ''])  # Coordenadas em branco para preencher
+        
+        coords_df = pd.DataFrame(coords_data[1:], columns=coords_data[0])
+        coords_df.to_excel(writer, sheet_name='Coordenadas_CDs', index=False)
+        
+        # Aplicar formatação profissional na aba de coordenadas
+        coords_worksheet = writer.sheets['Coordenadas_CDs']
+        
+        # Estilizar cabeçalho das coordenadas
+        header_fill_coords = PatternFill(start_color="4CAF50", end_color="4CAF50", fill_type="solid")  # Verde
+        for col in range(1, 4):  # 3 colunas: CD, Latitude, Longitude
+            cell = coords_worksheet.cell(row=1, column=col)
+            cell.font = header_font
+            cell.fill = header_fill_coords
+            cell.alignment = center_align
+            cell.border = thin_border
+        
+        # Estilizar células de dados das coordenadas
+        for row in range(2, num_cds + 2):  # +2 por causa do cabeçalho
+            for col in range(1, 4):
+                cell = coords_worksheet.cell(row=row, column=col)
+                cell.border = thin_border
+                cell.alignment = center_align
+                cell.fill = input_fill
+        
+        # Ajustar largura das colunas das coordenadas
+        coords_worksheet.column_dimensions['A'].width = 15  # CD
+        coords_worksheet.column_dimensions['B'].width = 20  # Latitude  
+        coords_worksheet.column_dimensions['C'].width = 20  # Longitude
+        
+        # 5. Adicionar aba de instruções
         instrucoes = pd.DataFrame([
             ['Como Usar', ''],
             ['', ''],
             ['1. Preencha os dados:', ''],
-            ['- Linha 1: Cabeçalho com IDs (C1, C2, ..., CD1, CD2, ...)', ''],
-            ['- Linhas seguintes: CDs (CD1, CD2, ...)', ''],
+            ['- Aba "Dados": Cabeçalho e matriz de distâncias', ''],
+            ['- Aba "Coordenadas_CDs": Latitude e Longitude dos CDs (OPCIONAL)', ''],
+            ['- Linha 1: Cabeçalho com IDs (Cliente 1, Cliente 2, ...)', ''],
+            ['- Linhas seguintes: CDs (CD 1, CD 2, ...)', ''],
             ['- Valores: Distâncias entre CDs e clientes', ''],
             ['- Diagonal CD×CD: Mantenha zero (0)', ''],
+            ['', ''],
+            ['1.1. Coordenadas Geográficas (Opcional):', ''],
+            ['- Se preenchidas, o sistema usará distâncias reais', ''],
+            ['- Formato: Latitude (ex: -23.5505), Longitude (ex: -46.6333)', ''],
+            ['- Use coordenadas Google Maps para precisão máxima', ''],
             ['', ''],
             ['2. Salve o arquivo:', ''],
             ['- Clique em Arquivo > Salvar Como', ''],
@@ -376,6 +523,11 @@ def criar_excel_pcentros(df, num_cds, num_clientes, p_cds):
             ['- Garante equidade no atendimento', ''],
             ['- Ideal para serviços emergenciais', ''],
             ['- Sem Demanda e sem Custo Fixo', ''],
+            ['', ''],
+            ['🌍 Recursos Geográficos:', ''],
+            ['- Com coordenadas: Mapa interativo e distâncias reais', ''],
+            ['- Sem coordenadas: Usa matriz de distâncias original', ''],
+            ['- Mapa mostra CDs selecionados e áreas de cobertura', ''],
             ['', ''],
             ['Parâmetros configurados:', ''],
             [f'- CDs candidatos: {num_cds}', ''],
@@ -436,7 +588,7 @@ def exportar_resultados_pcentros():
         
     except Exception as e:
         flash(f'Erro ao exportar resultados: {str(e)}', 'error')
-        return redirect(url_for('p_centros'))
+        return redirect(url_for('p_medianas'))
 
 @app.route('/exportar_resultados_pmedianas')
 def exportar_resultados_pmedianas():
@@ -540,6 +692,48 @@ def gerar_template_maxcobertura():
             df.to_excel(writer, sheet_name='Maxima_Cobertura', index=False)
             worksheet = writer.sheets['Maxima_Cobertura']
             
+            # Criar aba de coordenadas dos CDs (NOVO)
+            coords_data = [['CD', 'Latitude', 'Longitude']]  # Header
+            
+            for i, cd in enumerate(nomes_cds):
+                # Coordenadas em branco para usuário preencher
+                coords_data.append([cd, '', ''])
+            
+            coords_df = pd.DataFrame(coords_data[1:], columns=coords_data[0])
+            coords_df.to_excel(writer, sheet_name='Coordenadas_CDs', index=False)
+            
+            # Aplicar formatação profissional na aba de coordenadas
+            coords_worksheet = writer.sheets['Coordenadas_CDs']
+            
+            # --- DEFININDO ESTILOS PARA COORDENADAS ---
+            coords_header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            coords_header_font = Font(color="FFFFFF", bold=True, size=12)
+            coords_border = Border(
+                left=Side(style='thin'), right=Side(style='thin'), 
+                top=Side(style='thin'), bottom=Side(style='thin')
+            )
+            coords_alignment = Alignment(horizontal='center', vertical='center')
+            
+            # Formatar header da aba de coordenadas
+            for col_num, column_title in enumerate(['CD', 'Latitude', 'Longitude'], 1):
+                cell = coords_worksheet.cell(row=1, column=col_num)
+                cell.fill = coords_header_fill
+                cell.font = coords_header_font
+                cell.border = coords_border
+                cell.alignment = coords_alignment
+            
+            # Ajustar largura das colunas
+            coords_worksheet.column_dimensions['A'].width = 25  # CD
+            coords_worksheet.column_dimensions['B'].width = 15  # Latitude  
+            coords_worksheet.column_dimensions['C'].width = 15  # Longitude
+            
+            # Adicionar bordas nas células de dados
+            for row_num in range(2, len(nomes_cds) + 2):
+                for col_num in range(1, 4):
+                    cell = coords_worksheet.cell(row=row_num, column=col_num)
+                    cell.border = coords_border
+                    cell.alignment = coords_alignment
+            
             # Criar aba de instruções
             instructions_worksheet = writer.book.create_sheet('Como Usar')
             
@@ -583,11 +777,26 @@ def gerar_template_maxcobertura():
                 ['• Raio de Cobertura', f'Configure {raio_cobertura} km no sistema para filtrar clientes'],
                 ['• Demanda é Importante', 'Clientes com maior demanda priorizam a otimização'],
                 ['', ''],
+                ['🌍 COORDENADAS DOS CDs (OPCIONAL):', ''],
+                ['• Aba "Coordenadas_CDs"', 'Coordenadas geográficas reais dos CDs com design profissional'],
+                ['• Layout Profissional', 'Cabeçalho azul escuro, bordas e alinhamento centralizado'],
+                ['• Latitude/Longitude', 'Use coordenadas decimais (ex: -23.5505, -46.6333)'],
+                ['• Formatação Automática', 'Sistema aplica cores e estilos automaticamente'],
+                ['• Precisão Melhorada', 'Sistema usará distâncias reais se preenchido'],
+                ['• Totalmente Opcional', 'Funciona normalmente sem preencher esta aba'],
+                ['', ''],
+                ['🎨 BENEFÍCIOS VISUAIS:', ''],
+                ['• Mapa Interativo', 'Visualização geográfica da solução ótima'],
+                ['• Indicadores Visuais', 'CDs selecionados vs não selecionados'],
+                ['• Áreas de Cobertura', 'Círculos mostrando raio de atuação'],
+                ['• Legenda Integrada', 'Identificação clara dos elementos do mapa'],
+                ['', ''],
                 ['🚀 PRÓXIMOS PASSOS:', ''],
                 ['1. Preencha todos os dados na aba "Maxima_Cobertura"', ''],
-                ['2. Salve o arquivo Excel', ''],
-                ['3. Faça upload no sistema', ''],
-                ['4. Aguarde o resultado da otimização', ''],
+                ['2. (Opcional) Atualize coordenadas na aba "Coordenadas_CDs"', ''],
+                ['3. Salve o arquivo Excel', ''],
+                ['4. Faça upload no sistema', ''],
+                ['5. Aguarde o resultado da otimização', ''],
             ]
             
             # Adicionar instruções na worksheet
@@ -708,8 +917,10 @@ def resolver_maxcobertura_route():
             
             print(f"Arquivo salvo em: {filepath}")
             
-            df = pd.read_excel(filepath)
-            print(f"DataFrame lido com sucesso: {df.shape}")
+            df = pd.read_excel(filepath, sheet_name=None)  # Ler todas as abas
+            print(f"DataFrame lido com sucesso: {len(df)} abas")
+            for aba_name, aba_df in df.items():
+                print(f"  Aba '{aba_name}': {aba_df.shape}")
             
             from solver_maxcobertura import resolver_maxcobertura
             resultado = resolver_maxcobertura(df, p, raio, tipo_dado)
@@ -757,11 +968,11 @@ def gerar_template_pcentros():
         
         if num_cds <= 0 or num_clientes <= 0 or p_cds <= 0:
             flash('Todos os valores devem ser maiores que zero.', 'error')
-            return redirect(url_for('p_centros'))
+            return redirect(url_for('p_medianas'))
         
         if p_cds > num_cds:
             flash('O número de CDs a abrir (p) não pode ser maior que o número de CDs candidatos.', 'error')
-            return redirect(url_for('p_centros'))
+            return redirect(url_for('p_medianas'))
         
         # Criar as listas de nomes
         nomes_cds = [f'CD {i}' for i in range(1, num_cds + 1)]
@@ -783,8 +994,50 @@ def gerar_template_pcentros():
         # Salvar na memória como Excel com Design Profissional
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='P-Centros', index=False)
-            worksheet = writer.sheets['P-Centros']
+            df.to_excel(writer, sheet_name='Localização', index=False)
+            worksheet = writer.sheets['Localização']
+            
+            # Criar aba de coordenadas dos CDs (NOVO)
+            coords_data = [['CD', 'Latitude', 'Longitude']]  # Header
+            
+            for i, cd in enumerate(nomes_cds):
+                # Coordenadas em branco para usuário preencher
+                coords_data.append([cd, '', ''])
+            
+            coords_df = pd.DataFrame(coords_data[1:], columns=coords_data[0])
+            coords_df.to_excel(writer, sheet_name='Coordenadas_CDs', index=False)
+            
+            # Aplicar formatação profissional na aba de coordenadas
+            coords_worksheet = writer.sheets['Coordenadas_CDs']
+            
+            # --- DEFININDO ESTILOS PARA COORDENADAS ---
+            coords_header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            coords_header_font = Font(color="FFFFFF", bold=True, size=12)
+            coords_border = Border(
+                left=Side(style='thin'), right=Side(style='thin'), 
+                top=Side(style='thin'), bottom=Side(style='thin')
+            )
+            coords_alignment = Alignment(horizontal='center', vertical='center')
+            
+            # Formatar header da aba de coordenadas
+            for col_num, column_title in enumerate(['CD', 'Latitude', 'Longitude'], 1):
+                cell = coords_worksheet.cell(row=1, column=col_num)
+                cell.fill = coords_header_fill
+                cell.font = coords_header_font
+                cell.border = coords_border
+                cell.alignment = coords_alignment
+            
+            # Ajustar largura das colunas
+            coords_worksheet.column_dimensions['A'].width = 25  # CD
+            coords_worksheet.column_dimensions['B'].width = 15  # Latitude  
+            coords_worksheet.column_dimensions['C'].width = 15  # Longitude
+            
+            # Adicionar bordas nas células de dados
+            for row_num in range(2, num_cds + 2):
+                for col_num in range(1, 4):
+                    cell = coords_worksheet.cell(row=row_num, column=col_num)
+                    cell.border = coords_border
+                    cell.alignment = coords_alignment
             
             # Criar aba de instruções
             instructions_worksheet = writer.book.create_sheet('Como Usar')
@@ -806,9 +1059,17 @@ def gerar_template_pcentros():
                 ['', ''],
                 ['🎯 OBJETIVO', f'Abrir exatamente {p_cds} CDs para minimizar a maior {"distância" if tipo_dado == "distancia" else "custo"} entre qualquer cliente e seu CD'],
                 ['', ''],
-                ['📝 COMO PREENCHER A PLANILHA "P-Centros":', ''],
+                ['📝 COMO PREENCHER A PLANILHA "Dados":', ''],
                 ['1. DISTÂNCIAS/CUSTOS (Células Cinzas)', f'Informe {"distâncias (km, tempo)" if tipo_dado == "distancia" else "custos (R$/unidade)"} de cada CD para cada cliente'],
                 ['2. MATRIZ SIMPLIFICADA', 'No p-Centros não usamos Demanda, Custo Fixo ou Capacidade. Preencha apenas a matriz de valores.'],
+                ['', ''],
+                ['🌍 COORDENADAS DOS CDs (OPCIONAL):', ''],
+                ['• Aba "Coordenadas_CDs"', 'Coordenadas geográficas reais dos CDs com design profissional'],
+                ['• Layout Profissional', 'Cabeçalho azul escuro, bordas e alinhamento centralizado'],
+                ['• Latitude/Longitude', 'Use coordenadas decimais (ex: -23.5505, -46.6333)'],
+                ['• Formatação Automática', 'Sistema aplica cores e estilos automaticamente'],
+                ['• Precisão Melhorada', 'Sistema usará distâncias reais se preenchido'],
+                ['• Totalmente Opcional', 'Funciona normalmente sem preencher esta aba'],
                 ['', ''],
                 ['🎨 GUIA VISUAL DAS CORES:', ''],
                 ['AZUL ESCURO (Cabeçalho)', 'Títulos das colunas - não editar'],
@@ -827,11 +1088,23 @@ def gerar_template_pcentros():
                 ['• Foco no Pior Cenário', 'O sistema garante que nenhum cliente fique muito longe'],
                 ['• Ideal para Serviços Críticos', 'Perfeito para emergências, segurança, etc.'],
                 ['', ''],
+                ['🎨 BENEFÍCIOS VISUAIS:', ''],
+                ['• Mapa Interativo', 'Visualização geográfica da solução ótima'],
+                ['• Indicadores Visuais', 'CDs selecionados vs não selecionados'],
+                ['• Áreas de Cobertura', 'Círculos mostrando raio de atuação'],
+                ['• Legenda Integrada', 'Identificação clara dos elementos do mapa'],
+                ['', ''],
                 ['🚀 PRÓXIMOS PASSOS:', ''],
-                ['1. Preencha todos os dados na aba "P-Centros"', ''],
-                ['2. Salve o arquivo Excel', ''],
-                ['3. Faça upload no sistema', ''],
-                ['4. Aguarde o resultado da otimização', ''],
+                ['1. Preencha todos os dados na aba "Dados"', ''],
+                ['2. (Opcional) Preencha coordenadas na aba "Coordenadas_CDs"', ''],
+                ['3. Salve o arquivo Excel', ''],
+                ['4. Faça upload no sistema', ''],
+                ['5. Aguarde o resultado da otimização', ''],
+                ['', ''],
+                ['Parâmetros configurados:', ''],
+                [f'- CDs candidatos: {num_cds}', ''],
+                [f'- Clientes: {num_clientes}', ''],
+                [f'- CDs a abrir: {p_cds}', '']
             ]
             
             # Adicionar instruções na worksheet
@@ -914,28 +1187,31 @@ def gerar_template_pcentros():
         
     except Exception as e:
         flash(f'Erro ao gerar template: {str(e)}', 'error')
-        return redirect(url_for('p_centros'))
+        return redirect(url_for('p_medianas'))
 
 @app.route('/resolver_pcentros', methods=['POST'])
 def resolver_pcentros_route():
     try:
         if 'file' not in request.files:
             flash('Nenhum arquivo foi selecionado.', 'error')
-            return redirect(url_for('p_centros'))
+            return redirect(url_for('p_medianas'))
         
         file = request.files['file']
         
         if file.filename == '':
             flash('Nenhum arquivo foi selecionado.', 'error')
-            return redirect(url_for('p_centros'))
+            return redirect(url_for('p_medianas'))
         
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Ler dados do Excel
-            df_principal = pd.read_excel(filepath)
+            # Ler dados do Excel (todas as abas para coordenadas)
+            df = pd.read_excel(filepath, sheet_name=None)  # Ler todas as abas
+            print(f"DataFrame lido com sucesso: {len(df)} abas")
+            for aba_name, aba_df in df.items():
+                print(f"  Aba '{aba_name}': {aba_df.shape}")
             
             # Obter valores do formulário
             p_cds = int(request.form.get('p_cds', 1))
@@ -943,24 +1219,24 @@ def resolver_pcentros_route():
             
             # Resolver o problema p-Centros
             from solver_pcentros import resolver_pcentros
-            resultado = resolver_pcentros(df_principal, p_cds, tipo_dado)
+            resultado = resolver_pcentros(df, p_cds, tipo_dado)
             
             # Limpar arquivo temporário
             os.remove(filepath)
             
             if resultado.get('status') == 'Erro':
                 flash(f"Erro na otimização: {resultado.get('mensagem')}", 'error')
-                return redirect(url_for('p_centros'))
+                return redirect(url_for('p_medianas'))
             
             return render_template('resultado_pcentros.html', resultado=resultado)
                 
         else:
             flash('Formato de arquivo inválido. Por favor, envie um arquivo .xlsx ou .csv.', 'error')
-            return redirect(url_for('p_centros'))
+            return redirect(url_for('p_medianas'))
             
     except Exception as e:
         flash(f'Erro ao processar arquivo: {str(e)}', 'error')
-        return redirect(url_for('p_centros'))
+        return redirect(url_for('p_medianas'))
 
 @app.route('/exportar_resultados_maxcobertura')
 def exportar_resultados_maxcobertura():
@@ -1013,6 +1289,30 @@ def exportar_resultados_maxcobertura():
         
     except Exception as e:
         flash(f'Erro ao exportar resultados: {str(e)}', 'error')
+        return redirect(url_for('max_cobertura'))
+
+@app.route('/mapa/<filename>')
+def servir_mapa(filename):
+    """Serve o arquivo HTML do mapa gerado"""
+    try:
+        # Construir o caminho completo do arquivo na pasta estática
+        mapa_path = os.path.join(app.static_folder, 'mapas', filename)
+        
+        if os.path.exists(mapa_path):
+            return send_file(
+                mapa_path,
+                mimetype='text/html',
+                as_attachment=False,
+                download_name=filename
+            )
+        else:
+            print(f"Arquivo do mapa não encontrado: {mapa_path}")
+            flash('Arquivo do mapa não encontrado.', 'error')
+            return redirect(url_for('max_cobertura'))
+            
+    except Exception as e:
+        print(f"Erro ao carregar mapa: {str(e)}")
+        flash(f'Erro ao carregar mapa: {str(e)}', 'error')
         return redirect(url_for('max_cobertura'))
 
 @app.route('/exportar_resultados_tradicional')
@@ -1105,7 +1405,7 @@ def exportar_resultados_tradicional():
         
     except Exception as e:
         flash(f'Erro ao exportar resultados: {str(e)}', 'error')
-        return redirect(url_for('p_centros'))
+        return redirect(url_for('p_medianas'))
 
 # --- ROTA PARA p-MEDIANAS ---
 @app.route('/gerar_template_pmedianas', methods=['POST'])
@@ -1148,8 +1448,62 @@ def gerar_template_pmedianas():
         # Salvar na memória como Excel com Design Profissional
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='P-Medianas', index=False)
-            worksheet = writer.sheets['P-Medianas']
+            df.to_excel(writer, sheet_name='Localização', index=False)
+            worksheet = writer.sheets['Localização']
+            
+            # --- ADICIONAR ABA DE COORDENADAS (NOVO) ---
+            coords_data = [['CD', 'Latitude', 'Longitude']]  # Header
+            
+            for i, cd in enumerate(nomes_cds):
+                # Coordenadas exemplo (São Paulo, Rio de Janeiro, Belo Horizonte, etc.)
+                coords_exemplo = [
+                    (-23.5505, -46.6333),  # São Paulo
+                    (-22.9068, -43.1729),  # Rio de Janeiro  
+                    (-19.9167, -43.9345),  # Belo Horizonte
+                    (-30.0346, -51.2177),  # Porto Alegre
+                    (-8.0476, -34.8770),  # Recife
+                    (-12.9714, -38.5014),  # Salvador
+                    (-15.8267, -47.9218),  # Brasília
+                    (-3.1190, -60.0217),  # Manaus
+                    (-5.0892, -42.8016),  # Teresina
+                    (-2.5307, -44.3068)    # São Luís
+                ]
+                coords_data.append([cd, '', ''])
+            
+            coords_df = pd.DataFrame(coords_data[1:], columns=coords_data[0])
+            coords_df.to_excel(writer, sheet_name='Coordenadas_CDs', index=False)
+            
+            # Aplicar formatação profissional na aba de coordenadas
+            coords_worksheet = writer.sheets['Coordenadas_CDs']
+            
+            # --- DEFININDO ESTILOS PARA COORDENADAS ---
+            coords_header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            coords_header_font = Font(color="FFFFFF", bold=True, size=12)
+            coords_border = Border(
+                left=Side(style='thin'), right=Side(style='thin'), 
+                top=Side(style='thin'), bottom=Side(style='thin')
+            )
+            coords_alignment = Alignment(horizontal='center', vertical='center')
+            
+            # Formatar header da aba de coordenadas
+            for col_num, column_title in enumerate(['CD', 'Latitude', 'Longitude'], 1):
+                cell = coords_worksheet.cell(row=1, column=col_num)
+                cell.fill = coords_header_fill
+                cell.font = coords_header_font
+                cell.border = coords_border
+                cell.alignment = coords_alignment
+            
+            # Ajustar largura das colunas
+            coords_worksheet.column_dimensions['A'].width = 25  # CD
+            coords_worksheet.column_dimensions['B'].width = 15  # Latitude  
+            coords_worksheet.column_dimensions['C'].width = 15  # Longitude
+            
+            # Adicionar bordas nas células de dados
+            for row_num in range(2, num_cds + 2):
+                for col_num in range(1, 4):
+                    cell = coords_worksheet.cell(row=row_num, column=col_num)
+                    cell.border = coords_border
+                    cell.alignment = coords_alignment
             
             # Criar aba de instruções
             instructions_worksheet = writer.book.create_sheet('Como Usar')
@@ -1176,7 +1530,19 @@ def gerar_template_pmedianas():
                 ['2. DEMANDA DOS CLIENTES (Linha "Demanda Total")', 'Informe a demanda mensal (unidades) de cada cliente'],
                 ['3. CUSTO FIXO E CAPACIDADE (Colunas finais)', 'Essas colunas existem para manter formato, mas NÃO são usadas no modelo p-Medianas'],
                 ['', ''],
-                ['🎨 GUIA VISUAL DAS CORES:', ''],
+                ['🌍 COORDENADAS DOS CDs (OPCIONAL):', ''],
+                ['• Aba "Coordenadas_CDs"', 'Coordenadas geográficas reais dos CDs com design profissional'],
+                ['• Layout Profissional', 'Cabeçalho azul escuro, bordas e alinhamento centralizado'],
+                ['• Latitude/Longitude', 'Use coordenadas decimais (ex: -23.5505, -46.6333)'],
+                ['• Formatação Automática', 'Sistema aplica cores e estilos automaticamente'],
+                ['• Mapas Interativos', 'Se preenchida, gera mapas com áreas de influência'],
+                ['', ''],
+                ['📊 SISTEMA DE CÁLCULO:', ''],
+                ['• Análise Ótima', 'Sistema encontrou solução usando matriz de distâncias original'],
+                ['• Sem Coordenadas', 'Coordenadas não foram utilizadas nesta otimização'],
+                ['• Resultado Valido', 'Solução ótima encontrada com sucesso'],
+                ['', ''],
+                ['� GUIA VISUAL DAS CORES:', ''],
                 ['AZUL ESCURO (Cabeçalho)', 'Títulos das colunas - não editar'],
                 ['AZUL CLARO (Primeira coluna)', 'Nomes dos CDs e linha de demanda - não editar'],
                 ['CINZA CLARO (Miolo da tabela)', 'ÁREA PARA PREENCHER SEUS DADOS'],
@@ -1194,9 +1560,10 @@ def gerar_template_pmedianas():
                 ['', ''],
                 ['🚀 PRÓXIMOS PASSOS:', ''],
                 ['1. Preencha todos os dados na aba "P-Medianas"', ''],
-                ['2. Salve o arquivo Excel', ''],
-                ['3. Faça upload no sistema', ''],
-                ['4. Aguarde o resultado da otimização', ''],
+                ['2. (Opcional) Preencha coordenadas na aba "Coordenadas_CDs"', ''],
+                ['3. Salve o arquivo Excel', ''],
+                ['4. Faça upload no sistema', ''],
+                ['5. Aguarde o resultado da otimização', ''],
             ]
             
             # Adicionar instruções na worksheet
@@ -1253,23 +1620,80 @@ def gerar_template_pmedianas():
                     cell.border = thin_border
                     cell.alignment = center_align
                     
+                    # Se for a primeira coluna (Nomes dos CDs)
                     if col == 1:
                         cell.font = bold_font
                         cell.fill = col1_fill
+                    # Se for a área onde o usuário vai digitar os números
                     else:
                         cell.fill = input_fill
 
             # 3. Ajustar largura das colunas automaticamente
             for col in worksheet.columns:
                 max_length = 0
-                column = col[0].column_letter
+                column = col[0].column_letter # Pega a letra da coluna (A, B, C...)
                 for cell in col:
                     try:
                         if len(str(cell.value)) > max_length:
                             max_length = len(str(cell.value))
                     except:
                         pass
+                # Dá um respiro de tamanho (+4) para não ficar apertado
                 worksheet.column_dimensions[column].width = max_length + 4
+            
+            # --- ADICIONAR ABA DE COORDENADAS (NOVO) ---
+            coords_data = [['CD', 'Latitude', 'Longitude']]  # Header
+            
+            for i, cd in enumerate(nomes_cds):
+                # Coordenadas exemplo (São Paulo, Rio de Janeiro, Belo Horizonte, etc.)
+                coords_exemplo = [
+                    (-23.5505, -46.6333),  # São Paulo
+                    (-22.9068, -43.1729),  # Rio de Janeiro  
+                    (-19.9167, -43.9345),  # Belo Horizonte
+                    (-30.0346, -51.2177),  # Porto Alegre
+                    (-8.0476, -34.8770),  # Recife
+                    (-12.9714, -38.5014),  # Salvador
+                    (-15.8267, -47.9218),  # Brasília
+                    (-3.1190, -60.0217),  # Manaus
+                    (-5.0892, -42.8016),  # Teresina
+                    (-2.5307, -44.3068)    # São Luís
+                ]
+                coords_data.append([cd, '', ''])
+            
+            coords_df = pd.DataFrame(coords_data[1:], columns=coords_data[0])
+            coords_df.to_excel(writer, sheet_name='Coordenadas_CDs', index=False)
+            
+            # Aplicar formatação profissional na aba de coordenadas
+            coords_worksheet = writer.sheets['Coordenadas_CDs']
+            
+            # --- DEFININDO ESTILOS PARA COORDENADAS ---
+            coords_header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            coords_header_font = Font(color="FFFFFF", bold=True, size=12)
+            coords_border = Border(
+                left=Side(style='thin'), right=Side(style='thin'), 
+                top=Side(style='thin'), bottom=Side(style='thin')
+            )
+            coords_alignment = Alignment(horizontal='center', vertical='center')
+            
+            # Formatar header da aba de coordenadas
+            for col_num, column_title in enumerate(['CD', 'Latitude', 'Longitude'], 1):
+                cell = coords_worksheet.cell(row=1, column=col_num)
+                cell.fill = coords_header_fill
+                cell.font = coords_header_font
+                cell.border = coords_border
+                cell.alignment = coords_alignment
+            
+            # Ajustar largura das colunas
+            coords_worksheet.column_dimensions['A'].width = 25  # CD
+            coords_worksheet.column_dimensions['B'].width = 15  # Latitude  
+            coords_worksheet.column_dimensions['C'].width = 15  # Longitude
+            
+            # Adicionar bordas nas células de dados
+            for row_num in range(2, num_cds + 2):
+                for col_num in range(1, 4):
+                    cell = coords_worksheet.cell(row=row_num, column=col_num)
+                    cell.border = coords_border
+                    cell.alignment = coords_alignment
 
         output.seek(0)
         
@@ -1302,8 +1726,11 @@ def resolver_pmedianas():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Ler dados do Excel
-            df_principal = pd.read_excel(filepath)
+            # Ler dados do Excel (todas as abas para coordenadas)
+            df = pd.read_excel(filepath, sheet_name=None)  # Ler todas as abas
+            print(f"DataFrame lido com sucesso: {len(df)} abas")
+            for aba_name, aba_df in df.items():
+                print(f"  Aba '{aba_name}': {aba_df.shape}")
             
             # Extrair valores do formulário
             p_cds = int(request.form.get('p_cds', 0))
@@ -1311,7 +1738,7 @@ def resolver_pmedianas():
             
             # Resolver o problema p-medianas
             from solver_pmedianas import resolver_pmedianas
-            resultado = resolver_pmedianas(df_principal, p_cds, tipo_dado)
+            resultado = resolver_pmedianas(df, p_cds, tipo_dado)
             
             # Limpar arquivo temporário
             os.remove(filepath)
@@ -1445,4 +1872,38 @@ def resolver_pmediana_simples_route():
         return redirect(url_for('pmediana_simples'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    print("🚀 Iniciando servidor Flask...")
+    print("📁 Pasta atual:", os.getcwd())
+    print("🌐 Servidor será iniciado em http://127.0.0.1:5000")
+    print("⏳ Aguarde o servidor carregar completamente...")
+    
+    try:
+        app.run(debug=True, host='127.0.0.1', port=5000)
+    except Exception as e:
+        print(f"❌ Erro ao iniciar servidor: {e}")
+        print("🔍 Verificando dependências...")
+        
+        # Testar imports principais
+        try:
+            import flask
+            print("✅ Flask importado com sucesso")
+        except ImportError:
+            print("❌ Flask não encontrado - execute: pip install flask")
+            
+        try:
+            import pandas
+            print("✅ Pandas importado com sucesso")
+        except ImportError:
+            print("❌ Pandas não encontrado - execute: pip install pandas")
+            
+        try:
+            import pulp
+            print("✅ PuLP importado com sucesso")
+        except ImportError:
+            print("❌ PuLP não encontrado - execute: pip install pulp")
+            
+        try:
+            import folium
+            print("✅ Folium importado com sucesso")
+        except ImportError:
+            print("❌ Folium não encontrado - execute: pip install folium")

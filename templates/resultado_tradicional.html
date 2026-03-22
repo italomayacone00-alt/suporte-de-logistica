@@ -199,6 +199,96 @@
         </div>
     </section>
 
+    <!-- Mapa Interativo (NOVO) -->
+    <!-- DEBUG: coordenadas_usadas = {{ resultado.coordenadas_usadas }} -->
+    <!-- DEBUG: mapa_html = {{ resultado.mapa_html }} -->
+    <!-- DEBUG: info_coordenadas = {{ resultado.info_coordenadas }} -->
+    <!-- DEBUG: coordenadas_usadas is not None = {{ resultado.coordenadas_usadas is not none }} -->
+    <!-- DEBUG: mapa_html is not None = {{ resultado.mapa_html is not none }} -->
+    {% if resultado.mapa_html %}
+    <section class="card mapa-section">
+        <div class="card-header mapa-header">
+            <div class="mapa-title">
+                <h2>🗺️ Mapa Interativo - Otimizador Tradicional</h2>
+                <span class="mapa-subtitle">Visualização Geográfica da Solução Ótima</span>
+            </div>
+            <div class="badge orange">Mapa Dinâmico</div>
+        </div>
+        <div class="card-content">
+            <div class="mapa-wrapper">
+                <div class="mapa-container">
+                    <iframe 
+                        src="{{ url_for('static', filename='mapas/' + resultado.mapa_html) }}" 
+                        width="100%" 
+                        height="500" 
+                        style="border: 1px solid #e1e5e9; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"
+                    ></iframe>
+                </div>
+                
+                <div class="mapa-sidebar">
+                    <div class="mapa-stats">
+                        <h3>📊 Estatísticas do Mapa</h3>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon selected">
+                                <span class="material-symbols-outlined">warehouse</span>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">CDs Abertos</div>
+                                <div class="stat-value">{{ resultado.cds_abertos|length if resultado.cds_abertos is not none else 0 }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon total">
+                                <span class="material-symbols-outlined">inventory</span>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">Capacidade Total</div>
+                                <div class="stat-value">{{ "{:,.0f}".format(resultado.demanda_total if resultado.demanda_total is not none else 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon efficiency">
+                                <span class="material-symbols-outlined">trending_up</span>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">Custo Total</div>
+                                <div class="stat-value">{{ "{:,.2f}".format(resultado.custo_total if resultado.custo_total is not none else 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mapa-legend">
+                        <h3>🎨 Legenda do Mapa</h3>
+                        <div class="legend-items">
+                            <div class="legend-item">
+                                <div class="legend-marker selected">
+                                    <span class="material-symbols-outlined">warehouse</span>
+                                </div>
+                                <div class="legend-text">CD Aberto</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-marker unselected">
+                                    <span class="material-symbols-outlined">close</span>
+                                </div>
+                                <div class="legend-text">CD Fechado</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-marker coverage">
+                                    <span class="material-symbols-outlined">radio_button_unchecked</span>
+                                </div>
+                                <div class="legend-text">Área de Atendimento</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- Análises Estatísticas -->
     <section class="card">
         <div class="card-header">
