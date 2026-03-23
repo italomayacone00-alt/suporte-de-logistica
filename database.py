@@ -63,12 +63,10 @@ def salvar_projeto(nome, tipo_analise, parametros, resultados, mapa_html=None):
         ''', (projeto_id, json.dumps(resultados), mapa_html))
         
         conn.commit()
-        print(f"✅ Projeto '{nome}' salvo com ID: {projeto_id}")
         return projeto_id
         
     except Exception as e:
         conn.rollback()
-        print(f"❌ Erro ao salvar projeto: {str(e)}")
         return None
     finally:
         conn.close()

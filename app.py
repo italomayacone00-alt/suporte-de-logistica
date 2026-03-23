@@ -1270,7 +1270,13 @@ def salvar_resultados_pcentros():
             return jsonify({'success': False, 'message': 'Resultados não encontrados.'})
         
         import json
-        resultado = json.loads(resultados_json)
+        try:
+            print(f"DEBUG: JSON recebido p-Centros: {repr(resultados_json)}")
+            resultado = json.loads(resultados_json)
+        except json.JSONDecodeError as e:
+            print(f"Erro no JSON p-Centros: {str(e)}")
+            print(f"JSON completo p-Centros: {repr(resultados_json)}")
+            return jsonify({'success': False, 'message': f'Erro nos dados do resultado: Formato JSON inválido. Detalhes: {str(e)}'})
         
         # Preparar parâmetros para salvar
         parametros = {

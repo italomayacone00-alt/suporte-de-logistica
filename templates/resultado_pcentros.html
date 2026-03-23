@@ -765,7 +765,7 @@
                 </div>
                 
                 <!-- Campo oculto para passar os resultados -->
-                <input type="hidden" name="resultados" value="{{ resultado|tojson|safe }}">
+                <input type="hidden" name="resultados" value="">
             </div>
             
             <div class="modal-footer-actions">
@@ -786,14 +786,98 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+// Função para limpar dados não serializáveis
+function cleanForSerialization(obj) {
+    if (obj === null || obj === undefined) return null;
+    if (typeof obj !== 'object') return obj;
+    if (obj instanceof Date) return obj.toISOString();
+    if (Array.isArray(obj)) return obj.map(cleanForSerialization);
+    
+    const cleaned = {};
+    for (const [key, value] of Object.entries(obj)) {
+        if (typeof value === 'function') continue;
+        if (typeof value === 'object' && value !== null) {
+            try {
+                JSON.stringify(value);
+                cleaned[key] = cleanForSerialization(value);
+            } catch (e) {
+                cleaned[key] = String(value);
+            }
+        } else {
+            cleaned[key] = value;
+        }
+    }
+    return cleaned;
+}
+
 function exportResults() {
     // Redirecionar para rota de exportação
     window.location.href = "{{ url_for('exportar_resultados_pcentros') }}";
 }
 
-// Gráficos e Análises
+function showSaveDialog() {
+    document.getElementById('saveModal').style.display = 'flex';
+    document.getElementById('nome_projeto').focus();
+}
+
+function closeSaveDialog() {
+    document.getElementById('saveModal').style.display = 'none';
+    document.getElementById('saveForm').reset();
+}
+
+// Preencher campo oculto com dados limpos antes do envio
 document.addEventListener('DOMContentLoaded', function() {
-    const resultado = {{ resultado|tojson|safe }};
+    const resultado = cleanForSerialization({{ resultado|tojson|safe }});
+    
+    // Configurar formulário de salvamento
+    const saveForm = document.getElementById('saveForm');
+    if (saveForm) {
+        saveForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const resultadosField = document.querySelector('input[name="resultados"]');
+            const resultadoLimpo = cleanForSerialization(resultado);
+            resultadosField.value = JSON.stringify(resultadoLimpo);
+            console.log('Dados limpos para envio:', resultadoLimpo);
+            
+            // Enviar formulário via AJAX
+            const formData = new FormData(this);
+            
+            fetch('{{ url_for("salvar_resultados_pcentros") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    closeSaveDialog();
+                    // Opcional: redirecionar para dashboard
+                    setTimeout(() => {
+                        if (confirm('Deseja ir para o dashboard ver seus projetos salvos?')) {
+                            window.location.href = '{{ url_for("dashboard") }}';
+                        }
+                    }, 500);
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('❌ Ocorreu um erro ao salvar o projeto.');
+            });
+        });
+    }
+    
+    // Fechar modal ao clicar fora
+    const saveModal = document.getElementById('saveModal');
+    if (saveModal) {
+        saveModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSaveDialog();
+            }
+        });
+    }
     
     // 1. Gráfico de Distribuição de Clientes por CD
     const clientesCtx = document.getElementById('clientesPorCDChart');
@@ -1015,36 +1099,5 @@ function closeSaveDialog() {
     document.getElementById('saveModal').style.display = 'none';
     document.getElementById('saveForm').reset();
 }
-
-// Salvar projeto e Gráficos
-document.addEventListener('DOMContentLoaded', function() {
-    // Adicionar evento de submit ao formulário
-    document.getElementById('saveForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        
-        fetch('{{ url_for("salvar_resultados_pcentros") }}', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Mostrar mensagem de sucesso
-                alert('Projeto salvo com sucesso!');
-                closeSaveDialog();
-                // Opcional: redirecionar para o dashboard
-                // window.location.href = '{{ url_for("dashboard") }}';
-            } else {
-                alert('Erro ao salvar projeto: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro ao salvar projeto. Tente novamente.');
-        });
-    });
-});
 </script>
 {% endblock %}
