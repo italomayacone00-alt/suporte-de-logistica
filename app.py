@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, flash, redirect, url_for, Response
+from flask import Flask, render_template, request, send_file, flash, redirect, url_for, Response, jsonify
 import pandas as pd
 import os
 from werkzeug.utils import secure_filename
@@ -9,6 +9,9 @@ from datetime import datetime
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 import zipfile
+
+# Importar módulo de banco de dados
+from database import init_database, salvar_projeto, listar_projetos, carregar_resultados_projeto, excluir_projeto
 
 app = Flask(__name__)
 app.secret_key = 'sua_chave_secreta_aqui'
@@ -21,16 +24,29 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Criar pasta de uploads se não existir
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Inicializar banco de dados
+init_database()
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def index():
-    return render_template('dashboard_professional.html')
+    # Carregar projetos salvos na rota principal também
+    projetos = listar_projetos()
+    return render_template('dashboard_professional.html', projetos=projetos)
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard_professional.html')
+    # Carregar projetos salvos
+    projetos = listar_projetos()
+    return render_template('dashboard_professional.html', projetos=projetos)
+
+@app.route('/api/projetos')
+def api_projetos():
+    """API endpoint para buscar projetos salvos"""
+    projetos = listar_projetos()
+    return jsonify({'projetos': projetos})
 
 @app.route('/tools')
 def tools():
@@ -1237,6 +1253,258 @@ def resolver_pcentros_route():
     except Exception as e:
         flash(f'Erro ao processar arquivo: {str(e)}', 'error')
         return redirect(url_for('p_medianas'))
+
+@app.route('/salvar_resultados_pcentros', methods=['POST'])
+def salvar_resultados_pcentros():
+    """Salva os resultados de uma análise p-Centros no banco de dados"""
+    try:
+        # Obter dados do formulário
+        nome_projeto = request.form.get('nome_projeto', '').strip()
+        
+        if not nome_projeto:
+            return jsonify({'success': False, 'message': 'Por favor, informe um nome para o projeto.'})
+        
+        # Obter resultados da sessão (precisamos passar os resultados via formulário)
+        resultados_json = request.form.get('resultados')
+        if not resultados_json:
+            return jsonify({'success': False, 'message': 'Resultados não encontrados.'})
+        
+        import json
+        resultado = json.loads(resultados_json)
+        
+        # Preparar parâmetros para salvar
+        parametros = {
+            'p': resultado.get('p', 0),
+            'tipo_valor': resultado.get('tipo_valor', 'distancia'),
+            'num_cds_selecionados': resultado.get('num_cds_selecionados', 0),
+            'coordenadas_usadas': resultado.get('coordenadas_usadas', False)
+        }
+        
+        # Salvar no banco de dados
+        projeto_id = salvar_projeto(
+            nome=nome_projeto,
+            tipo_analise='p_centros',
+            parametros=parametros,
+            resultados=resultado,
+            mapa_html=resultado.get('mapa_html')
+        )
+        
+        if projeto_id:
+            return jsonify({
+                'success': True, 
+                'message': 'Projeto salvo com sucesso!',
+                'projeto_id': projeto_id
+            })
+        else:
+            return jsonify({'success': False, 'message': 'Erro ao salvar o projeto.'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro: {str(e)}'})
+
+@app.route('/salvar_resultados_pmedianas', methods=['POST'])
+def salvar_resultados_pmedianas():
+    """Salva os resultados de uma análise p-Medianas no banco de dados"""
+    try:
+        # Obter dados do formulário
+        nome_projeto = request.form.get('nome_projeto', '').strip()
+        
+        if not nome_projeto:
+            return jsonify({'success': False, 'message': 'Por favor, informe um nome para o projeto.'})
+        
+        # Obter resultados da sessão (precisamos passar os resultados via formulário)
+        resultados_json = request.form.get('resultados')
+        if not resultados_json:
+            return jsonify({'success': False, 'message': 'Resultados não encontrados.'})
+        
+        import json
+        resultado = json.loads(resultados_json)
+        
+        # Preparar parâmetros para salvar
+        parametros = {
+            'p': resultado.get('p', 0),
+            'tipo_valor': resultado.get('tipo_valor', 'distancia'),
+            'num_cds_selecionados': resultado.get('num_cds_selecionados', 0),
+            'custo_total': resultado.get('custo_total', 0),
+            'coordenadas_usadas': resultado.get('coordenadas_usadas', False)
+        }
+        
+        # Salvar no banco de dados
+        projeto_id = salvar_projeto(
+            nome=nome_projeto,
+            tipo_analise='p_medianas',
+            parametros=parametros,
+            resultados=resultado,
+            mapa_html=resultado.get('mapa_html')
+        )
+        
+        if projeto_id:
+            return jsonify({
+                'success': True, 
+                'message': 'Projeto salvo com sucesso!',
+                'projeto_id': projeto_id
+            })
+        else:
+            return jsonify({'success': False, 'message': 'Erro ao salvar o projeto.'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro: {str(e)}'})
+
+@app.route('/salvar_resultados_tradicional', methods=['POST'])
+def salvar_resultados_tradicional():
+    """Salva os resultados de uma análise Tradicional no banco de dados"""
+    try:
+        # Obter dados do formulário
+        nome_projeto = request.form.get('nome_projeto', '').strip()
+        
+        if not nome_projeto:
+            return jsonify({'success': False, 'message': 'Por favor, informe um nome para o projeto.'})
+        
+        # Obter resultados da sessão (precisamos passar os resultados via formulário)
+        resultados_json = request.form.get('resultados')
+        if not resultados_json:
+            return jsonify({'success': False, 'message': 'Resultados não encontrados.'})
+        
+        # Debug: mostrar o JSON recebido
+        print(f"JSON recebido Tradicional (primeiros 200 chars): {resultados_json[:200]}")
+        
+        import json
+        try:
+            resultado = json.loads(resultados_json)
+        except json.JSONDecodeError as e:
+            print(f"Erro no JSON Tradicional: {str(e)}")
+            print(f"JSON completo Tradicional: {repr(resultados_json)}")
+            return jsonify({'success': False, 'message': f'Erro nos dados: Formato JSON inválido. Detalhes: {str(e)}'})
+        
+        # Preparar parâmetros para salvar
+        parametros = {
+            'tipo_valor': resultado.get('tipo_valor', 'distancia'),
+            'num_cds_abertos': resultado.get('cds_abertos', 0) if resultado.get('cds_abertos') else 0,
+            'custo_total': resultado.get('custo_total', 0),
+            'coordenadas_usadas': resultado.get('coordenadas_usadas', False)
+        }
+        
+        # Salvar no banco de dados
+        projeto_id = salvar_projeto(
+            nome=nome_projeto,
+            tipo_analise='tradicional',
+            parametros=parametros,
+            resultados=resultado,
+            mapa_html=resultado.get('mapa_html')
+        )
+        
+        if projeto_id:
+            return jsonify({
+                'success': True, 
+                'message': 'Projeto salvo com sucesso!',
+                'projeto_id': projeto_id
+            })
+        else:
+            return jsonify({'success': False, 'message': 'Erro ao salvar o projeto.'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro: {str(e)}'})
+
+@app.route('/salvar_resultados_maxcobertura', methods=['POST'])
+def salvar_resultados_maxcobertura():
+    """Salva os resultados de uma análise Max Cobertura no banco de dados"""
+    try:
+        # Obter dados do formulário
+        nome_projeto = request.form.get('nome_projeto', '').strip()
+        
+        if not nome_projeto:
+            return jsonify({'success': False, 'message': 'Por favor, informe um nome para o projeto.'})
+        
+        # Obter resultados da sessão (precisamos passar os resultados via formulário)
+        resultados_json = request.form.get('resultados')
+        if not resultados_json:
+            return jsonify({'success': False, 'message': 'Resultados não encontrados.'})
+        
+        # Debug: mostrar o JSON recebido
+        print(f"JSON recebido Max Cobertura (primeiros 200 chars): {resultados_json[:200]}")
+        
+        import json
+        try:
+            resultado = json.loads(resultados_json)
+        except json.JSONDecodeError as e:
+            print(f"Erro no JSON Max Cobertura: {str(e)}")
+            print(f"JSON completo Max Cobertura: {repr(resultados_json)}")
+            return jsonify({'success': False, 'message': f'Erro nos dados: Formato JSON inválido. Detalhes: {str(e)}'})
+        
+        # Preparar parâmetros para salvar
+        parametros = {
+            'p': resultado.get('p', 0),
+            'tipo_valor': resultado.get('tipo_valor', 'distancia'),
+            'num_cds_selecionados': resultado.get('num_cds_selecionados', 0),
+            'cobertura_total': resultado.get('cobertura_total', 0),
+            'coordenadas_usadas': resultado.get('coordenadas_usadas', False)
+        }
+        
+        # Salvar no banco de dados
+        projeto_id = salvar_projeto(
+            nome=nome_projeto,
+            tipo_analise='max_cobertura',
+            parametros=parametros,
+            resultados=resultado,
+            mapa_html=resultado.get('mapa_html')
+        )
+        
+        if projeto_id:
+            return jsonify({
+                'success': True, 
+                'message': 'Projeto salvo com sucesso!',
+                'projeto_id': projeto_id
+            })
+        else:
+            return jsonify({'success': False, 'message': 'Erro ao salvar o projeto.'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro: {str(e)}'})
+
+@app.route('/ver_projeto/<int:projeto_id>')
+def ver_projeto(projeto_id):
+    """Visualiza um projeto salvo"""
+    projeto = carregar_resultados_projeto(projeto_id)
+    if not projeto:
+        flash('Projeto não encontrado.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Renderizar com base no tipo de análise
+    if projeto['tipo_analise'] == 'p_centros':
+        return render_template('resultado_pcentros.html', resultado=projeto['resultados'])
+    elif projeto['tipo_analise'] == 'p_medianas':
+        return render_template('resultado_pmedianas.html', resultado=projeto['resultados'])
+    elif projeto['tipo_analise'] == 'max_cobertura':
+        return render_template('resultado_maxcobertura.html', resultado=projeto['resultados'])
+    else:
+        return render_template('resultado_tradicional.html', resultado=projeto['resultados'])
+
+@app.route('/excluir_projeto/<int:projeto_id>', methods=['POST'])
+def excluir_projeto_route(projeto_id):
+    """Exclui um projeto"""
+    success = excluir_projeto(projeto_id)
+    if success:
+        return jsonify({'success': True, 'message': 'Projeto excluído com sucesso!'})
+    else:
+        return jsonify({'success': False, 'message': 'Erro ao excluir o projeto.'})
+
+@app.route('/relatorio_projeto/<int:projeto_id>')
+def relatorio_projeto(projeto_id):
+    """Gera um relatório em PDF/Excel de um projeto"""
+    projeto = carregar_resultados_projeto(projeto_id)
+    if not projeto:
+        flash('Projeto não encontrado.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Por enquanto, redireciona para a exportação padrão
+    # Futuro: implementar geração de PDF/Excel personalizado
+    if projeto['tipo_analise'] == 'p_centros':
+        return redirect(url_for('exportar_resultados_pcentros'))
+    elif projeto['tipo_analise'] == 'p_medianas':
+        return redirect(url_for('exportar_resultados_pmedianas'))
+    elif projeto['tipo_analise'] == 'max_cobertura':
+        return redirect(url_for('exportar_resultados_maxcobertura'))
+    else:
+        return redirect(url_for('exportar_resultados_tradicional'))
 
 @app.route('/exportar_resultados_maxcobertura')
 def exportar_resultados_maxcobertura():

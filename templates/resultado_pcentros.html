@@ -683,16 +683,14 @@
                 <span class="material-symbols-outlined">download</span>
                 Baixar Resultados
             </button>
+            <button class="btn btn-primary" onclick="showSaveDialog()">
+                <span class="material-symbols-outlined">save</span>
+                Salvar Projeto
+            </button>
             <a href="{{ url_for('p_centros') }}" class="btn btn-primary">
                 <span class="material-symbols-outlined">refresh</span>
                 Nova Análise
             </a>
-            {% if resultado.coordenadas_usadas and resultado.mapa_html %}
-            <a href="{{ url_for('static', filename='mapas/' + resultado.mapa_html) }}" target="_blank" class="btn btn-outline">
-                <span class="material-symbols-outlined">open_in_new</span>
-                Abrir Mapa
-            </a>
-            {% endif %}
         </div>
     </section>
 
@@ -709,6 +707,79 @@
         <a href="{{ url_for('p_centros') }}" class="btn btn-primary">Tentar Novamente</a>
     </section>
     {% endif %}
+</div>
+
+<!-- Modal para Salvar Projeto -->
+<div id="saveModal" class="modal" style="display: none;">
+    <div class="modal-backdrop" onclick="closeSaveDialog()"></div>
+    <div class="modal-container">
+        <div class="modal-header-gradient">
+            <div class="modal-icon">
+                <span class="material-symbols-outlined">save</span>
+            </div>
+            <div class="modal-title-section">
+                <h3>Salvar Projeto</h3>
+                <p>Guarde sua análise para acessar depois</p>
+            </div>
+            <button class="modal-close-btn" onclick="closeSaveDialog()">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <form id="saveForm" method="POST" action="{{ url_for('salvar_resultados_pcentros') }}">
+            <div class="modal-body-content">
+                <div class="save-form-group">
+                    <label for="nome_projeto" class="form-label">
+                        <span class="material-symbols-outlined">bookmark</span>
+                        Nome do Projeto
+                    </label>
+                    <input type="text" id="nome_projeto" name="nome_projeto" required 
+                           placeholder="Ex: Análise p-Centros - Região Sudeste" 
+                           maxlength="100"
+                           class="form-input-modern">
+                    <div class="input-help">
+                        <span class="material-symbols-outlined">info</span>
+                        Dê um nome fácil de lembrar para encontrar depois
+                    </div>
+                </div>
+                
+                <div class="project-preview">
+                    <div class="preview-header">
+                        <span class="material-symbols-outlined">preview</span>
+                        <span>Resumo da Análise</span>
+                    </div>
+                    <div class="preview-content">
+                        <div class="preview-item">
+                            <span class="preview-label">Tipo:</span>
+                            <span class="preview-value">p-Centros</span>
+                        </div>
+                        <div class="preview-item">
+                            <span class="preview-label">CDs Selecionados:</span>
+                            <span class="preview-value">{{ resultado.cds_selecionados|length if resultado.cds_selecionados else 0 }}</span>
+                        </div>
+                        <div class="preview-item">
+                            <span class="preview-label">Valor Máximo:</span>
+                            <span class="preview-value">{{ "{:,.2f}".format(resultado.valor_maximo).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.valor_maximo else '0,00' }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campo oculto para passar os resultados -->
+                <input type="hidden" name="resultados" value="{{ resultado|tojson|safe }}">
+            </div>
+            
+            <div class="modal-footer-actions">
+                <button type="button" class="btn btn-outline-modern" onclick="closeSaveDialog()">
+                    <span class="material-symbols-outlined">close</span>
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary-modern">
+                    <span class="material-symbols-outlined">save</span>
+                    Salvar Projeto
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
@@ -932,6 +1003,48 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+
+// Funções para o modal de salvar projeto
+function showSaveDialog() {
+    document.getElementById('saveModal').style.display = 'flex';
+    document.getElementById('nome_projeto').focus();
+}
+
+function closeSaveDialog() {
+    document.getElementById('saveModal').style.display = 'none';
+    document.getElementById('saveForm').reset();
+}
+
+// Salvar projeto e Gráficos
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar evento de submit ao formulário
+    document.getElementById('saveForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('{{ url_for("salvar_resultados_pcentros") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mostrar mensagem de sucesso
+                alert('Projeto salvo com sucesso!');
+                closeSaveDialog();
+                // Opcional: redirecionar para o dashboard
+                // window.location.href = '{{ url_for("dashboard") }}';
+            } else {
+                alert('Erro ao salvar projeto: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao salvar projeto. Tente novamente.');
+        });
+    });
 });
 </script>
 {% endblock %}

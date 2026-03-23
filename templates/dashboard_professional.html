@@ -52,21 +52,507 @@
     <section class="saved-projects">
         <div class="projects-header">
             <h2>PROJETOS SALVOS</h2>
-            <div class="projects-count">0</div>
+            <div class="projects-count">{{ projetos|length if projetos else 0 }}</div>
         </div>
         
+        {% if projetos and projetos|length > 0 %}
+        <div class="projects-toolbar">
+            <div class="toolbar-left">
+                <h3>Seus Projetos</h3>
+                <span class="projects-count-badge">{{ projetos|length }}</span>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-primary" onclick="toggleSelectMode()" id="selectModeBtn">
+                    <span class="material-symbols-outlined">checklist</span>
+                    Selecionar
+                </button>
+                <button class="btn btn-success" onclick="generateSelectedReports()" id="generateReportsBtn" style="display: none;">
+                    <span class="material-symbols-outlined">description</span>
+                    Gerar Relatório (<span id="selectedCount">0</span>)
+                </button>
+            </div>
+        </div>
+        
+        <div class="projects-grid-modern">
+            {% for projeto in projetos %}
+            <div class="project-card-modern" data-project-id="{{ projeto.id }}">
+                <div class="project-checkbox" style="display: none;">
+                    <input type="checkbox" id="check-{{ projeto.id }}" value="{{ projeto.id }}" onchange="updateSelectedCount()">
+                    <label for="check-{{ projeto.id }}"></label>
+                </div>
+                
+                <div class="project-header-modern">
+                    <div class="project-type-badge">
+                        {% if projeto.tipo_analise == 'p_centros' %}
+                        <span class="material-symbols-outlined">center_focus_strong</span>
+                        <span>p-Centros</span>
+                        {% elif projeto.tipo_analise == 'p_medianas' %}
+                        <span class="material-symbols-outlined">location_city</span>
+                        <span>p-Medianas</span>
+                        {% elif projeto.tipo_analise == 'max_cobertura' %}
+                        <span class="material-symbols-outlined">radar</span>
+                        <span>Máxima Cobertura</span>
+                        {% else %}
+                        <span class="material-symbols-outlined">inventory_2</span>
+                        <span>Tradicional</span>
+                        {% endif %}
+                    </div>
+                    <div class="project-date-modern">
+                        <span class="material-symbols-outlined">calendar_today</span>
+                        {% if projeto.data_criacao %}
+                            {{ projeto.data_criacao[8:10] }}/{{ projeto.data_criacao[5:7] }}/{{ projeto.data_criacao[:4] }}
+                        {% else %}
+                            Sem data
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="project-body-modern">
+                    <h3 class="project-title">{{ projeto.nome }}</h3>
+                    <div class="project-meta-modern">
+                        <span class="meta-item">
+                            <span class="material-symbols-outlined">tag</span>
+                            ID: #{{ projeto.id }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="project-actions-modern">
+                    <button class="action-btn btn-view" onclick="viewProject({{ projeto.id }})" title="Ver Projeto">
+                        <span class="material-symbols-outlined">visibility</span>
+                    </button>
+                    <button class="action-btn btn-delete" onclick="deleteProject({{ projeto.id }})" title="Excluir Projeto">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
         <div class="empty-state">
             <p>Nenhuma análise salva ainda. Use as ferramentas ao lado e clique em 'Salvar'.</p>
             <button class="btn btn-primary" disabled>
                 GERAR RELATÓRIO
             </button>
         </div>
+        {% endif %}
     </section>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Apenas para futuras implementações
+let selectMode = false;
+let projetosCache = [];
+
+// Carregar projetos quando a página for carregada
+document.addEventListener('DOMContentLoaded', function() {
+    carregarProjetos();
+    
+    // Verificar atualizações a cada 5 segundos
+    setInterval(verificarAtualizacoes, 5000);
+});
+
+function carregarProjetos() {
+    fetch('/api/projetos')
+        .then(response => response.json())
+        .then(data => {
+            projetosCache = data.projetos;
+            atualizarInterfaceProjetos(data.projetos);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar projetos:', error);
+        });
+}
+
+function verificarAtualizacoes() {
+    fetch('/api/projetos')
+        .then(response => response.json())
+        .then(data => {
+            if (data.projetos.length !== projetosCache.length) {
+                console.log('Projetos atualizados, recarregando...');
+                carregarProjetos();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao verificar atualizações:', error);
+        });
+}
+
+function atualizarInterfaceProjetos(projetos) {
+    const container = document.querySelector('.projects-grid-modern');
+    const emptyState = document.querySelector('.empty-state');
+    const projectsSection = document.querySelector('.projects-toolbar');
+    
+    if (!container) return;
+    
+    if (projetos && projetos.length > 0) {
+        // Mostrar toolbar e projetos
+        if (projectsSection) projectsSection.style.display = 'flex';
+        if (emptyState) emptyState.style.display = 'none';
+        
+        // Atualizar contador
+        const countBadge = document.querySelector('.projects-count-badge');
+        if (countBadge) countBadge.textContent = projetos.length;
+        
+        // Gerar HTML dos projetos
+        container.innerHTML = projetos.map(function(projeto) {
+            return '<div class="project-card-modern" data-project-id="' + projeto.id + '">' +
+                '<div class="project-checkbox" style="display: none;">' +
+                '<input type="checkbox" id="check-' + projeto.id + '" value="' + projeto.id + '" onchange="updateSelectedCount()">' +
+                '<label for="check-' + projeto.id + '"></label>' +
+                '</div>' +
+                '<div class="project-header-modern">' +
+                '<div class="project-type-badge">' +
+                getTipoIcone(projeto.tipo_analise) +
+                '<span>' + getTipoNome(projeto.tipo_analise) + '</span>' +
+                '</div>' +
+                '<div class="project-date-modern">' +
+                '<span class="material-symbols-outlined">calendar_today</span>' +
+                formatarData(projeto.data_criacao) +
+                '</div>' +
+                '</div>' +
+                '<div class="project-body-modern">' +
+                '<h3 class="project-title">' + projeto.nome + '</h3>' +
+                '<div class="project-meta-modern">' +
+                '<span class="meta-item">' +
+                '<span class="material-symbols-outlined">tag</span>' +
+                'ID: #' + projeto.id +
+                '</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="project-actions-modern">' +
+                '<button class="action-btn btn-view" onclick="viewProject(' + projeto.id + ')" title="Ver Projeto">' +
+                '<span class="material-symbols-outlined">visibility</span>' +
+                '</button>' +
+                '<button class="action-btn btn-delete" onclick="deleteProject(' + projeto.id + ')" title="Excluir Projeto">' +
+                '<span class="material-symbols-outlined">delete</span>' +
+                '</button>' +
+                '</div>' +
+                '</div>';
+        }).join('');
+    } else {
+        // Mostrar estado vazio
+        if (projectsSection) projectsSection.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'block';
+        container.innerHTML = '';
+    }
+}
+
+function getTipoIcone(tipo) {
+    const icones = {
+        'p_centros': '<span class="material-symbols-outlined">center_focus_strong</span>',
+        'p_medianas': '<span class="material-symbols-outlined">location_city</span>',
+        'max_cobertura': '<span class="material-symbols-outlined">radar</span>',
+        'tradicional': '<span class="material-symbols-outlined">inventory_2</span>'
+    };
+    return icones[tipo] || icones['tradicional'];
+}
+
+function getTipoNome(tipo) {
+    const nomes = {
+        'p_centros': 'p-Centros',
+        'p_medianas': 'p-Medianas',
+        'max_cobertura': 'Máxima Cobertura',
+        'tradicional': 'Tradicional'
+    };
+    return nomes[tipo] || 'Tradicional';
+}
+
+function formatarData(dataString) {
+    if (!dataString) return 'Sem data';
+    return dataString.substring(8, 10) + '/' + dataString.substring(5, 7) + '/' + dataString.substring(0, 4);
+}
+
+function toggleSelectMode() {
+    selectMode = !selectMode;
+    const checkboxes = document.querySelectorAll('.project-checkbox');
+    const selectBtn = document.getElementById('selectModeBtn');
+    const generateBtn = document.getElementById('generateReportsBtn');
+    
+    if (selectMode) {
+        checkboxes.forEach(cb => cb.style.display = 'block');
+        selectBtn.innerHTML = '<span class="material-symbols-outlined">close</span> Cancelar';
+        selectBtn.classList.remove('btn-primary');
+        selectBtn.classList.add('btn-secondary');
+        generateBtn.style.display = 'flex';
+    } else {
+        checkboxes.forEach(cb => {
+            cb.style.display = 'none';
+            const checkbox = cb.querySelector('input[type="checkbox"]');
+            checkbox.checked = false;
+        });
+        selectBtn.innerHTML = '<span class="material-symbols-outlined">checklist</span> Selecionar';
+        selectBtn.classList.remove('btn-secondary');
+        selectBtn.classList.add('btn-primary');
+        generateBtn.style.display = 'none';
+        updateSelectedCount();
+    }
+}
+
+function updateSelectedCount() {
+    const checkedBoxes = document.querySelectorAll('.project-checkbox input[type="checkbox"]:checked');
+    document.getElementById('selectedCount').textContent = checkedBoxes.length;
+}
+
+function generateSelectedReports() {
+    const checkedBoxes = document.querySelectorAll('.project-checkbox input[type="checkbox"]:checked');
+    if (checkedBoxes.length === 0) {
+        alert('Por favor, selecione pelo menos um projeto para gerar o relatório.');
+        return;
+    }
+    
+    const projectIds = Array.from(checkedBoxes).map(cb => cb.value);
+    console.log('Gerar relatório para projetos:', projectIds);
+    
+    // Futuro: implementar geração de relatório múltiplo
+    alert(`Relatório será gerado para ${projectIds.length} projeto(s). Funcionalidade em desenvolvimento!`);
+}
+
+function viewProject(projectId) {
+    window.location.href = `/ver_projeto/${projectId}`;
+}
+
+function deleteProject(projectId) {
+    if (confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) {
+        fetch(`/excluir_projeto/${projectId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ ' + data.message);
+                // Recarregar projetos automaticamente
+                carregarProjetos();
+            } else {
+                alert('❌ ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('❌ Ocorreu um erro ao excluir o projeto.');
+        });
+    }
+}
 </script>
+
+<style>
+/* Estilos Modernos para Dashboard */
+.projects-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toolbar-left h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.projects-count-badge {
+    background: #6366f1;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.toolbar-right {
+    display: flex;
+    gap: 12px;
+}
+
+.projects-grid-modern {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.project-card-modern {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.project-card-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    border-color: #6366f1;
+}
+
+.project-checkbox {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+}
+
+.project-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #6366f1;
+    cursor: pointer;
+}
+
+.project-checkbox label {
+    cursor: pointer;
+}
+
+.project-header-modern {
+    padding: 20px 20px 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.project-type-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #f0f9ff;
+    color: #0369a1;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #bae6fd;
+}
+
+.project-type-badge .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.project-date-modern {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.project-date-modern .material-symbols-outlined {
+    font-size: 14px;
+}
+
+.project-body-modern {
+    padding: 0 20px 16px 20px;
+}
+
+.project-title {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.4;
+}
+
+.project-meta-modern {
+    display: flex;
+    gap: 12px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.meta-item .material-symbols-outlined {
+    font-size: 14px;
+}
+
+.project-actions-modern {
+    display: flex;
+    padding: 12px 20px 20px 20px;
+    gap: 8px;
+}
+
+.action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.btn-view {
+    background: #f0f9ff;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.btn-view:hover {
+    background: #0369a1;
+    color: white;
+}
+
+.btn-delete {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .projects-toolbar {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .toolbar-left, .toolbar-right {
+        justify-content: center;
+    }
+    
+    .projects-grid-modern {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

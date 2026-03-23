@@ -427,22 +427,27 @@
     </section>
 
     <!-- Actions -->
-    <section class="actions-section">
-        <div class="actions-grid">
-            <a href="{{ url_for('otimizador_cds') }}" class="btn btn-outline">
-                <span class="material-symbols-outlined">refresh</span>
-                Nova Análise
-            </a>
-            
+    <section class="card">
+        <div class="card-header">
+            <h2>Ações</h2>
+        </div>
+        <div class="form-actions">
             <button class="btn btn-outline" onclick="window.print()">
                 <span class="material-symbols-outlined">print</span>
                 Imprimir Relatório
             </button>
-            
             <button class="btn btn-success" onclick="exportResults()">
                 <span class="material-symbols-outlined">download</span>
-                Exportar Resultados
+                Baixar Resultados
             </button>
+            <button class="btn btn-primary" onclick="showSaveDialog()">
+                <span class="material-symbols-outlined">save</span>
+                Salvar Projeto
+            </button>
+            <a href="{{ url_for('otimizador_cds') }}" class="btn btn-primary">
+                <span class="material-symbols-outlined">refresh</span>
+                Nova Análise
+            </a>
         </div>
     </section>
 
@@ -465,6 +470,79 @@
     
     {% endif %}
 </div>
+
+<!-- Modal para Salvar Projeto -->
+<div id="saveModal" class="modal" style="display: none;">
+    <div class="modal-backdrop" onclick="closeSaveDialog()"></div>
+    <div class="modal-container">
+        <div class="modal-header-gradient">
+            <div class="modal-icon">
+                <span class="material-symbols-outlined">save</span>
+            </div>
+            <div class="modal-title-section">
+                <h3>Salvar Projeto</h3>
+                <p>Guarde sua análise para acessar depois</p>
+            </div>
+            <button class="modal-close-btn" onclick="closeSaveDialog()">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <form id="saveForm" method="POST" action="{{ url_for('salvar_resultados_tradicional') }}">
+            <div class="modal-body-content">
+                <div class="save-form-group">
+                    <label for="nome_projeto" class="form-label">
+                        <span class="material-symbols-outlined">bookmark</span>
+                        Nome do Projeto
+                    </label>
+                    <input type="text" id="nome_projeto" name="nome_projeto" required 
+                           placeholder="Ex: Análise Tradicional - Região Sudeste" 
+                           maxlength="100"
+                           class="form-input-modern">
+                    <div class="input-help">
+                        <span class="material-symbols-outlined">info</span>
+                        Dê um nome fácil de lembrar para encontrar depois
+                    </div>
+                </div>
+                
+                <div class="project-preview">
+                    <div class="preview-header">
+                        <span class="material-symbols-outlined">preview</span>
+                        <span>Resumo da Análise</span>
+                    </div>
+                    <div class="preview-content">
+                        <div class="preview-item">
+                            <span class="preview-label">Tipo:</span>
+                            <span class="preview-value">Tradicional</span>
+                        </div>
+                        <div class="preview-item">
+                            <span class="preview-label">CDs Abertos:</span>
+                            <span class="preview-value">{{ resultado.cds_abertos|length if resultado.cds_abertos is not none else 0 }}</span>
+                        </div>
+                        <div class="preview-item">
+                            <span class="preview-label">Custo Total:</span>
+                            <span class="preview-value">{{ "{:,.2f}".format(resultado.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_total is not none else '0,00' }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campo oculto para passar os resultados -->
+                <input type="hidden" id="resultados_data" name="resultados">
+            </div>
+            
+            <div class="modal-footer-actions">
+                <button type="button" class="btn btn-outline-modern" onclick="closeSaveDialog()">
+                    <span class="material-symbols-outlined">close</span>
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary-modern">
+                    <span class="material-symbols-outlined">save</span>
+                    Salvar Projeto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -475,23 +553,98 @@ function exportResults() {
     window.location.href = "{{ url_for('exportar_resultados_tradicional') }}";
 }
 
-// Gráficos e Análises
+// Funções para o modal de salvar projeto
+function showSaveDialog() {
+    const modal = document.getElementById('saveModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.getElementById('nome_projeto').focus();
+    }
+}
+
+function closeSaveDialog() {
+    document.getElementById('saveModal').style.display = 'none';
+    document.getElementById('saveForm').reset();
+}
+
+// Salvar projeto e Gráficos
 document.addEventListener('DOMContentLoaded', function() {
-    const resultado = {{ resultado|tojson }};
+    const resultado = {{ resultado|tojson|safe }};
     
-    if (resultado.cds_abertos && resultado.transportes) {
-        // Gráfico 1: Distribuição de Rotas por CD
-        const rotasCtx = document.getElementById('rotasPorCDChart');
-        if (rotasCtx) {
-            const rotasData = [];
-            const labels = [];
+    // Configurar formulário de salvamento
+    const saveForm = document.getElementById('saveForm');
+    if (saveForm) {
+        saveForm.addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            resultado.cds_abertos.forEach(cd => {
-                const rotasCD = resultado.transportes.filter(r => r.origem === cd);
-                rotasData.push(rotasCD.length);
-                labels.push(cd);
+            // Adicionar os resultados ao campo oculto
+            document.getElementById('resultados_data').value = JSON.stringify(resultado);
+            
+            // Enviar formulário via AJAX
+            const formData = new FormData(saveForm);
+            
+            fetch('{{ url_for("salvar_resultados_tradicional") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    closeSaveDialog();
+                    // Opcional: redirecionar para dashboard
+                    setTimeout(() => {
+                        if (confirm('Deseja ir para o dashboard ver seus projetos salvos?')) {
+                            window.location.href = '{{ url_for("dashboard") }}';
+                        }
+                    }, 500);
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('❌ Ocorreu um erro ao salvar o projeto.');
             });
+        });
+    }
+    
+    // Fechar modal ao clicar fora
+    document.getElementById('saveModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeSaveDialog();
+        }
+    });
+    
+    // Gráficos e Análises
+    if (resultado.cds_abertos && resultado.transportes) {
+        const rotasCtx = document.getElementById('rotasPorCDChart');
+        const custosCtx = document.getElementById('custosPorCDChart');
+        const quantidadeCtx = document.getElementById('quantidadeCustoChart');
+        const eficienciaCtx = document.getElementById('eficienciaChart');
+        
+        const labels = [];
+        const rotasData = [];
+        const custosData = [];
+        const quantidadeData = [];
+        const custoData = [];
+        const eficienciaData = [];
+        
+        resultado.cds_abertos.forEach(cd => {
+            const rotasCD = resultado.transportes.filter(r => r.origem === cd);
+            const quantidadeCD = rotasCD.reduce((sum, rota) => sum + (rota.quantidade || 0), 0);
+            const custoCD = rotasCD.reduce((sum, rota) => sum + (rota.custo_total_rota || 0), 0);
+            const eficiencia = quantidadeCD > 0 ? quantidadeCD / (custoCD || 1) : 0;
             
+            rotasData.push(rotasCD.length);
+            custosData.push(custoCD);
+            quantidadeData.push(quantidadeCD);
+            custoData.push(custoCD);
+            eficienciaData.push(eficiencia);
+            labels.push(cd);
+        });
+        
+        if (rotasCtx) {
             new Chart(rotasCtx, {
                 type: 'bar',
                 data: {
@@ -520,19 +673,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Gráfico 2: Custos por CD
-        const custosCtx = document.getElementById('custosPorCDChart');
         if (custosCtx) {
-            const custosData = [];
-            const labels = [];
-            
-            resultado.cds_abertos.forEach(cd => {
-                const rotasCD = resultado.transportes.filter(r => r.origem === cd);
-                const custoCD = rotasCD.reduce((sum, rota) => sum + (rota.custo_total_rota || 0), 0);
-                custosData.push(custoCD);
-                labels.push(cd);
-            });
-            
             new Chart(custosCtx, {
                 type: 'doughnut',
                 data: {
@@ -561,23 +702,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Gráfico 3: Quantidade vs Custo
-        const quantidadeCtx = document.getElementById('quantidadeCustoChart');
         if (quantidadeCtx) {
-            const quantidadeData = [];
-            const custoData = [];
-            const labels = [];
-            
-            resultado.cds_abertos.forEach(cd => {
-                const rotasCD = resultado.transportes.filter(r => r.origem === cd);
-                const quantidadeCD = rotasCD.reduce((sum, rota) => sum + (rota.quantidade || 0), 0);
-                const custoCD = rotasCD.reduce((sum, rota) => sum + (rota.custo_total_rota || 0), 0);
-                
-                quantidadeData.push(quantidadeCD);
-                custoData.push(custoCD);
-                labels.push(cd);
-            });
-            
             new Chart(quantidadeCtx, {
                 type: 'line',
                 data: {
@@ -629,7 +754,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Gráfico 4: Eficiência Operacional
-        const eficienciaCtx = document.getElementById('eficienciaChart');
         if (eficienciaCtx) {
             const eficienciaData = [];
             const labels = [];
