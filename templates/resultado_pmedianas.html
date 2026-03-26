@@ -4,230 +4,9 @@
 
 {% block head %}
 <style>
-/* Estilos para a seção de mapa */
-.mapa-section {
-    margin: 30px 0;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    border: 1px solid #e1e5e9;
-}
-
+/* Específico para p-Medianas - usar classes do style.css */
 .mapa-header {
     background: linear-gradient(135deg, #28a745 0%, #1e8e3e 100%);
-    padding: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.mapa-title h2 {
-    margin: 0 0 4px 0;
-    color: white;
-    font-size: 24px;
-    font-weight: 600;
-}
-
-.mapa-subtitle {
-    color: #e3f2fd;
-    font-size: 14px;
-    font-weight: 400;
-}
-
-.mapa-wrapper {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 24px;
-    padding: 24px;
-}
-
-.mapa-container {
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    border: 1px solid #e1e5e9;
-}
-
-.mapa-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.mapa-stats {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #e2e8f0;
-}
-
-.mapa-stats h3 {
-    margin: 0 0 16px 0;
-    color: #1e293b;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: white;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-}
-
-.stat-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-}
-
-.stat-icon.selected {
-    background: #e8f5e8;
-    color: #28a745;
-}
-
-.stat-icon.total {
-    background: #e3f2fd;
-    color: #1e40af;
-}
-
-.stat-icon.performance {
-    background: #f3e5f5;
-    color: #28a745;
-}
-
-.stat-icon.cost {
-    background: #fef3c7;
-    color: #dc3545;
-}
-
-.stat-content {
-    flex: 1;
-}
-
-.stat-label {
-    display: block;
-    font-size: 12px;
-    color: #64748b;
-    font-weight: 500;
-    margin-bottom: 4px;
-}
-
-.stat-value {
-    display: block;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.mapa-legend {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #e2e8f0;
-}
-
-.mapa-legend h3 {
-    margin: 0 0 16px 0;
-    color: #1e293b;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.legend-items {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 0;
-}
-
-.legend-marker {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-}
-
-.legend-marker.selected {
-    background: #e8f5e8;
-    color: #28a745;
-}
-
-.legend-marker.not-selected {
-    background: #f1f5f9;
-    color: #64748b;
-}
-
-.legend-marker.influence-area {
-    background: rgba(40, 167, 69, 0.2);
-    border: 2px solid #28a745;
-    border-radius: 4px;
-}
-
-/* Responsividade */
-@media (max-width: 1024px) {
-    .mapa-wrapper {
-        grid-template-columns: 1fr;
-    }
-    
-    .mapa-sidebar {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-}
-
-@media (max-width: 768px) {
-    .mapa-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    
-    .mapa-wrapper {
-        padding: 16px;
-    }
-    
-    .mapa-sidebar {
-        grid-template-columns: 1fr;
-    }
-    
-    .stat-item {
-        padding: 12px;
-    }
-    
-    .stat-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 20px;
-    }
-    
-    .stat-value {
-        font-size: 18px;
-    }
 }
 </style>
 {% endblock %}
@@ -300,6 +79,50 @@
         </div>
     </section>
 
+    <!-- Model Info -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Informações do Modelo p-Medianas Clássico</h2>
+            <div class="badge blue">p = {{ resultado.p }}</div>
+        </div>
+        
+        <div class="model-info">
+            <div class="info-item">
+                <div class="info-icon">
+                    <span class="material-symbols-outlined">calculate</span>
+                </div>
+                <div class="info-content">
+                    <h3>Função Objetivo</h3>
+                    <p>Minimizar Σ ({% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %}_ij × quantidade_ij) para todas as rotas</p>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <span class="material-symbols-outlined">functions</span>
+                </div>
+                <div class="info-content">
+                    <h3>Restrições</h3>
+                    <p>
+                        • &Sigma; Y_i = p (exatamente p CDs)<br>
+                        • &Sigma; X_ij = 1 (atendimento completo)<br>
+                        • Z &ge; {% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %}_ij &times; X_ij ({% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} m&aacute;xima)
+                    </p>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <span class="material-symbols-outlined">data_usage</span>
+                </div>
+                <div class="info-content">
+                    <h3>Aplicação Ideal</h3>
+                    <p>Distribuição logística, transporte de mercadorias, otimização de rotas</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Mapa Interativo (NOVO) -->
     <!-- DEBUG: coordenadas_usadas = {{ resultado.coordenadas_usadas }} -->
     <!-- DEBUG: mapa_html = {{ resultado.mapa_html }} -->
@@ -318,9 +141,6 @@
                 <div class="mapa-container">
                     <iframe 
                         src="{{ url_for('static', filename='mapas/' + resultado.mapa_html) }}" 
-                        width="100%" 
-                        height="500" 
-                        style="border: 1px solid #e1e5e9; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"
                         frameborder="0">
                     </iframe>
                 </div>
@@ -355,7 +175,7 @@
                             </div>
                             <div class="stat-content">
                                 <span class="stat-label">Custo Total</span>
-                                <span class="stat-value">{{ "{:,.2f}".format(resultado.custo_total_ponderado) if resultado.custo_total_ponderado is not none else '0,00' }}</span>
+                                <span class="stat-value">{{ "{:,.2f}".format(resultado.custo_total_ponderado).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_total_ponderado is not none else '0,00' }}</span>
                             </div>
                         </div>
                         
@@ -396,44 +216,6 @@
         </div>
     </section>
     {% endif %}
-
-    <!-- Model Info -->
-    <section class="card">
-        <div class="card-header">
-            <h2>Informações do Modelo p-Medianas Clássico</h2>
-            <div class="badge blue">p = {{ resultado.p }}</div>
-        </div>
-        
-        <div class="model-info">
-            <div class="info-item">
-                <div class="info-label">
-                    <span class="material-symbols-outlined">calculate</span>
-                    <span>Função Objetivo</span>
-                </div>
-                <div class="info-value">Minimizar Σ ({% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %}_ij × X_ij) onde X_ij = quantidade atendida</div>
-            </div>
-            
-            <div class="info-item">
-                <div class="info-label">
-                    <span class="material-symbols-outlined">rule</span>
-                    <span>Restrições</span>
-                </div>
-                <div class="info-value">
-                    • Σ Y_i = p (exatamente p CDs)<br>
-                    • Σ X_ij = demanda_j (atendimento completo)<br>
-                    • Sem restrição de capacidade (como o Excel)
-                </div>
-            </div>
-            
-            <div class="info-item">
-                <div class="info-label">
-                    <span class="material-symbols-outlined">data_usage</span>
-                    <span>Dimensões</span>
-                </div>
-                <div class="info-value">{{ resultado.total_cds if resultado.total_cds is not none else 0 }} CDs × {{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }} Clientes</div>
-            </div>
-        </div>
-    </section>
 
     <!-- CDs Selected -->
     <section class="card">

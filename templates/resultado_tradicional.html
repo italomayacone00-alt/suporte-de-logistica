@@ -2,6 +2,15 @@
 
 {% block title %}Resultado - Otimizador de CDs{% endblock %}
 
+{% block head %}
+<style>
+/* Específico para Tradicional - usar classes do style.css */
+.mapa-header {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="dashboard-container">
     <!-- Success Header -->
@@ -10,10 +19,24 @@
             <span class="material-symbols-outlined">local_shipping</span>
         </div>
         <div class="result-info">
-            <h1>Solução Ótima - Otimizador de CDs</h1>
-            <p>{{ resultado.cds_abertos|length if resultado.cds_abertos is not none else 0 }} CDs abertos para minimizar custos totais de distribuição</p>
+            <h1>Solução Ótima - Modelo Tradicional</h1>
+            <p>{{ resultado.p }} CDs selecionados para minimizar custos totais de distribuição</p>
             {% if resultado.tipo_valor %}
             <small>Tipo de análise: {% if resultado.tipo_valor == 'distancia' %}📍 Distâncias{% else %}💰 Custos Financeiros{% endif %}</small>
+            {% endif %}
+            {% if resultado.coordenadas_usadas is defined %}
+            <div class="coordenadas-info" style="margin-top: 10px; padding: 8px 12px; background: {% if resultado.coordenadas_usadas %}#e8f5e8{% else %}#fff3cd{% endif %}; border-radius: 6px; border-left: 4px solid {% if resultado.coordenadas_usadas %}#28a745{% else %}#ffc107{% endif %};">
+                <small style="font-weight: 500; color: {% if resultado.coordenadas_usadas %}#155724{% else %}#856404{% endif %};">
+                    {% if resultado.coordenadas_usadas %}
+                        🌍 Sistema usou coordenadas geográficas reais!
+                    {% else %}
+                        📊 Sistema usou matriz de distâncias original
+                    {% endif %}
+                </small>
+                {% if resultado.info_coordenadas and resultado.info_coordenadas.cds_com_coords %}
+                <br><small style="color: #666;">CDs com coordenadas: {{ resultado.info_coordenadas.cds_com_coords|length }}/{{ resultado.total_cds if resultado.total_cds is not none else 0 }}</small>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
     </section>
@@ -30,7 +53,7 @@
                 <div class="metric-content">
                     <span class="metric-label">{% if resultado.tipo_valor == 'custo' %}Custo Total{% else %}Custo Total de Distribuição{% endif %}</span>
                     <span class="metric-value">{{ "{:,.2f}".format(resultado.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_total is not none else '0,00' }}</span>
-                    <span class="metric-subtitle">{% if resultado.tipo_valor == 'custo' %}R$ totais{% else %}unidades de custo{% endif %}</span>
+                    <span class="metric-subtitle">{% if resultado.tipo_valor == 'custo' %}R$ totais{% else %}unidades de distância{% endif %}</span>
                 </div>
             </div>
             
@@ -59,10 +82,10 @@
     <!-- Model Info -->
     <section class="card">
         <div class="card-header">
-            <h2>Informações do Modelo</h2>
-            <div class="badge">Problema Tradicional</div>
+            <h2>Informações do Modelo Tradicional</h2>
+            <div class="badge blue">p = {{ resultado.p }}</div>
         </div>
-        <div class="info-grid">
+        <div class="model-info">
             <div class="info-item">
                 <div class="info-icon">
                     <span class="material-symbols-outlined">calculate</span>
@@ -99,11 +122,118 @@
         </div>
     </section>
 
+    <!-- Mapa Interativo (NOVO) -->
+    <!-- DEBUG: coordenadas_usadas = {{ resultado.coordenadas_usadas }} -->
+    <!-- DEBUG: mapa_html = {{ resultado.mapa_html }} -->
+    <!-- DEBUG: info_coordenadas = {{ resultado.info_coordenadas }} -->
+    <!-- DEBUG: coordenadas_usadas is not None = {{ resultado.coordenadas_usadas is not none }} -->
+    <!-- DEBUG: mapa_html is not None = {{ resultado.mapa_html is not none }} -->
+    {% if resultado.mapa_html %}
+    <section class="card mapa-section">
+        <div class="card-header mapa-header">
+            <div class="mapa-title">
+                <h2>🗺️ Mapa Interativo - Otimizador Tradicional</h2>
+                <span class="mapa-subtitle">Visualização Geográfica da Solução Ótima</span>
+            </div>
+            <div class="badge orange">Mapa Dinâmico</div>
+        </div>
+        <div class="card-content">
+            <div class="mapa-wrapper">
+                <div class="mapa-container">
+                    <iframe 
+                        src="{{ url_for('static', filename='mapas/' + resultado.mapa_html) }}" 
+                        frameborder="0">
+                    </iframe>
+                </div>
+                
+                <div class="mapa-sidebar">
+                    <div class="mapa-stats">
+                        <h3>📊 Estatísticas do Mapa</h3>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon selected">
+                                <span class="material-symbols-outlined">warehouse</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">CDs Selecionados</span>
+                                <span class="stat-value">{{ resultado.num_cds_selecionados if resultado.num_cds_selecionados is not none else 0 }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon total">
+                                <span class="material-symbols-outlined">location_on</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Total de CDs</span>
+                                <span class="stat-value">{{ resultado.total_cds if resultado.total_cds is not none else 0 }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon cost">
+                                <span class="material-symbols-outlined">trending_up</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Custo Total</span>
+                                <span class="stat-value">{{ "{:,.2f}".format(resultado.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_total is not none else '0,00' }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon performance">
+                                <span class="material-symbols-outlined">trending_up</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Performance</span>
+                                <span class="stat-value">{{ "%.1f"|format((resultado.num_cds_selecionados / resultado.p * 100) if resultado.p > 0 else 0) }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mapa-legend">
+                        <h3>🎨 Legenda do Mapa</h3>
+                        <div class="legend-items">
+                            <div class="legend-item">
+                                <div class="legend-marker selected">
+                                    <span class="material-symbols-outlined">warehouse</span>
+                                </div>
+                                <span>CD Selecionado (Ativo)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-marker not-selected">
+                                    <span class="material-symbols-outlined">close</span>
+                                </div>
+                                <span>CD Não Selecionado</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-marker coverage-area"></div>
+                                <span>Área de Cobertura</span>
+                            </div>
+                            {% if resultado.tipo_valor == 'custo' %}
+                            <div class="legend-item">
+                                <div class="legend-marker cost-gradient"></div>
+                                <span>Gradiente de Custo</span>
+                            </div>
+                            {% else %}
+                            <div class="legend-item">
+                                <div class="legend-marker distance-gradient"></div>
+                                <span>Gradiente de Distância</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- CDs Selected -->
     <section class="card">
         <div class="card-header">
             <h2>CDs Abertos</h2>
-            <div class="badge">{{ resultado.cds_abertos|length if resultado.cds_abertos is not none else 0 }} Unidades</div>
+            <div class="badge">{{ resultado.num_cds_selecionados if resultado.num_cds_selecionados is not none else 0 }} / {{ resultado.p if resultado.p is not none else 0 }} unidades</div>
         </div>
         
         <div class="cds-list">
@@ -199,96 +329,6 @@
         </div>
     </section>
 
-    <!-- Mapa Interativo (NOVO) -->
-    <!-- DEBUG: coordenadas_usadas = {{ resultado.coordenadas_usadas }} -->
-    <!-- DEBUG: mapa_html = {{ resultado.mapa_html }} -->
-    <!-- DEBUG: info_coordenadas = {{ resultado.info_coordenadas }} -->
-    <!-- DEBUG: coordenadas_usadas is not None = {{ resultado.coordenadas_usadas is not none }} -->
-    <!-- DEBUG: mapa_html is not None = {{ resultado.mapa_html is not none }} -->
-    {% if resultado.mapa_html %}
-    <section class="card mapa-section">
-        <div class="card-header mapa-header">
-            <div class="mapa-title">
-                <h2>🗺️ Mapa Interativo - Otimizador Tradicional</h2>
-                <span class="mapa-subtitle">Visualização Geográfica da Solução Ótima</span>
-            </div>
-            <div class="badge orange">Mapa Dinâmico</div>
-        </div>
-        <div class="card-content">
-            <div class="mapa-wrapper">
-                <div class="mapa-container">
-                    <iframe 
-                        src="{{ url_for('static', filename='mapas/' + resultado.mapa_html) }}" 
-                        width="100%" 
-                        height="500" 
-                        style="border: 1px solid #e1e5e9; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"
-                    ></iframe>
-                </div>
-                
-                <div class="mapa-sidebar">
-                    <div class="mapa-stats">
-                        <h3>📊 Estatísticas do Mapa</h3>
-                        
-                        <div class="stat-item">
-                            <div class="stat-icon selected">
-                                <span class="material-symbols-outlined">warehouse</span>
-                            </div>
-                            <div class="stat-info">
-                                <div class="stat-label">CDs Abertos</div>
-                                <div class="stat-value">{{ resultado.cds_abertos|length if resultado.cds_abertos is not none else 0 }}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-item">
-                            <div class="stat-icon total">
-                                <span class="material-symbols-outlined">inventory</span>
-                            </div>
-                            <div class="stat-info">
-                                <div class="stat-label">Capacidade Total</div>
-                                <div class="stat-value">{{ "{:,.0f}".format(resultado.demanda_total if resultado.demanda_total is not none else 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="stat-item">
-                            <div class="stat-icon efficiency">
-                                <span class="material-symbols-outlined">trending_up</span>
-                            </div>
-                            <div class="stat-info">
-                                <div class="stat-label">Custo Total</div>
-                                <div class="stat-value">{{ "{:,.2f}".format(resultado.custo_total if resultado.custo_total is not none else 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mapa-legend">
-                        <h3>🎨 Legenda do Mapa</h3>
-                        <div class="legend-items">
-                            <div class="legend-item">
-                                <div class="legend-marker selected">
-                                    <span class="material-symbols-outlined">warehouse</span>
-                                </div>
-                                <div class="legend-text">CD Aberto</div>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-marker unselected">
-                                    <span class="material-symbols-outlined">close</span>
-                                </div>
-                                <div class="legend-text">CD Fechado</div>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-marker coverage">
-                                    <span class="material-symbols-outlined">radio_button_unchecked</span>
-                                </div>
-                                <div class="legend-text">Área de Atendimento</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
     <!-- Análises Estatísticas -->
     <section class="card">
         <div class="card-header">
@@ -305,7 +345,7 @@
                 <div class="stat-content">
                     <h4>{% if resultado.tipo_valor == 'custo' %}Custo Médio{% else %}Custo Médio{% endif %} por Rota</h4>
                     <p class="stat-value">{{ "{:,.2f}".format((resultado.custo_total / resultado.transportes|length) if resultado.custo_total and resultado.transportes and resultado.transportes|length > 0 else 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</p>
-                    <p class="stat-desc">{% if resultado.tipo_valor == 'custo' %}R$ por rota{% else %}Unidades por rota{% endif %}</p>
+                    <p class="stat-desc">{% if resultado.tipo_valor == 'custo' %}R$ por rota{% else %}Unidades de distância por rota{% endif %}</p>
                 </div>
             </div>
 

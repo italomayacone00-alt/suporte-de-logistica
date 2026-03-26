@@ -4,291 +4,9 @@
 
 {% block head %}
 <style>
-/* Estilos para a seção de mapa */
-.mapa-section {
-    margin: 30px 0;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    border: 1px solid #e1e5e9;
-}
-
+/* Específico para Máxima Cobertura - usar classes do style.css */
 .mapa-header {
     background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-    padding: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.mapa-title h2 {
-    margin: 0 0 4px 0;
-    color: white;
-    font-size: 24px;
-    font-weight: 600;
-}
-
-.mapa-subtitle {
-    color: #cbd5e1;
-    font-size: 14px;
-    font-weight: 400;
-}
-
-.mapa-wrapper {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 24px;
-    padding: 24px;
-}
-
-.mapa-container {
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    border: 1px solid #e1e5e9;
-}
-
-.mapa-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.mapa-stats {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #e2e8f0;
-}
-
-.mapa-stats h3 {
-    margin: 0 0 16px 0;
-    color: #1e293b;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: white;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-}
-
-.stat-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-}
-
-.stat-icon.selected {
-    background: #dcfce7;
-    color: #16a34a;
-}
-
-.stat-icon.total {
-    background: #dbeafe;
-    color: #2563eb;
-}
-
-.stat-icon.coverage {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.stat-icon.performance {
-    background: #ede9fe;
-    color: #7c3aed;
-}
-
-.stat-content {
-    flex: 1;
-}
-
-.stat-label {
-    display: block;
-    font-size: 12px;
-    color: #64748b;
-    font-weight: 500;
-    margin-bottom: 4px;
-}
-
-.stat-value {
-    display: block;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.mapa-legend {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #e2e8f0;
-}
-
-.mapa-legend h3 {
-    margin: 0 0 16px 0;
-    color: #1e293b;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.legend-items {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 0;
-}
-
-.legend-marker {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-}
-
-.legend-marker.selected {
-    background: #dcfce7;
-    color: #16a34a;
-}
-
-.legend-marker.not-selected {
-    background: #f1f5f9;
-    color: #64748b;
-}
-
-.legend-marker.coverage-area {
-    background: rgba(220, 38, 38, 0.2);
-    border: 2px solid #dc2626;
-    border-radius: 4px;
-}
-
-/* Responsividade */
-@media (max-width: 1024px) {
-    .mapa-wrapper {
-        grid-template-columns: 1fr;
-    }
-    
-    .mapa-sidebar {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-}
-
-@media (max-width: 768px) {
-    .mapa-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    
-    .mapa-wrapper {
-        padding: 16px;
-    }
-    
-    .mapa-sidebar {
-        grid-template-columns: 1fr;
-    }
-    
-    .stat-item {
-        padding: 12px;
-    }
-    
-    .stat-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 20px;
-    }
-    
-    .stat-value {
-        font-size: 18px;
-    }
-}
-
-/* Estilos antigos mantidos para compatibilidade */
-.mapa-info {
-    margin-top: 20px;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #007bff;
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 15px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.info-icon {
-    font-size: 24px;
-    min-width: 30px;
-}
-
-.mapa-legenda {
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-}
-
-.mapa-legenda h4 {
-    margin: 0 0 10px 0;
-    color: #495057;
-    font-size: 16px;
-}
-
-.mapa-legenda ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.mapa-legenda li {
-    margin: 8px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.mapa-legenda li span {
-    font-size: 18px;
 }
 </style>
 {% endblock %}
@@ -345,7 +63,7 @@
                 </div>
                 <div class="metric-content">
                     <span class="metric-label">CDs Selecionados</span>
-                    <span class="metric-value">{{ resultado.cds_selecionados|length if resultado.cds_selecionados is not none else 0 }} / {{ resultado.p }}</span>
+                    <span class="metric-value">{{ resultado.num_cds_selecionados if resultado.num_cds_selecionados is not none else 0 }} / {{ resultado.p if resultado.p is not none else 0 }}</span>
                 </div>
             </div>
             
@@ -370,31 +88,37 @@
         
         <div class="model-info">
             <div class="info-item">
-                <div class="info-label">
+                <div class="info-icon">
                     <span class="material-symbols-outlined">calculate</span>
-                    <span>Função Objetivo</span>
                 </div>
-                <div class="info-value">Maximizar Σ (peso_i × Z_i) onde Z_i = cobertura do ponto i</div>
-            </div>
-            
-            <div class="info-item">
-                <div class="info-label">
-                    <span class="material-symbols-outlined">rule</span>
-                    <span>Restrições</span>
-                </div>
-                <div class="info-value">
-                    • Σ Y_j = p (exatamente p instalações)<br>
-                    • Z_i ≤ Σ Y_j (para j ∈ N_i)<br>
-                    • Raio de cobertura: {{ resultado.raio_cobertura }} km
+                <div class="info-content">
+                    <h3>Função Objetivo</h3>
+                    <p>Maximizar &Sigma; (peso_i &times; Z_i) onde Z_i = cobertura do ponto i</p>
                 </div>
             </div>
             
             <div class="info-item">
-                <div class="info-label">
-                    <span class="material-symbols-outlined">track_changes</span>
-                    <span>Raio de Cobertura</span>
+                <div class="info-icon">
+                    <span class="material-symbols-outlined">functions</span>
                 </div>
-                <div class="info-value">{{ resultado.raio_cobertura }} km - distância máxima para cobertura</div>
+                <div class="info-content">
+                    <h3>Restrições</h3>
+                    <p>
+                        • &Sigma; Y_j = p (exatamente p instalações)<br>
+                        • Z_i &le; &Sigma; Y_j (para j &isin; N_i)<br>
+                        • Raio de cobertura: {{ resultado.raio_cobertura }} km
+                    </p>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <span class="material-symbols-outlined">data_usage</span>
+                </div>
+                <div class="info-content">
+                    <h3>Aplicação Ideal</h3>
+                    <p>Postos de atendimento, redes de distribuição, cobertura de serviços essenciais</p>
+                </div>
             </div>
         </div>
     </section>
@@ -414,9 +138,6 @@
                 <div class="mapa-container">
                     <iframe 
                         src="{{ url_for('static', filename='mapas/' + resultado.mapa_html) }}" 
-                        width="100%" 
-                        height="500" 
-                        style="border: 1px solid #e1e5e9; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"
                         frameborder="0">
                     </iframe>
                 </div>

@@ -44,25 +44,45 @@ def carregar_coordenadas_cds(df):
     Retorna dicionário com coordenadas ou None se não encontrar
     """
     try:
-        # Ler o arquivo Excel em todas as abas
-        if hasattr(df, 'shape'):  # Se for um DataFrame único (aba principal)
-            return None
-        
-        # Tentar ler como dicionário de DataFrames (múltiplas abas)
+        # Verificar se é um dicionário de DataFrames (múltiplas abas)
         if isinstance(df, dict):
             if 'Coordenadas_CDs' in df:
                 coords_df = df['Coordenadas_CDs']
+                print(f"📁 Encontrada aba 'Coordenadas_CDs' com {len(coords_df)} linhas")
             else:
+                print("❌ Aba 'Coordenadas_CDs' não encontrada no arquivo")
                 return None
         else:
-            # Se for DataFrame único, tentar ler o arquivo novamente com todas as abas
+            # Se for DataFrame único, não há coordenadas disponíveis
+            print("❌ Arquivo não possui múltiplas abas (sem coordenadas)")
             return None
         
         coordenadas = {}
+        
+        # Detectar nomes das colunas automaticamente
+        cd_col = None
+        lat_col = None
+        lon_col = None
+        
+        for col in coords_df.columns:
+            col_lower = str(col).lower().strip()
+            if 'cd' in col_lower or 'centro' in col_lower or 'warehouse' in col_lower:
+                cd_col = col
+            elif 'lat' in col_lower and 'lon' not in col_lower:
+                lat_col = col
+            elif 'lon' in col_lower or 'lng' in col_lower:
+                lon_col = col
+        
+        print(f"🔍 Colunas detectadas: CD='{cd_col}', Latitude='{lat_col}', Longitude='{lon_col}'")
+        
+        if not all([cd_col, lat_col, lon_col]):
+            print("❌ Colunas necessárias não encontradas na aba de coordenadas")
+            return None
+        
         for _, row in coords_df.iterrows():
-            cd_nome = str(row['CD']).strip()
-            lat = float(row['Latitude']) if pd.notna(row['Latitude']) else None
-            lon = float(row['Longitude']) if pd.notna(row['Longitude']) else None
+            cd_nome = str(row[cd_col]).strip()
+            lat = float(row[lat_col]) if pd.notna(row[lat_col]) else None
+            lon = float(row[lon_col]) if pd.notna(row[lon_col]) else None
             coordenadas[cd_nome] = {'lat': lat, 'lon': lon}
         
         print(f"✅ Coordenadas carregadas: {len(coordenadas)} CDs")
@@ -73,6 +93,9 @@ def carregar_coordenadas_cds(df):
         
     except Exception as e:
         print(f"❌ Erro ao carregar coordenadas: {str(e)}")
+        print(f"❌ Tipo do erro: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def calcular_distancias_geograficas(coordenadas, cds, clientes, valores_originais):
@@ -82,17 +105,16 @@ def calcular_distancias_geograficas(coordenadas, cds, clientes, valores_originai
     """
     print("🌍 Calculando distâncias geográficas reais...")
     
-    valores = {}
+    valores = {}  # Dicionário de pares (cd, cliente): valor
     
     for cd in cds:
-        valores[cd] = {}
         cd_coords = coordenadas.get(cd)
         
         if not cd_coords or cd_coords['lat'] is None or cd_coords['lon'] is None:
             # Se não tiver coordenadas do CD, usar valores originais
             print(f"⚠️ CD {cd} sem coordenadas, usando matriz original")
             for cliente in clientes:
-                valores[cd][cliente] = valores_originais.get(cd, {}).get(cliente, float('inf'))
+                valores[(cd, cliente)] = valores_originais.get((cd, cliente), float('inf'))
             continue
         
         # Para cada cliente, calcular distância real
@@ -102,16 +124,17 @@ def calcular_distancias_geograficas(coordenadas, cds, clientes, valores_originai
             # Por ora, usa uma aproximação ou mantém original
             
             # Se tiver dados originais, usa como referência
-            valor_original = valores_originais.get(cd, {}).get(cliente, float('inf'))
+            valor_original = valores_originais.get((cd, cliente), float('inf'))
             
             # Se valor original for finito, usa como proxy
             # Futuro melhor: adicionar coordenadas dos clientes
-            valores[cd][cliente] = valor_original
+            valores[(cd, cliente)] = valor_original
             
             # DEBUG: mostrar quando CD tem coordenadas
             if valor_original != float('inf'):
                 print(f"📍 CD {str(cd)} ({cd_coords['lat']:.4f}, {cd_coords['lon']:.4f}) → Cliente {str(cliente)}: {valor_original:.2f}")
     
+    print(f"✅ Distâncias calculadas: {len(valores)} pares CD-Cliente")
     return valores
 
 def gerar_mapa_tradicional(resultado, coordenadas):
@@ -286,7 +309,7 @@ def resolver_problema_logistica(df, tipo_dado='custo'):
     - Determina número ótimo de CDs a abrir
     
     Parâmetros:
-    - df: DataFrame com dados da planilha
+    - df: DataFrame ou dicionário de DataFrames com dados da planilha
     - tipo_dado: 'custo' ou 'distancia' para tipo de transporte
     
     Retorna:
@@ -295,27 +318,44 @@ def resolver_problema_logistica(df, tipo_dado='custo'):
     try:
         print("=== DEBUG: Iniciando solver tradicional ===")
         
+        # Extrair a primeira aba como dados principais se for dicionário
+        if isinstance(df, dict):
+            primeira_aba = list(df.keys())[0]
+            df_principal = df[primeira_aba]
+            print(f"📁 Usando aba principal: '{primeira_aba}'")
+        else:
+            df_principal = df
+            print("📁 Usando DataFrame único")
+        
         # 0. VERIFICAR COORDENADAS (NOVO)
-        coordenadas = carregar_coordenadas_cds(df)
-        tem_coordenadas = coordenadas is not None
-        print(f"🌍 Tem coordenadas dos CDs? {tem_coordenadas}")
+        coordenadas = None
+        tem_coordenadas = False
+        try:
+            coordenadas = carregar_coordenadas_cds(df)
+            tem_coordenadas = coordenadas is not None
+            print(f"🌍 Tem coordenadas dos CDs? {tem_coordenadas}")
+        except Exception as coord_error:
+            print(f"⚠️ Erro ao verificar coordenadas (continuando sem coordenadas): {str(coord_error)}")
+            tem_coordenadas = False
         
         # 1. Separar a linha de Demanda dos CDs candidatos
-        nome_primeira_coluna = df.columns[0] 
+        nome_primeira_coluna = df_principal.columns[0] 
         print(f"Nome da primeira coluna: {nome_primeira_coluna}")
         
-        linha_demanda = df[df[nome_primeira_coluna] == 'Demanda Total']
+        linha_demanda = df_principal[df_principal[nome_primeira_coluna] == 'Demanda Total']
         print(f"Linha de demanda encontrada:\n{linha_demanda}")
         
-        df_cds = df[df[nome_primeira_coluna] != 'Demanda Total'].dropna(subset=[nome_primeira_coluna])
+        df_cds = df_principal[df_principal[nome_primeira_coluna] != 'Demanda Total'].dropna(subset=[nome_primeira_coluna])
         print(f"DataFrame de CDs:\n{df_cds}")
         
         # 2. Identificar listas de CDs e Clientes
         cds = df_cds[nome_primeira_coluna].astype(str).tolist()
         print(f"CDs encontrados: {cds}")
         
-        clientes = df.columns[1:-2].tolist()  # Excluindo Custo Fixo e Capacidade
+        clientes = df_principal.columns[1:-2].tolist()  # Excluindo Custo Fixo e Capacidade
         print(f"Clientes encontrados: {clientes}")
+        print(f"Colunas disponíveis: {list(df_principal.columns)}")
+        print(f"Colunas a serem excluídas: {df_principal.columns[0]}, Custo Fixo, Capacidade")
         
         # 3. Extrair os Dicionários de Parâmetros
         demanda = {cliente: pd.to_numeric(linha_demanda[cliente].values[0]) for cliente in clientes}
@@ -340,8 +380,32 @@ def resolver_problema_logistica(df, tipo_dado='custo'):
         for index, row in df_cds.iterrows():
             cd_atual = str(row[nome_primeira_coluna])
             for cliente in clientes:
-                custos_transporte[(cd_atual, cliente)] = pd.to_numeric(row[cliente])
+                # Verificar se a coluna do cliente existe
+                if cliente in row.index:
+                    custos_transporte[(cd_atual, cliente)] = pd.to_numeric(row[cliente])
+                else:
+                    print(f"⚠️ Cliente '{cliente}' não encontrado para CD '{cd_atual}', usando valor 0")
+                    custos_transporte[(cd_atual, cliente)] = 0
         print(f"Custos de transporte (primeiros 5): {dict(list(custos_transporte.items())[:5])}")
+        print(f"Total de pares CD-Cliente: {len(custos_transporte)}")
+        
+        # VERIFICAÇÃO CRÍTICA: Garantir que todos os pares existam antes da otimização
+        pares_faltantes = []
+        for cd in cds:
+            for cliente in clientes:
+                if (cd, cliente) not in custos_transporte:
+                    pares_faltantes.append((cd, cliente))
+        
+        if pares_faltantes:
+            print(f"❌ Pares faltantes detectados: {len(pares_faltantes)}")
+            for par in pares_faltantes[:5]:  # Mostrar apenas os 5 primeiros
+                print(f"   Faltando: {par}")
+            # Adicionar pares faltantes com valor 0
+            for par in pares_faltantes:
+                custos_transporte[par] = 0
+            print(f"✅ Pares faltantes adicionados com valor 0")
+        else:
+            print("✅ Todos os pares CD-Cliente estão presentes")
         
         # Identificar o tipo de transporte nos logs
         tipo_transporte = "Custos" if tipo_dado == 'custo' else "Distâncias"
@@ -367,10 +431,20 @@ def resolver_problema_logistica(df, tipo_dado='custo'):
         x = LpVariable.dicts("Envio", (cds, clientes), lowBound=0)
         
         # Função Objetivo: Minimizar custo total (fixo + transporte)
-        custo_fixo_total = lpSum([custos_fixos[i] * y[i] for i in cds])
-        custo_transporte_total = lpSum([custos_transporte[(i, j)] * x[i][j] for i in cds for j in clientes])
-        
-        prob += custo_fixo_total + custo_transporte_total, "Custo_Total"
+        try:
+            custo_fixo_total = lpSum([custos_fixos[i] * y[i] for i in cds])
+            custo_transporte_total = lpSum([custos_transporte[(i, j)] * x[i][j] for i in cds for j in clientes])
+            prob += custo_fixo_total + custo_transporte_total, "Custo_Total"
+        except KeyError as e:
+            print(f"❌ Erro na fórmula matemática: {e}")
+            print(f"❌ Par não encontrado: {e}")
+            print(f"❌ CDs disponíveis: {cds}")
+            print(f"❌ Clientes disponíveis: {clientes}")
+            print(f"❌ Chaves em custos_transporte: {list(custos_transporte.keys())[:10]}...")
+            raise Exception(f"Erro ao processar os dados da planilha: {e}")
+        except Exception as e:
+            print(f"❌ Erro geral na otimização: {e}")
+            raise Exception(f"Erro ao processar os dados da planilha: {e}")
         
         # Restrição 1: Cada cliente deve ter sua demanda atendida
         for j in clientes:
@@ -444,11 +518,15 @@ def resolver_problema_logistica(df, tipo_dado='custo'):
             "status": "Sucesso",
             "modelo": f"Localização Capacitada - {tipo_transporte}",
             "tipo_transporte": tipo_dado,
+            "tipo_valor": tipo_dado,  # Adicionando campo tipo_valor para compatibilidade com templates
+            "p": len(cds_abertos),  # Adicionando atributo p
+            "total_cds": len(cds),  # Adicionando total de CDs disponíveis
             "custo_total": value(prob.objective),
             "custo_fixo_total": value(custo_fixo_total),
             "custo_transporte_total": value(custo_transporte_total),
             "cds_abertos": cds_abertos,
-            "num_cds_abertos": len(cds_abertos),
+            "num_cds_selecionados": len(cds_abertos),  # Adicionando atributo consistente
+            "cds_selecionados": cds_abertos,  # Adicionando para compatibilidade
             "transportes": transportes,
             "num_transportes": len(transportes),
             "capacidade_utilizada": capacidade_utilizada,
