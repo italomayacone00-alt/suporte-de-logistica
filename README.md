@@ -1,11 +1,17 @@
 # SAD Logística - Sistema de Apoio à Decisão
 
-Um sistema web completo para otimização de malha logística utilizando Programação Linear Inteira com o solver PuLP.
+Um sistema web completo para otimização de malha logística utilizando Programação Linear Inteira com múltiplos modelos de otimização.
 
 ## 🚀 Funcionalidades
 
+- **Múltiplos Modelos de Otimização**: 
+  - Modelo Tradicional (Localização Capacitada)
+  - p-Medianas (Minimização de Distâncias Totais)
+  - p-Centros (Minimização da Maior Distância)
+  - Máxima Cobertura (Maximização de Clientes Atendidos)
 - **Geração Automática de Templates**: Cria planilhas Excel pré-formatadas com base no número de CDs e clientes
 - **Otimização Matemática**: Utiliza Programação Linear Inteira para encontrar a solução ótima
+- **Sistema de Coordenadas Geográficas**: Suporte completo para mapas interativos e cálculos de distâncias reais
 - **Interface Moderna**: Design responsivo e intuitivo com animações suaves
 - **Análise Completa**: Relatórios detalhados com custos, rotas e indicadores de performance
 - **Exportação de Resultados**: Possibilidade de exportar análises em diversos formatos
@@ -13,23 +19,35 @@ Um sistema web completo para otimização de malha logística utilizando Program
 ## 📁 Estrutura do Projeto
 
 ```
-meu_sistema_logistico/
+SAD-Logistica/
 │
-├── app.py                 # Rotas Flask e lógica web
-├── solver.py              # Algoritmo de otimização PuLP
-├── requirements.txt       # Dependências Python
-├── README.md             # Documentação do projeto
+├── app.py                           # Rotas Flask e lógica web principal
+├── database.py                      # Configuração do banco de dados SQLite
+├── coordenadas_utils.py              # Utilitários para coordenadas geográficas
+├── requirements.txt                  # Dependências Python
+├── README.md                        # Documentação do projeto
 │
-├── static/                # Arquivos estáticos
+├── solvers/                         # Algoritmos de otimização
+│   ├── solver_tradicional.py         # Modelo de Localização Capacitada
+│   ├── solver_pmedianas.py          # Modelo p-Medianas
+│   ├── solver_pcentros.py           # Modelo p-Centros
+│   ├── solver_maxcobertura.py       # Modelo Máxima Cobertura
+│   └── solver_pmediana_simples.py  # p-Mediana simplificado
+│
+├── static/                          # Arquivos estáticos
 │   ├── css/
-│   │   └── style.css      # Estilos modernos e responsivos
+│   │   └── style.css              # Estilos modernos e responsivos
 │   └── js/
-│       └── script.js      # Interatividade e validações
+│       └── script.js              # Interatividade e validações
 │
-└── templates/             # Templates HTML
-    ├── base.html          # Layout base com header/footer
-    ├── index.html         # Página principal com formulários
-    └── resultado.html     # Página de resultados da otimização
+└── templates/                       # Templates HTML
+    ├── base.html                   # Layout base com header/footer
+    ├── index.html                  # Página principal com formulários
+    ├── resultado_tradicional.html   # Resultados do Modelo Tradicional
+    ├── resultado_pmedianas.html     # Resultados do p-Medianas
+    ├── resultado_pcentros.html      # Resultados do p-Centros
+    ├── resultado_maxcobertura.html   # Resultados da Máxima Cobertura
+    └── resultado_pmediana_simples.html # Resultados p-Mediana Simples
 ```
 
 ## 🛠️ Instalação e Configuração
