@@ -1,0 +1,1542 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório Técnico - NexusNode{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+/* ===================================================================
+   RELATÓRIO PROFISSIONAL A4 - VERSÃO CORRIGIDA
+   =================================================================== */
+
+/* CONFIGURAÇÃO DE IMPRESSÃO A4 */
+@page { 
+    size: A4; 
+    margin: 0;
+}
+
+/* RESET PROFISSIONAL */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* VARIÁVEIS PROFISSIONAIS */
+:root {
+    --primary: #0f172a;
+    --primary-dark: #1e293b;
+    --accent: #2563eb;
+    --accent-light: #dbeafe;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --text-muted: #64748b;
+    --bg-white: #ffffff;
+    --bg-light: #f8fafc;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* BODY PROFISSIONAL */
+body {
+    font-family: 'Inter', sans-serif;
+    background: #525659;
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 100vh;
+}
+
+/* CONTAINER PRINCIPAL */
+#pdf-content {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
+    background: var(--bg-white);
+    box-shadow: 0 0 20px var(--shadow);
+    overflow: visible;
+    min-height: 100vh;
+}
+
+/* ===================================================================
+   SISTEMA DE PÁGINAS A4
+   =================================================================== */
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    background: var(--bg-white);
+    position: relative;
+    page-break-after: always;
+    page-break-inside: avoid;
+}
+
+.page:first-child {
+    page-break-before: auto;
+}
+
+.page:last-child {
+    page-break-after: auto;
+    margin-bottom: 0;
+}
+
+/* CONTEÚDO DA PÁGINA */
+.page-content {
+    width: 100%;
+    height: 100%;
+    padding: 20mm;
+    display: block;
+    position: relative;
+}
+
+/* ===================================================================
+   TIPOGRAFIA PROFISSIONAL
+   =================================================================== */
+
+/* Títulos Principais */
+.doc-h1 {
+    font-size: 24pt;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 0 0 40px 0;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    orphans: 2;
+    widows: 2;
+}
+
+.doc-h2 {
+    font-size: 16pt;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 50px 0 25px 0;
+    border-bottom: 2px solid var(--accent-light);
+    padding-bottom: 12px;
+    line-height: 1.3;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    orphans: 2;
+    widows: 2;
+}
+
+.doc-h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 35px 0 20px 0;
+    line-height: 1.4;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    orphans: 2;
+    widows: 2;
+}
+
+.doc-h4 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 25px 0 15px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    orphans: 2;
+    widows: 2;
+}
+
+/* Parágrafos */
+.doc-p {
+    font-size: 10pt;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin: 0 0 15px 0;
+    line-height: 1.7;
+    text-align: justify;
+    hyphens: auto;
+    orphans: 2;
+    widows: 2;
+    page-break-inside: avoid;
+}
+
+/* Listas */
+.doc-ul {
+    list-style: none;
+    margin: 0 0 20px 0;
+    padding-left: 20px;
+}
+
+.doc-ul li {
+    font-size: 10pt;
+    color: var(--text-secondary);
+    margin: 0 0 8px 0;
+    line-height: 1.6;
+    position: relative;
+    padding-left: 15px;
+}
+
+.doc-ul li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: bold;
+}
+
+/* ===================================================================
+   CAPA PROFISSIONAL
+   =================================================================== */
+
+.cover-page {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: white;
+    min-height: 297mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.cover-page::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 12mm;
+    background: linear-gradient(180deg, var(--accent) 0%, var(--primary) 100%);
+}
+
+.cover-content {
+    padding: 40mm 20mm 20mm 30mm;
+    position: relative;
+    z-index: 2;
+}
+
+.cover-logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cover-logo .material-symbols-outlined {
+    font-size: 2.5rem;
+    color: var(--accent);
+}
+
+.cover-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 30px;
+}
+
+.cover-subtitle {
+    font-size: 1.2rem;
+    font-weight: 300;
+    opacity: 0.9;
+    margin-bottom: 40px;
+    max-width: 600px;
+    line-height: 1.6;
+}
+
+.cover-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cover-info {
+    display: flex;
+    gap: 40px;
+}
+
+.cover-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cover-info-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cover-info-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+}
+
+/* ===================================================================
+   SEÇÕES ESPECIAIS
+   =================================================================== */
+
+.highlight-box {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+    padding: 20px;
+    margin: 25px 0;
+    page-break-inside: avoid;
+}
+
+.highlight-box strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+    page-break-inside: avoid;
+}
+
+.stat-card {
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    page-break-inside: avoid;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===================================================================
+   PROJETOS E MAPAS
+   =================================================================== */
+
+.proj-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 30px;
+    margin: 30px 0;
+    page-break-inside: avoid;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.proj-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+}
+
+.proj-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.proj-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+.map-wrapper {
+    width: 100%;
+    height: 220px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin: 20px 0;
+    background: var(--bg-light);
+    page-break-inside: avoid;
+}
+
+.map-wrapper iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* ===================================================================
+   ASSINATURA
+   =================================================================== */
+
+.signature-section {
+    margin-top: 60px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+    page-break-inside: avoid;
+}
+
+.signature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 40px;
+    margin-top: 30px;
+}
+
+.signature-item {
+    text-align: center;
+}
+
+.signature-line {
+    border-bottom: 1px solid var(--text-primary);
+    height: 40px;
+    margin-bottom: 10px;
+}
+
+.signature-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.signature-role {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===================================================================
+   BOTÕES E CONTROLES
+   =================================================================== */
+
+.no-print {
+    display: block;
+}
+
+.controls {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 9999;
+}
+
+.btn-action {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}
+
+.btn-action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-action .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+/* Botões de Navegação */
+.navigation-controls {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9998;
+}
+
+.nav-btn {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    opacity: 0.8;
+}
+
+.nav-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.nav-btn .material-symbols-outlined {
+    font-size: 1.3rem;
+}
+
+.nav-top {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+}
+
+/* ===================================================================
+   IMPRESSÃO PROFISSIONAL
+   =================================================================== */
+
+@media print {
+    body {
+        background: none;
+        padding: 0;
+    }
+    
+    #pdf-content {
+        box-shadow: none;
+        max-width: 100%;
+    }
+    
+    .page {
+        box-shadow: none;
+        margin: 0;
+        page-break-after: always;
+    }
+    
+    .page:last-child {
+        page-break-after: auto;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    .controls {
+        display: none !important;
+    }
+    
+    .navigation-controls {
+        display: none !important;
+    }
+    
+    /* Numeração de páginas */
+    .page::after {
+        content: "Página " counter(page);
+        position: absolute;
+        bottom: 10mm;
+        right: 20mm;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-family: 'Inter', sans-serif;
+    }
+    
+    @page :first {
+        margin: 0;
+    }
+    
+    /* Evitar quebras indesejadas */
+    .doc-h1,
+    .doc-h2,
+    .doc-h3,
+    .doc-h4,
+    .highlight-box,
+    .stats-grid,
+    .stat-card,
+    .proj-card,
+    .map-wrapper,
+    .signature-section {
+        page-break-inside: avoid !important;
+    }
+    
+    /* Controle de órfãos e viúvas */
+    .doc-p {
+        orphans: 2;
+        widows: 2;
+    }
+    
+    /* Ajustes finais para impressão */
+    .page-content {
+        padding: 20mm;
+    }
+}
+
+/* ===================================================================
+   RESPONSIVIDADE
+   =================================================================== */
+
+@media screen and (max-width: 1200px) {
+    .page {
+        transform: scale(0.8);
+        transform-origin: top center;
+        margin-bottom: -50px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .page {
+        transform: scale(0.6);
+        margin-bottom: -100px;
+    }
+    
+    .controls {
+        bottom: 10px;
+        right: 10px;
+        flex-direction: column;
+    }
+    
+    .btn-action {
+        padding: 10px 20px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ===================================================================
+   ÍCONES MATERIAL SYMBOLS
+   =================================================================== */
+
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="pdf-content">
+    <!-- CAPA -->
+    <div class="page cover-page">
+        <div class="cover-content">
+            <div class="cover-logo">
+                <span class="material-symbols-outlined">account_tree</span>
+                NexusNode
+            </div>
+            
+            <div class="cover-title">
+                Relatório Técnico Anual
+                <div class="cover-subtitle">
+                    Análise Otimizada de Redes Logísticas e Soluções de Distribuição
+                </div>
+            </div>
+        </div>
+        
+        <div class="cover-footer">
+            <div class="cover-info">
+                <div class="cover-info-item">
+                    <div class="cover-info-label">RESPONSÁVEL</div>
+                    <div class="cover-info-value">{{ user.username.upper() if user else 'SISTEMA' }}</div>
+                </div>
+                <div class="cover-info-item">
+                    <div class="cover-info-label">EMISSÃO</div>
+                    <div class="cover-info-value">{{ data_atual }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PÁGINA 2: FUNDAMENTAÇÃO -->
+    <div class="page">
+        <div class="page-content">
+            <h1 class="doc-h1">1. Fundamentação Teórica</h1>
+            
+            <p class="doc-p">O presente relatório técnico tem como objetivo apresentar uma análise abrangente dos resultados obtidos através da aplicação de modelos matemáticos de Otimização Combinatória em redes logísticas, desenvolvidos e implementados mediante a plataforma inteligente NexusNode. A crescente complexidade dos cenários modernos de distribuição exige decisões estratégicas fundamentadas em dados estruturados e análises quantitativas robustas, visando garantir máxima eficiência operacional e competitividade no mercado.</p>
+            
+            <p class="doc-p">O foco central deste documento consiste na compilação sistemática de análises detalhadas referentes à localização ótima de facilidades logísticas (Centros de Distribuição), buscando alcançar o equilíbrio ideal entre múltiplos objetivos estratégicos: redução significativa de custos operacionais, minimização de distâncias percorridas na cadeia de suprimentos e maximização da cobertura geográfica de atendimento aos pontos de demanda identificados.</p>
+            
+            <div class="highlight-box">
+                <strong>Objetivo Principal:</strong> Fornecer uma base analítica e matemática rigorosa, fundamentada em algoritmos de otimização avançados, para subsidiar o processo decisório de planejamento estratégico da cadeia de suprimentos da organização no período avaliado, possibilitando maximização de eficiência e rentabilidade.
+            </div>
+
+            <h2 class="doc-h2">2. Metodologia de Análise</h2>
+            
+            <p class="doc-p">Para a obtenção dos resultados apresentados na Seção 3 deste relatório técnico, foram empregados algoritmos computacionais avançados de Pesquisa Operacional, especificamente desenvolvidos e implementados através de abordagens matemáticas distintas e complementares, cada uma com suas características e aplicações específicas:</p>
+            
+            {% set modelos_analisados = [] %}
+            {% for projeto in projetos %}
+                {% if projeto.tipo_analise not in modelos_analisados %}
+                    {% set modelos_analisados = modelos_analisados + [projeto.tipo_analise] %}
+                {% endif %}
+            {% endfor %}
+            
+            {% if 'p_medianas' in modelos_analisados %}
+            <h3 class="doc-h3">2.1. Modelo p-Medianas</h3>
+            <p class="doc-p">Este modelo matemático concentra-se primordialmente na <strong>otimização de eficiência de custos</strong>. O algoritmo computacional aloca estrategicamente um número predefinido (p) de instalações logísticas de forma a minimizar a distância total ponderada entre as instalações selecionadas e os pontos de demanda, considerando o custo de transporte como variável decisiva. Esta abordagem mostra-se ideal para cenários corporativos onde o custo logístico representa o fator mais crítico e impactante na rentabilidade operacional do negócio.</p>
+            {% endif %}
+
+            {% if 'p_centros' in modelos_analisados %}
+            <h3 class="doc-h3">2.2. Modelo p-Centros</h3>
+            <p class="doc-p">Com foco estratégico em <strong>equidade distributiva e atendimento urgente</strong>, o modelo p-Centros busca minimizar a distância máxima absoluta entre qualquer ponto de demanda e o Centro de Distribuição geograficamente mais próximo. Esta metodologia representa o padrão ouro para operações logísticas que requerem garantia de tempo máximo de resposta, equalizando o nível de serviço em toda a rede de distribuição e assegurando atendimento uniforme a todos os clientes.</p>
+            {% endif %}
+
+            {% if 'max_cobertura' in modelos_analisados %}
+            <h3 class="doc-h3">2.3. Modelo de Máxima Cobertura</h3>
+            <p class="doc-p">O modelo de Máxima Cobertura prioriza <strong>expansão de mercado e alcance geográfico</strong>, maximizando o número de pontos de demanda atendidos dentro de um raio de distância pré-determinado. Esta abordagem é particularmente valiosa para empresas em fase de expansão ou aquelas que buscam aumentar sua participação de mercado through otimização estratégica da cobertura geográfica, garantindo atendimento ao maior número possível de clientes com recursos limitados.</p>
+            {% endif %}
+
+            {% if 'tradicional' in modelos_analisados %}
+            <h3 class="doc-h3">2.4. Modelo Tradicional</h3>
+            <p class="doc-p">O modelo tradicional de localização capacitada combina <strong>otimização integrada de custos fixos e variáveis</strong>, selecionando aleatoriamente os Centros de Distribuição a serem abertos e alocando clientes aos CDs mais próximos considerando capacidades limitadas. Esta abordagem é fundamental para operações logísticas estabelecidas que buscam equilibrar custos operacionais fixos com custos de transporte, garantindo atendimento eficiente da demanda dentro das restrições de capacidade existentes.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- PÁGINAS DE PROJETOS -->
+    {% for projeto in projetos %}
+    <div class="page">
+        <div class="page-content">
+            <div class="proj-card">
+                <div class="proj-header">
+                    <h3 class="proj-title">{{ projeto.nome }}</h3>
+                    <div class="proj-meta">
+                        <strong>ID: #{{ projeto.id }}</strong><br>
+                        {{ projeto.data_criacao[:10] }}<br>
+                        <small class="text-muted">{{ projeto.tipo_analise|upper }}</small>
+                    </div>
+                </div>
+                
+                <p class="doc-p"><strong>Tipo de Análise:</strong> {{ get_tipo_descricao(projeto.tipo_analise) if get_tipo_descricao else projeto.tipo_analise }}</p>
+                
+                {% if projeto.mapa_html %}
+                <div class="map-wrapper">
+                    <iframe src="{{ url_for('static', filename='mapas/' + projeto.mapa_html) }}" allowfullscreen></iframe>
+                </div>
+                {% endif %}
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">
+                            {% if projeto.tipo_analise == 'tradicional' %}
+                                R$ {{ format_currency_brl(projeto.resultados.custo_total) if projeto.resultados.custo_total else 'N/A' }}
+                            {% else %}
+                                {{ projeto.resultados.custo_total_ponderado|round(2) if projeto.resultados.custo_total_ponderado else 'N/A' }}
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">Custo Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">
+                            {% if projeto.tipo_analise == 'tradicional' %}
+                                {{ projeto.resultados.cds_abertos|length if projeto.resultados.cds_abertos else 'N/A' }}
+                            {% else %}
+                                {{ projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 'N/A' }}
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">CDs Ativos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">
+                            {% if projeto.tipo_analise == 'tradicional' %}
+                                {{ projeto.resultados.transportes|length if projeto.resultados.transportes else 'N/A' }}
+                            {% else %}
+                                {{ projeto.resultados.clientes_atendidos if projeto.resultados.clientes_atendidos else 'N/A' }}
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">
+                            {% if projeto.tipo_analise == 'tradicional' %}
+                                Total de Rotas
+                            {% else %}
+                                Clientes Atendidos
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if projeto.resultados and (projeto.resultados.cds_selecionados or projeto.resultados.cds_abertos) %}
+                <div style="margin-top: 25px;">
+                    <h4 class="doc-h4">Centros de Distribuição Selecionados</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        {% set cds_lista = projeto.resultados.cds_selecionados if projeto.resultados.cds_selecionados else projeto.resultados.cds_abertos %}
+                        {% for cd in cds_lista %}
+                        <div style="background: var(--bg-light); padding: 12px; border-radius: 6px; border-left: 3px solid var(--accent);">
+                            <strong>{{ cd.nome if cd.nome else 'CD #' + loop.index|string }}</strong><br>
+                            <small>Capacidade: {{ cd.capacidade if cd.capacidade else 'N/A' }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- DADOS DETALHADOS POR TIPO DE ANÁLISE -->
+                {% if projeto.tipo_analise == 'tradicional' and projeto.resultados %}
+                <div style="margin-top: 30px; padding: 20px; background: var(--bg-light); border-radius: 8px;">
+                    <h4 class="doc-h4" style="margin-top: 0; color: var(--primary);">📊 Análise Detalhada - Modelo tradicional</h4>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent);">
+                                R$ {{ format_currency_brl(projeto.resultados.custo_total) if projeto.resultados.custo_total else '0,00' }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Custo Total</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary);">
+                                {{ projeto.resultados.cds_abertos|length if projeto.resultados.cds_abertos else 0 }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">CDs Abertos</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #10b981;">
+                                {{ projeto.resultados.transportes|length if projeto.resultados.transportes else 0 }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Total de Rotas</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #f59e0b;">
+                                {% if projeto.resultados.capacidade_utilizada %}
+                                    {% if projeto.resultados.capacidade_utilizada is mapping %}
+                                        {% set total_capacidade = 0 %}
+                                        {% for cd, dados in projeto.resultados.capacidade_utilizada.items() %}
+                                            {% set total_capacidade = total_capacidade + dados.utilizada %}
+                                        {% endfor %}
+                                        {{ "%.0f"|format(total_capacidade) }}
+                                    {% else %}
+                                        {{ "%.0f"|format(projeto.resultados.capacidade_utilizada) }}
+                                    {% endif %}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Capacidade Usada</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Análise de Custos -->
+                    {% if projeto.resultados.custo_fixo_total or projeto.resultados.custo_transporte_total %}
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border: 1px solid var(--border);">
+                        <h5 style="margin-bottom: 15px; color: var(--primary);">💰 Estrutura Detalhada de Custos</h5>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-light);">
+                                    <span>Custos Fixos (CDs):</span>
+                                    <strong>R$ {{ format_currency_brl(projeto.resultados.custo_fixo_total) if projeto.resultados.custo_fixo_total else '0,00' }}</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-light);">
+                                    <span>Custos de Transporte:</span>
+                                    <strong>R$ {{ format_currency_brl(projeto.resultados.custo_transporte_total) if projeto.resultados.custo_transporte_total else '0,00' }}</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding: 8px 0; font-weight: 700; font-size: 1.1rem;">
+                                    <span>Custo Total:</span>
+                                    <strong style="color: var(--accent);">R$ {{ format_currency_brl(projeto.resultados.custo_total) if projeto.resultados.custo_total else '0,00' }}</strong>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="text-align: center; margin-bottom: 10px;">
+                                    <div style="font-size: 0.9rem; color: var(--text-secondary);">Taxa de Atendimento da Demanda</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;">
+                                        {% if projeto.resultados.demanda_atendida and projeto.resultados.demanda_total and projeto.resultados.demanda_total > 0 %}
+                                            {{ "%.1f"|format((projeto.resultados.demanda_atendida / projeto.resultados.demanda_total * 100)) }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                    {% if projeto.resultados.demanda_atendida and projeto.resultados.demanda_atendida > 0 %}
+                                        Atendido: {{ "%.0f"|format(projeto.resultados.demanda_atendida) }} 
+                                    {% else %}
+                                        Atendido: 0
+                                    {% endif %}
+                                    {% if projeto.resultados.demanda_total and projeto.resultados.demanda_total > 0 %}
+                                        de {{ "%.0f"|format(projeto.resultados.demanda_total) }} unidades demandadas
+                                    {% else %}
+                                        de 0 unidades demandadas
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% elif projeto.tipo_analise == 'p_medianas' and projeto.resultados %}
+                <div style="margin-top: 30px; padding: 20px; background: var(--bg-light); border-radius: 8px;">
+                    <h4 class="doc-h4" style="margin-top: 0; color: var(--primary);">📍 Análise Detalhada - p-Medianas</h4>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent);">
+                                R$ {{ format_currency_brl(projeto.resultados.custo_total_ponderado) if projeto.resultados.custo_total_ponderado else '0,00' }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Custo Total Ponderado</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary);">
+                                {{ projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 0 }} / {{ projeto.resultados.p if projeto.resultados.p else 0 }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">CDs Selecionados</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #10b981;">
+                                {{ projeto.resultados.atribuicoes|length if projeto.resultados.atribuicoes else 0 }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Total de Clientes</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #f59e0b;">
+                                {{ "%.2f"|format((projeto.resultados.custo_total_ponderado / projeto.resultados.atribuicoes|length) if projeto.resultados.custo_total_ponderado and projeto.resultados.atribuicoes and projeto.resultados.atribuicoes|length > 0 else 0) }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Custo Médio por Cliente</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Distribuição de Clientes por CD -->
+                    {% if projeto.resultados.clientes_por_cd %}
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border: 1px solid var(--border);">
+                        <h5 style="margin-bottom: 15px; color: var(--primary);">👥 Distribuição de Clientes por CD</h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            {% for cd in projeto.resultados.clientes_por_cd %}
+                            <div style="padding: 10px; background: var(--bg-light); border-radius: 4px; text-align: center;">
+                                <strong style="color: var(--primary);">{{ cd }}</strong><br>
+                                <span style="font-size: 1.3rem; font-weight: 700;">{{ projeto.resultados.clientes_por_cd[cd] }}</span><br>
+                                <small style="color: var(--text-secondary);">clientes atendidos</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% elif projeto.tipo_analise == 'p_centros' and projeto.resultados %}
+                <div style="margin-top: 30px; padding: 20px; background: var(--bg-light); border-radius: 8px;">
+                    <h4 class="doc-h4" style="margin-top: 0; color: var(--primary);">🎯 Análise Detalhada - p-Centros</h4>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #dc2626;">
+                                {{ "{:,.2f}".format(projeto.resultados.valor_maximo).replace(',', 'X').replace('.', ',').replace('X', '.') if projeto.resultados.valor_maximo else '0,00' }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">{% if projeto.resultados.tipo_valor == 'custo' %}Custo Máximo{% else %}Distância Máxima{% endif %}</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary);">
+                                {{ projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 0 }} / {{ projeto.resultados.p if projeto.resultados.p else 0 }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">CDs Selecionados</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #10b981;">
+                                {{ projeto.resultados.atribuicoes|length if projeto.resultados.atribuicoes else 0 }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Total Clientes</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #8b5cf6;">
+                                {{ "%.1f"|format((projeto.resultados.num_cds_selecionados / projeto.resultados.p * 100) if projeto.resultados.num_cds_selecionados and projeto.resultados.p and projeto.resultados.p > 0 else 0) }}%
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Performance</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Análise de Equidade -->
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border: 1px solid var(--border);">
+                        <h5 style="margin-bottom: 15px; color: var(--primary);">⚖️ Análise de Equidade no Atendimento</h5>
+                        <p style="margin-bottom: 10px;">O modelo p-Centros otimiza a máxima {% if projeto.resultados.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} entre CDs e clientes, garantindo equidade no atendimento.</p>
+                        <div style="background: var(--bg-light); padding: 12px; border-radius: 6px; border-left: 4px solid var(--accent);">
+                            <strong>Principais Benefícios:</strong> Redução do pior caso de atendimento, melhoria no nível de serviço para clientes distantes, maior equidade na distribuição.
+                        </div>
+                    </div>
+                </div>
+                
+                {% elif projeto.tipo_analise == 'max_cobertura' and projeto.resultados %}
+                <div style="margin-top: 30px; padding: 20px; background: var(--bg-light); border-radius: 8px;">
+                    <h4 class="doc-h4" style="margin-top: 0; color: var(--primary);">📡 Análise Detalhada - Máxima Cobertura</h4>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent);">
+                                {{ "{:,.2f}".format(projeto.resultados.demanda_coberta).replace(',', 'X').replace('.', ',').replace('X', '.') if projeto.resultados.demanda_coberta else '0,00' }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Demanda Coberta</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary);">
+                                {{ projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 0 }} / {{ projeto.resultados.p if projeto.resultados.p else 0 }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">CDs Selecionados</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #10b981;">
+                                {% set clientes_cobertos = 0 %}
+                                {% if projeto.resultados.atribuicoes %}
+                                    {% for atribuicao in projeto.resultados.atribuicoes %}
+                                        {% if atribuicao.coberto %}
+                                            {% set clientes_cobertos = clientes_cobertos + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                {{ clientes_cobertos }}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Clientes Cobertos</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #f59e0b;">
+                                {{ projeto.resultados.raio_cobertura if projeto.resultados.raio_cobertura else 'N/A' }} km
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Raio de Cobertura</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Análise de Cobertura -->
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border: 1px solid var(--border);">
+                        <h5 style="margin-bottom: 15px; color: var(--primary);">📊 Análise de Eficiência de Cobertura</h5>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <div style="text-align: center; margin-bottom: 15px;">
+                                    <div style="font-size: 2.2rem; font-weight: 800; color: #10b981;">
+                                        {{ "%.1f"|format(projeto.resultados.percentual_cobertura) if projeto.resultados.percentual_cobertura else 0 }}%
+                                    </div>
+                                    <div style="font-size: 0.9rem; color: var(--text-secondary);">Taxa de Cobertura Total</div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                    {% set clientes_cobertos_calc = 0 %}
+                                    {% if projeto.resultados.atribuicoes %}
+                                        {% for atribuicao in projeto.resultados.atribuicoes %}
+                                            {% if atribuicao.coberto %}
+                                                {% set clientes_cobertos_calc = clientes_cobertos_calc + 1 %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    Clientes dentro do raio: {{ clientes_cobertos_calc }} de {{ projeto.resultados.atribuicoes|length if projeto.resultados.atribuicoes else 0 }}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 4px solid #f59e0b; margin-bottom: 10px;">
+                                    <strong style="color: #92400e;">⚠️ Oportunidade de Melhoria</strong><br>
+                                    <small style="color: #78350f;">
+                                        {% set clientes_nao_cobertos_calc = 0 %}
+                                        {% if projeto.resultados.atribuicoes %}
+                                            {% for atribuicao in projeto.resultados.atribuicoes %}
+                                                {% if not atribuicao.coberto %}
+                                                    {% set clientes_nao_cobertos_calc = clientes_nao_cobertos_calc + 1 %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if clientes_nao_cobertos_calc > 0 %}
+                                            {{ clientes_nao_cobertos_calc }} clientes ainda não são atendidos dentro do raio de {{ projeto.resultados.raio_cobertura if projeto.resultados.raio_cobertura else 'N/A' }}km.
+                                        {% else %}
+                                            Todos os clientes estão dentro do raio de cobertura!
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div style="background: #dcfce7; padding: 12px; border-radius: 6px; border-left: 4px solid #16a34a;">
+                                    <strong style="color: #15803d;">✅ Recomendação</strong><br>
+                                    <small style="color: #166534;">
+                                        {% if projeto.resultados.percentual_cobertura and projeto.resultados.percentual_cobertura < 80 %}
+                                            Considere aumentar o raio para {{ projeto.resultados.raio_cobertura + 5 if projeto.resultados.raio_cobertura else 10 }}km para cobrir mais clientes.
+                                        {% else %}
+                                            Excelente taxa de cobertura! Mantenha o raio atual.
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- PÁGINA DE ANÁLISE COMPARATIVA -->
+    {% if projetos|length > 1 %}
+    <div class="page">
+        <div class="page-content">
+            <h1 class="doc-h1">4. Análise Comparativa e Métricas Consolidadas</h1>
+            
+            <!-- Tabela Comparativa -->
+            <div style="margin-top: 25px;">
+                <h3 class="doc-h3">Comparativo Geral dos Projetos</h3>
+                <div style="overflow-x: auto; margin-top: 15px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="background: var(--primary-dark); color: white;">
+                                <th style="padding: 12px 8px; text-align: left; border: 1px solid var(--border);">Projeto</th>
+                                <th style="padding: 12px 8px; text-align: center; border: 1px solid var(--border);">Modelo</th>
+                                <th style="padding: 12px 8px; text-align: center; border: 1px solid var(--border);">Data</th>
+                                <th style="padding: 12px 8px; text-align: center; border: 1px solid var(--border);">CDs</th>
+                                <th style="padding: 12px 8px; text-align: center; border: 1px solid var(--border);">Clientes</th>
+                                <th style="padding: 12px 8px; text-align: center; border: 1px solid var(--border);">Custo Total</th>
+                                <th style="padding: 12px 8px; text-align: center; border: 1px solid var(--border);">Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for projeto in projetos %}
+                            <tr style="{% if loop.index % 2 == 0 %}background: var(--bg-light);{% endif %}">
+                                <td style="padding: 10px 8px; border: 1px solid var(--border); font-weight: 500;">{{ projeto.nome }}</td>
+                                <td style="padding: 10px 8px; border: 1px solid var(--border); text-align: center;">
+                                    <span style="background: var(--accent-light); color: var(--accent); padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">
+                                        {{ get_tipo_icone(projeto.tipo_analise) }} {{ get_tipo_nome(projeto.tipo_analise) }}
+                                    </span>
+                                </td>
+                                <td style="padding: 10px 8px; border: 1px solid var(--border); text-align: center;">{{ formatar_data(projeto.data_criacao) }}</td>
+                                <td style="padding: 10px 8px; border: 1px solid var(--border); text-align: center;">
+                                    {% if projeto.resultados and projeto.resultados.num_cds_selecionados %}
+                                        {{ projeto.resultados.num_cds_selecionados }}
+                                    {% elif projeto.resultados and projeto.resultados.cds_abertos %}
+                                        {{ projeto.resultados.cds_abertos|length }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 10px 8px; border: 1px solid var(--border); text-align: center;">
+                                    {% if projeto.resultados and projeto.resultados.atribuicoes %}
+                                        {{ projeto.resultados.atribuicoes|length }}
+                                    {% elif projeto.resultados and projeto.resultados.transportes %}
+                                        {{ projeto.resultados.transportes|length }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 10px 8px; border: 1px solid var(--border); text-align: center; font-weight: 600;">
+                                    {% if projeto.resultados and projeto.resultados.custo_total %}
+                                        R$ {{ format_currency_brl(projeto.resultados.custo_total) }}
+                                    {% elif projeto.resultados and projeto.resultados.custo_total_ponderado %}
+                                        R$ {{ format_currency_brl(projeto.resultados.custo_total_ponderado) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 10px 8px; border: 1px solid var(--border); text-align: center;">
+                                    {% if projeto.tipo_analise == 'max_cobertura' and projeto.resultados and projeto.resultados.percentual_cobertura %}
+                                        <span style="color: #10b981; font-weight: 700;">{{ "%.1f"|format(projeto.resultados.percentual_cobertura) }}%</span>
+                                    {% elif projeto.resultados and projeto.resultados.num_cds_selecionados and projeto.resultados.p %}
+                                        <span style="color: #8b5cf6; font-weight: 700;">{{ "%.1f"|format((projeto.resultados.num_cds_selecionados / projeto.resultados.p * 100)) }}%</span>
+                                    {% else %}
+                                        <span style="color: var(--text-muted);">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Métricas Consolidadas -->
+            <div style="margin-top: 30px;">
+                <h3 class="doc-h3">Métricas Consolidadas do Período</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 15px;">
+                    <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: 800; margin-bottom: 5px;">{{ projetos|length }}</div>
+                        <div style="font-size: 0.9rem;">Projetos Analisados</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                        {% set total_cds = 0 %}
+                        {% for projeto in projetos %}
+                            {% if projeto.resultados and projeto.resultados.num_cds_selecionados %}
+                                {% set total_cds = total_cds + projeto.resultados.num_cds_selecionados %}
+                            {% elif projeto.resultados and projeto.resultados.cds_abertos %}
+                                {% set total_cds = total_cds + projeto.resultados.cds_abertos|length %}
+                            {% endif %}
+                        {% endfor %}
+                        <div style="font-size: 2rem; font-weight: 800; margin-bottom: 5px;">{{ total_cds }}</div>
+                        <div style="font-size: 0.9rem;">Total de CDs Ativados</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                        {% set total_clientes = 0 %}
+                        {% for projeto in projetos %}
+                            {% if projeto.resultados and projeto.resultados.atribuicoes %}
+                                {% set total_clientes = total_clientes + projeto.resultados.atribuicoes|length %}
+                            {% elif projeto.resultados and projeto.resultados.transportes %}
+                                {% set total_clientes = total_clientes + projeto.resultados.transportes|length %}
+                            {% endif %}
+                        {% endfor %}
+                        <div style="font-size: 2rem; font-weight: 800; margin-bottom: 5px;">{{ total_clientes }}</div>
+                        <div style="font-size: 0.9rem;">Total de Conexões</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 20px; border-radius: 10px; text-align: center;">
+                        {% set total_custo = 0 %}
+                        {% for projeto in projetos %}
+                            {% if projeto.resultados and projeto.resultados.custo_total %}
+                                {% set total_custo = total_custo + projeto.resultados.custo_total %}
+                            {% elif projeto.resultados and projeto.resultados.custo_total_ponderado %}
+                                {% set total_custo = total_custo + projeto.resultados.custo_total_ponderado %}
+                            {% endif %}
+                        {% endfor %}
+                        <div style="font-size: 2rem; font-weight: 800; margin-bottom: 5px;">R$ {{ format_currency_brl(total_custo) }}</div>
+                        <div style="font-size: 0.9rem;">Investimento Total Otimizado</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Distribuição por Tipo de Análise -->
+            <div style="margin-top: 30px;">
+                <h3 class="doc-h3">Distribuição por Tipo de Análise</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                    {% for tipo in tipos_contagem %}
+                    <div style="background: var(--bg-light); padding: 20px; border-radius: 8px; border-left: 4px solid var(--accent);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <h4 style="margin: 0; color: var(--primary);">{{ get_tipo_icone(tipo) }} {{ get_tipo_nome(tipo) }}</h4>
+                            <span style="background: var(--accent); color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700;">{{ tipos_contagem[tipo] }}</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                            {{ "%.1f"|format((tipos_contagem[tipo] / projetos|length * 100)) }}% do total de projetos
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.8rem; color: var(--text-muted);">
+                            {{ get_tipo_descricao(tipo) }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Insights Estratégicos -->
+            <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%); border-radius: 10px; border: 1px solid #0ea5e9;">
+                <h3 style="margin-top: 0; color: #0369a1;">💡 Insights Estratégicos Consolidados</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                    <div>
+                        <h4 style="color: #0369a1; margin-bottom: 10px;">📈 Tendências Identificadas</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                            <li>Preferência por modelos de {% if tipos_contagem.get('tradicional', 0) > tipos_contagem.get('p_medianas', 0) %}custo fixo{% else %}otimização{% endif %} na estratégia logística</li>
+                            <li>Foco na {% if tipos_contagem.get('max_cobertura', 0) > 0 %}maximização de cobertura{% else %}redução de custos{% endif %} como objetivo principal</li>
+                            <li>Média de {{ "%.1f"|format((total_cds / projetos|length)) if projetos and projetos|length > 0 else 0 }} CDs por projeto analisado</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: #0369a1; margin-bottom: 10px;">🎯 Recomendações Estratégicas</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                            <li>Manter {% if tipos_contagem.get('p_centros', 0) > 0 %}equidade{% else %}eficiência{% endif %} como prioridade operacional</li>
+                            <li>Considerar análise comparativa periódica para validação de modelos</li>
+                            <li>Expandir para {% if tipos_contagem.get('max_cobertura', 0) == 0 %}modelos de cobertura{% else %}análises de custos{% endif %} para complementar estratégia</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- PÁGINA FINAL: CONCLUSÃO -->
+    <div class="page">
+        <div class="page-content">
+            <h1 class="doc-h1">3. Conclusões e Recomendações</h1>
+            
+            <p class="doc-p">A análise integrada dos resultados obtidos através da aplicação dos modelos matemáticos demonstra a eficácia da plataforma NexusNode na otimização de redes logísticas complexas. Os algoritmos implementados conseguiram identificar soluções que equilibram de forma eficiente os múltiplos objetivos estratégicos das operações logísticas modernas.</p>
+            
+            <!-- CONCLUSÕES ESPECÍFICAS POR PROJETO -->
+            {% for projeto in projetos %}
+            <div style="margin-bottom: 25px; padding: 20px; background: var(--bg-light); border-radius: 8px; border-left: 4px solid var(--accent);">
+                <h3 style="margin-top: 0; color: var(--primary);">{{ projeto.nome }} - {{ get_tipo_nome(projeto.tipo_analise) }}</h3>
+                
+                {% if projeto.tipo_analise == 'tradicional' and projeto.resultados %}
+                <div style="margin-top: 15px;">
+                    <h4 style="color: #f59e0b; margin-bottom: 10px;">📊 Conclusões do Modelo Tradicional</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                        <li>Foram abertos <strong>{{ projeto.resultados.cds_abertos|length if projeto.resultados.cds_abertos else 0 }}</strong> centros de distribuição otimizando custos fixos</li>
+                        <li>Geradas <strong>{{ projeto.resultados.transportes|length if projeto.resultados.transportes else 0 }}</strong> rotas de transporte eficientes</li>
+                        {% if projeto.resultados.demanda_atendida and projeto.resultados.demanda_total %}
+                        <li>Atendida <strong>{{ "%.1f"|format((projeto.resultados.demanda_atendida / projeto.resultados.demanda_total * 100) if projeto.resultados.demanda_total > 0 else 0) }}%</strong> da demanda total</li>
+                        {% endif %}
+                        {% if projeto.resultados.custo_total %}
+                        <li>Custo total otimizado de <strong>R$ {{ format_currency_brl(projeto.resultados.custo_total) }}</strong></li>
+                        {% endif %}
+                    </ul>
+                    
+                    <h4 style="color: #10b981; margin-top: 15px; margin-bottom: 10px;">🎯 Recomendações Específicas</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                        <li>Manter os {{ projeto.resultados.cds_abertos|length if projeto.resultados.cds_abertos else 0 }} CDs ativos para continuidade operacional</li>
+                        <li>Monitorar custos de transporte para identificar oportunidades de otimização adicional</li>
+                        {% if projeto.resultados.demanda_atendida and projeto.resultados.demanda_total and projeto.resultados.demanda_atendida < projeto.resultados.demanda_total %}
+                        <li>Considerar expansão de capacidade para atender demanda remanescente</li>
+                        {% else %}
+                        <li>Capacidade atual adequada para demanda existente</li>
+                        {% endif %}
+                        <li>Avaliar periodicamente a configuração dos CDs para adaptação a novas demandas</li>
+                    </ul>
+                </div>
+                
+                {% elif projeto.tipo_analise == 'p_medianas' and projeto.resultados %}
+                <div style="margin-top: 15px;">
+                    <h4 style="color: #10b981; margin-bottom: 10px;">📍 Conclusões do Modelo p-Medianas</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                        <li>Selecionados <strong>{{ projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 0 }}</strong> CDs para minimização de custos de transporte</li>
+                        {% if projeto.resultados.atribuicoes %}
+                        <li>Atendidos <strong>{{ projeto.resultados.atribuicoes|length }}</strong> clientes de forma otimizada</li>
+                        {% endif %}
+                        {% if projeto.resultados.custo_total_ponderado %}
+                        <li>Custo médio por cliente otimizado em <strong>R$ {{ format_currency_brl(projeto.resultados.custo_total_ponderado / projeto.resultados.atribuicoes|length) if projeto.resultados.atribuicoes and projeto.resultados.atribuicoes|length > 0 else '0,00' }}</strong></li>
+                        {% endif %}
+                    </ul>
+                    
+                    <h4 style="color: #10b981; margin-top: 15px; margin-bottom: 10px;">🎯 Recomendações Específicas</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                        <li>Manter configuração atual dos {{ projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 0 }} CDs otimizados</li>
+                        <li>Reavaliar demanda sazonal para ajustes periódicos na alocação</li>
+                        <li>Considerar análise de sensibilidade para variações nos custos de transporte</li>
+                        <li>Explorar integração com sistemas de roteirização dinâmica</li>
+                    </ul>
+                </div>
+                
+                {% elif projeto.tipo_analise == 'p_centros' and projeto.resultados %}
+                <div style="margin-top: 15px;">
+                    <h4 style="color: #8b5cf6; margin-bottom: 10px;">🎯 Conclusões do Modelo p-Centros</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                        <li>Minimizada {% if projeto.resultados.tipo_valor == 'custo' %}distância máxima de custo{% else %}distância geográfica máxima{% endif %} entre CDs e clientes</li>
+                        {% if projeto.resultados.valor_maximo %}
+                        <li>Valor máximo otimizado: <strong>{{ "{:,.2f}".format(projeto.resultados.valor_maximo).replace(',', 'X').replace('.', ',').replace('X', '.') if projeto.resultados.valor_maximo else '0,00' }}</strong></li>
+                        {% endif %}
+                        <li>Garantida equidade no atendimento para todos os clientes</li>
+                    </ul>
+                    
+                    <h4 style="color: #8b5cf6; margin-top: 15px; margin-bottom: 10px;">🎯 Recomendações Específicas</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                        <li>Manter foco na equidade de atendimento como diferencial competitivo</li>
+                        <li>Monitorar continuamente as {% if projeto.resultados.tipo_valor == 'custo' %}distâncias de custo{% else %}distâncias geográficas{% endif %} máximas</li>
+                        <li>Comunicar aos clientes os tempos máximos de atendimento como SLA</li>
+                        <li>Considerar modelo híbrido combinando equidade e eficiência de custos</li>
+                    </ul>
+                </div>
+                
+                {% elif projeto.tipo_analise == 'max_cobertura' and projeto.resultados %}
+                <div style="margin-top: 15px;">
+                    <h4 style="color: #dc2626; margin-bottom: 10px;">📡 Conclusões do Modelo Máxima Cobertura</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                        {% if projeto.resultados.percentual_cobertura %}
+                        <li>Alcançada cobertura de <strong>{{ "%.1f"|format(projeto.resultados.percentual_cobertura) }}%</strong> da demanda total</li>
+                        {% endif %}
+                        {% if projeto.resultados.raio_cobertura %}
+                        <li>Utilizado raio de cobertura de <strong>{{ projeto.resultados.raio_cobertura }} km</strong> para otimização</li>
+                        {% endif %}
+                        {% if projeto.resultados.demanda_coberta %}
+                        <li>Demanda coberta otimizada: <strong>{{ "{:,.2f}".format(projeto.resultados.demanda_coberta).replace(',', 'X').replace('.', ',').replace('X', '.') if projeto.resultados.demanda_coberta else '0,00' }}</strong></li>
+                        {% endif %}
+                    </ul>
+                    
+                    <h4 style="color: #dc2626; margin-top: 15px; margin-bottom: 10px;">🎯 Recomendações Específicas</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
+                        {% if projeto.resultados.percentual_cobertura and projeto.resultados.percentual_cobertura < 80 %}
+                        <li>Considerar aumento do raio de cobertura para {{ projeto.resultados.raio_cobertura + 5 if projeto.resultados.raio_cobertura else 10 }}km</li>
+                        {% else %}
+                        <li>Manter raio de cobertura atual - otimização satisfatória</li>
+                        {% endif %}
+                        <li>Identificar áreas de alta densidade para priorizar novos CDs</li>
+                        <li>Avaliar modelo de cobertura múltipla para regiões estratégicas</li>
+                        <li>Monitorar expansão da demanda para ajustes proativos</li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <!-- CONCLUSÕES GERAIS -->
+            <div class="highlight-box" style="margin-top: 25px;">
+                <strong>Principais Achievements Consolidados:</strong> 
+                {% set total_cds = 0 %}
+                {% set total_clientes = 0 %}
+                {% set total_custo = 0 %}
+                {% for projeto in projetos %}
+                    {% if projeto.resultados and projeto.resultados.num_cds_selecionados %}
+                        {% set total_cds = total_cds + projeto.resultados.num_cds_selecionados %}
+                    {% elif projeto.resultados and projeto.resultados.cds_abertos %}
+                        {% set total_cds = total_cds + projeto.resultados.cds_abertos|length %}
+                    {% endif %}
+                    {% if projeto.resultados and projeto.resultados.atribuicoes %}
+                        {% set total_clientes = total_clientes + projeto.resultados.atribuicoes|length %}
+                    {% elif projeto.resultados and projeto.resultados.transportes %}
+                        {% set total_clientes = total_clientes + projeto.resultados.transportes|length %}
+                    {% endif %}
+                    {% if projeto.resultados and projeto.resultados.custo_total %}
+                        {% set total_custo = total_custo + projeto.resultados.custo_total %}
+                    {% elif projeto.resultados and projeto.resultados.custo_total_ponderado %}
+                        {% set total_custo = total_custo + projeto.resultados.custo_total_ponderado %}
+                    {% endif %}
+                {% endfor %}
+                
+                Análise de <strong>{{ projetos|length }}</strong> projetos resultando em <strong>{{ total_cds }}</strong> CDs otimizados, 
+                atendendo <strong>{{ total_clientes }}</strong> pontos de demanda com 
+                investimento total otimizado de <strong>R$ {{ format_currency_brl(total_custo) }}</strong>.
+            </div>
+            
+            <h2 class="doc-h2">4. Próximos Passos</h2>
+            
+            <ul class="doc-ul">
+                <li>Implementação das soluções otimizadas em ambiente produtivo</li>
+                <li>Monitoramento contínuo de performance e KPIs operacionais</li>
+                <li>Ajustes finos nos parâmetros dos modelos conforme feedback operacional</li>
+                <li>Expansão da análise para novas regiões geográficas</li>
+                <li>Integração com sistemas ERP e WMS existentes</li>
+            </ul>
+            
+            <div class="signature-section">
+                <div class="signature-grid">
+                    <div class="signature-item">
+                        <div class="signature-line"></div>
+                        <div class="signature-name">{{ user.username.upper() if user else 'ANALISTA' }}</div>
+                        <div class="signature-role">Analista de Otimização</div>
+                    </div>
+                    <div class="signature-item">
+                        <div class="signature-line"></div>
+                        <div class="signature-name">GERÊNCIA</div>
+                        <div class="signature-role">Gerência de Logística</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botões de Controle -->
+<div class="controls no-print">
+    <a href="javascript:history.back()" class="btn-action">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Voltar
+    </a>
+    <button class="btn-action" onclick="window.print()">
+        <span class="material-symbols-outlined">print</span>
+        Gerar PDF
+    </button>
+</div>
+
+<!-- Botões de Navegação -->
+<div class="navigation-controls no-print">
+    <button class="nav-btn nav-up" onclick="smoothScroll('up')" title="Rolar para cima">
+        <span class="material-symbols-outlined">keyboard_arrow_up</span>
+    </button>
+    <button class="nav-btn nav-down" onclick="smoothScroll('down')" title="Rolar para baixo">
+        <span class="material-symbols-outlined">keyboard_arrow_down</span>
+    </button>
+    <button class="nav-btn nav-top" onclick="smoothScroll('top')" title="Ir para o topo">
+        <span class="material-symbols-outlined">keyboard_double_arrow_up</span>
+    </button>
+</div>
+
+<script>
+// Função simples de impressão
+function printReport() {
+    window.print();
+}
+
+// Função de scroll suave
+function smoothScroll(direction) {
+    const scrollAmount = 300;
+    
+    switch(direction) {
+        case 'up':
+            window.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+            break;
+        case 'down':
+            window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+            break;
+        case 'top':
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            break;
+    }
+}
+
+// Prevenir comportamentos indesejados
+document.addEventListener('DOMContentLoaded', function() {
+    // Permitir scroll vertical suave
+    document.body.style.overflowY = 'auto';
+    document.body.style.overflowX = 'hidden';
+    
+    // Adicionar scroll suave
+    document.documentElement.style.scrollBehavior = 'smooth';
+    
+    // Ajustar viewport para mobile
+    if (window.innerWidth < 768) {
+        document.querySelector('#pdf-content').style.transform = 'scale(0.6)';
+        document.querySelector('#pdf-content').style.transformOrigin = 'top center';
+    }
+    
+    // Adicionar navegação por teclado
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowDown') {
+            window.scrollBy({ top: 200, behavior: 'smooth' });
+        } else if (e.key === 'ArrowUp') {
+            window.scrollBy({ top: -200, behavior: 'smooth' });
+        } else if (e.key === 'PageDown') {
+            window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+        } else if (e.key === 'PageUp') {
+            window.scrollBy({ top: -window.innerHeight, behavior: 'smooth' });
+        } else if (e.key === 'Home') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (e.key === 'End') {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    });
+    
+    // Mostrar/ocultar botões de navegação baseado no scroll
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const navControls = document.querySelector('.navigation-controls');
+        
+        if (navControls) {
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                // Scrollando para baixo - esconder botões
+                navControls.style.opacity = '0.3';
+            } else {
+                // Scrollando para cima - mostrar botões
+                navControls.style.opacity = '0.8';
+            }
+        }
+        
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    });
+});
+</script>
+
+{% endblock %}

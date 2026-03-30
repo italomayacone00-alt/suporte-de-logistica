@@ -118,10 +118,10 @@
                 </div>
                 
                 <div class="project-actions-modern">
-                    <button class="action-btn btn-view" onclick="viewProject({{ projeto.id }})" title="Ver Projeto">
+                    <button class="action-btn btn-view" onclick="viewProject('{{ projeto.id }}')" title="Ver Projeto">
                         <span class="material-symbols-outlined">visibility</span>
                     </button>
-                    <button class="action-btn btn-delete" onclick="deleteProject({{ projeto.id }})" title="Excluir Projeto">
+                    <button class="action-btn btn-delete" onclick="deleteProject('{{ projeto.id }}')" title="Excluir Projeto">
                         <span class="material-symbols-outlined">delete</span>
                     </button>
                 </div>
@@ -195,7 +195,6 @@ function atualizarInterfaceProjetos(projetos) {
         const countBadge = document.querySelector('.projects-count-badge');
         if (countBadge) countBadge.textContent = projetos.length;
         
-        // Gerar HTML dos projetos
         container.innerHTML = projetos.map(function(projeto) {
             return '<div class="project-card-modern" data-project-id="' + projeto.id + '">' +
                 '<div class="project-checkbox" style="display: none;">' +
@@ -303,10 +302,61 @@ function generateSelectedReports() {
     }
     
     const projectIds = Array.from(checkedBoxes).map(cb => cb.value);
-    console.log('Gerar relatório para projetos:', projectIds);
+    const btn = document.getElementById('generateReportsBtn');
     
-    // Futuro: implementar geração de relatório múltiplo
-    alert(`Relatório será gerado para ${projectIds.length} projeto(s). Funcionalidade em desenvolvimento!`);
+    btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Gerando...';
+    btn.disabled = true;
+    
+    fetch('/gerar_relatorio_anual', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            project_ids: projectIds
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Data received:', data);
+        console.log('Success:', data.success);
+        console.log('Message:', data.message);
+        if (data.success) {
+            // Abrir relatório em nova janela
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(data.html_content);
+            newWindow.document.close();
+            
+            // Resetar interface
+            toggleSelectMode();
+            alert(`✅ ${data.message}`);
+        } else {
+            console.log('Backend error message:', data.message);
+            alert(`❌ ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error details:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        // Não mostrar mensagem de erro genérica se o relatório foi processado
+        // Apenas mostrar erro se for falha crítica de rede
+        if (error.name === 'NetworkError' || error.message.includes('Failed to fetch')) {
+            alert('❌ Falha de conexão ao gerar o relatório.');
+        }
+    })
+    .finally(() => {
+        btn.innerHTML = '<span class="material-symbols-outlined">description</span> Gerar Relatório (<span id="selectedCount">0</span>)';
+        btn.disabled = false;
+        updateSelectedCount();
+    });
 }
 
 function viewProject(projectId) {

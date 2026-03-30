@@ -1519,6 +1519,201 @@ def relatorio_projeto(projeto_id):
     else:
         return redirect(url_for('exportar_resultados_tradicional'))
 
+@app.route('/gerar_relatorio_anual', methods=['POST'])
+def gerar_relatorio_anual():
+    """Gera relatório anual dos projetos selecionados"""
+    try:
+        data = request.get_json()
+        project_ids = data.get('project_ids', [])
+        
+        if not project_ids:
+            return jsonify({'success': False, 'message': 'Nenhum projeto selecionado.'})
+        
+        # Carregar projetos selecionados
+        projetos_selecionados = []
+        for project_id in project_ids:
+            projeto = carregar_resultados_projeto(int(project_id))
+            if projeto:
+                projetos_selecionados.append(projeto)
+        
+        if not projetos_selecionados:
+            return jsonify({'success': False, 'message': 'Nenhum projeto válido encontrado.'})
+        
+        # Preparar dados para o template
+        from datetime import datetime
+        ano_atual = datetime.now().year
+        data_atual = datetime.now().strftime('%d/%m/%Y')
+        
+        # Contar tipos de análises
+        tipos_contagem = {}
+        for projeto in projetos_selecionados:
+            tipo = projeto['tipo_analise']
+            tipos_contagem[tipo] = tipos_contagem.get(tipo, 0) + 1
+        
+        # Determinar período de análise
+        if projetos_selecionados:
+            datas = [p.get('data_criacao') for p in projetos_selecionados if p.get('data_criacao')]
+            if datas:
+                datas_ordenadas = sorted(datas)
+                periodo_analise = f"{datas_ordenadas[0][5:7]}/{datas_ordenadas[0][:4]} - {datas_ordenadas[-1][5:7]}/{datas_ordenadas[-1][:4]}"
+            else:
+                periodo_analise = "N/A"
+        else:
+            periodo_analise = "N/A"
+        
+        # Funções auxiliares para o template
+        def get_tipo_nome(tipo):
+            nomes = {
+                'p_centros': 'p-Centros',
+                'p_medianas': 'p-Medianas', 
+                'max_cobertura': 'Máxima Cobertura',
+                'tradicional': 'Tradicional'
+            }
+            return nomes.get(tipo, 'Desconhecido')
+        
+        def get_tipo_icone(tipo):
+            icones = {
+                'p_centros': 'center_focus_strong',
+                'p_medianas': 'location_city',
+                'max_cobertura': 'radar',
+                'tradicional': 'inventory_2'
+            }
+            return icones.get(tipo, 'help')
+        
+        def get_tipo_descricao(tipo):
+            descricoes = {
+                'p_centros': 'Minimização da distância máxima de atendimento',
+                'p_medianas': 'Otimização com número fixo de instalações',
+                'max_cobertura': 'Maximização da demanda dentro do raio de cobertura',
+                'tradicional': 'Localização com custos fixos e capacidades'
+            }
+            return descricoes.get(tipo, 'Análise logística')
+        
+        def formatar_data(data_str):
+            if not data_str:
+                return 'N/A'
+            return f"{data_str[8:10]}/{data_str[5:7]}/{data_str[:4]}"
+        
+        def formatar_data_completa(data_str):
+            if not data_str:
+                return 'N/A'
+            return f"{data_str[8:10]}/{data_str[5:7]}/{data_str[:4]} {data_str[11:16]}"
+        
+        def format_currency_brl(value):
+            if not value:
+                return "0,00"
+            return f"{value:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        
+        # Renderizar template corrigido
+        html_content = render_template('relatorio.html', 
+                                     projetos=projetos_selecionados,
+                                     ano_atual=ano_atual,
+                                     data_atual=data_atual,
+                                     tipos_contagem=tipos_contagem,
+                                     periodo_analise=periodo_analise,
+                                     get_tipo_nome=get_tipo_nome,
+                                     get_tipo_icone=get_tipo_icone,
+                                     get_tipo_descricao=get_tipo_descricao,
+                                     formatar_data=formatar_data,
+                                     formatar_data_completa=formatar_data_completa,
+                                     format_currency_brl=format_currency_brl)
+        
+        return jsonify({
+            'success': True, 
+            'html_content': html_content,
+            'message': f'Relatório gerado com {len(projetos_selecionados)} projetos!'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro ao gerar relatório: {str(e)}'})
+
+@app.route('/relatorio_anual_visualizacao')
+def relatorio_anual_visualizacao():
+    """Visualização do relatório anual (para teste)"""
+    try:
+        # Carregar todos os projetos do banco de dados
+        projetos = listar_projetos()
+        
+        if not projetos:
+            flash('Nenhum projeto encontrado para gerar relatório.', 'warning')
+            return redirect(url_for('dashboard'))
+        
+        # Preparar dados (mesma lógica da rota POST)
+        from datetime import datetime
+        ano_atual = datetime.now().year
+        data_atual = datetime.now().strftime('%d/%m/%Y')
+        
+        tipos_contagem = {}
+        for projeto in projetos:
+            tipo = projeto['tipo_analise']
+            tipos_contagem[tipo] = tipos_contagem.get(tipo, 0) + 1
+        
+        datas = [p.get('data_criacao') for p in projetos if p.get('data_criacao')]
+        if datas:
+            datas_ordenadas = sorted(datas)
+            periodo_analise = f"{datas_ordenadas[0][5:7]}/{datas_ordenadas[0][:4]} - {datas_ordenadas[-1][5:7]}/{datas_ordenadas[-1][:4]}"
+        else:
+            periodo_analise = "N/A"
+        
+        def get_tipo_nome(tipo):
+            nomes = {
+                'p_centros': 'p-Centros',
+                'p_medianas': 'p-Medianas', 
+                'max_cobertura': 'Máxima Cobertura',
+                'tradicional': 'Tradicional'
+            }
+            return nomes.get(tipo, 'Desconhecido')
+        
+        def get_tipo_icone(tipo):
+            icones = {
+                'p_centros': 'center_focus_strong',
+                'p_medianas': 'location_city',
+                'max_cobertura': 'radar',
+                'tradicional': 'inventory_2'
+            }
+            return icones.get(tipo, 'help')
+        
+        def get_tipo_descricao(tipo):
+            descricoes = {
+                'p_centros': 'Minimização da distância máxima de atendimento',
+                'p_medianas': 'Otimização com número fixo de instalações',
+                'max_cobertura': 'Maximização da demanda dentro do raio de cobertura',
+                'tradicional': 'Localização com custos fixos e capacidades'
+            }
+            return descricoes.get(tipo, 'Análise logística')
+        
+        def formatar_data(data_str):
+            if not data_str:
+                return 'N/A'
+            return f"{data_str[8:10]}/{data_str[5:7]}/{data_str[:4]}"
+        
+        def formatar_data_completa(data_str):
+            if not data_str:
+                return 'N/A'
+            return f"{data_str[8:10]}/{data_str[5:7]}/{data_str[:4]} {data_str[11:16]}"
+        
+        def format_currency_brl(value):
+            if not value:
+                return "0,00"
+            return f"{value:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        
+        return render_template('relatorio.html', 
+                             projetos=projetos,
+                             ano_atual=ano_atual,
+                             data_atual=data_atual,
+                             tipos_contagem=tipos_contagem,
+                             periodo_analise=periodo_analise,
+                             get_tipo_nome=get_tipo_nome,
+                             get_tipo_icone=get_tipo_icone,
+                             get_tipo_descricao=get_tipo_descricao,
+                             formatar_data=formatar_data,
+                             formatar_data_completa=formatar_data_completa,
+                             format_currency_brl=format_currency_brl)
+        
+    except Exception as e:
+        flash(f'Erro ao carregar relatório: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
 @app.route('/exportar_resultados_maxcobertura')
 def exportar_resultados_maxcobertura():
     try:
@@ -2188,3 +2383,7 @@ if __name__ == '__main__':
             print("✅ Folium importado com sucesso")
         except ImportError:
             print("❌ Folium não encontrado - execute: pip install folium")
+
+if __name__ == "__main__":
+    # O use_reloader=False ajuda a evitar processos duplicados que travam a porta
+    app.run(debug=True, port=5000, use_reloader=False)

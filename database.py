@@ -79,17 +79,21 @@ def listar_projetos(tipo_analise=None):
     try:
         if tipo_analise:
             cursor.execute('''
-                SELECT id, nome, tipo_analise, data_criacao, status
-                FROM projetos 
-                WHERE tipo_analise = ? AND status = 'ativo'
-                ORDER BY data_criacao DESC
+                SELECT p.id, p.nome, p.tipo_analise, p.data_criacao, p.status,
+                       p.parametros, r.dados, r.mapa_html
+                FROM projetos p
+                LEFT JOIN resultados r ON p.id = r.projeto_id
+                WHERE p.tipo_analise = ? AND p.status = 'ativo'
+                ORDER BY p.data_criacao DESC
             ''', (tipo_analise,))
         else:
             cursor.execute('''
-                SELECT id, nome, tipo_analise, data_criacao, status
-                FROM projetos 
-                WHERE status = 'ativo'
-                ORDER BY data_criacao DESC
+                SELECT p.id, p.nome, p.tipo_analise, p.data_criacao, p.status,
+                       p.parametros, r.dados, r.mapa_html
+                FROM projetos p
+                LEFT JOIN resultados r ON p.id = r.projeto_id
+                WHERE p.status = 'ativo'
+                ORDER BY p.data_criacao DESC
             ''')
         
         projetos = []
@@ -99,7 +103,10 @@ def listar_projetos(tipo_analise=None):
                 'nome': row[1],
                 'tipo_analise': row[2],
                 'data_criacao': row[3],
-                'status': row[4]
+                'status': row[4],
+                'parametros': json.loads(row[5]) if row[5] else {},
+                'resultados': json.loads(row[6]) if row[6] else {},
+                'mapa_html': row[7]
             })
         
         return projetos
