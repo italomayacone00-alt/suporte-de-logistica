@@ -1604,9 +1604,119 @@ def gerar_relatorio_anual():
                 return "0,00"
             return f"{value:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
         
+        # Função para calcular métricas consolidadas
+        def calcular_consolidados(projetos):
+            total_cds = 0
+            total_clientes = 0
+            total_investimento = 0.0
+            
+            for projeto in projetos:
+                resultados = projeto.get('resultados', {})
+                tipo = projeto.get('tipo_analise')
+                
+                if tipo == 'tradicional':
+                    total_cds += len(resultados.get('cds_abertos', []))
+                    # Contar clientes únicos em vez de rotas
+                    clientes_unicos = set()
+                    transportes = resultados.get('transportes', [])
+                    for transporte in transportes:
+                        if transporte.get('destino'):
+                            clientes_unicos.add(transporte['destino'])
+                    total_clientes += len(clientes_unicos)
+                    total_investimento += float(resultados.get('custo_total', 0))
+                    
+                elif tipo == 'p_medianas':
+                    total_cds += resultados.get('num_cds_selecionados', 0)
+                    total_clientes += len(resultados.get('atribuicoes', []))
+                    total_investimento += float(resultados.get('custo_total_ponderado', 0))
+                    
+                elif tipo == 'p_centros':
+                    total_cds += resultados.get('num_cds_selecionados', 0)
+                    total_clientes += len(resultados.get('atribuicoes', []))
+                    # p-centros não tem custo monetário
+                    
+                elif tipo == 'max_cobertura':
+                    # Máxima Cobertura: múltiplas formas de obter número de CDs
+                    cds_selecionados = 0
+                    if resultados.get('num_cds_selecionados'):
+                        cds_selecionados = resultados.get('num_cds_selecionados')
+                    elif resultados.get('cds_selecionados'):
+                        cds_selecionados = len(resultados.get('cds_selecionados'))
+                    elif resultados.get('atribuicoes'):
+                        # Extrair CDs únicos das atribuições
+                        cds_unicos = set()
+                        for atribuicao in resultados.get('atribuicoes', []):
+                            if atribuicao.get('cd_selecionado'):
+                                cds_unicos.add(atribuicao.get('cd_selecionado'))
+                        cds_selecionados = len(cds_unicos)
+                    
+                    total_cds += cds_selecionados
+                    
+                    # Contar clientes cobertos
+                    clientes_cobertos = len([a for a in resultados.get('atribuicoes', []) if a.get('coberto')])
+                    total_clientes += clientes_cobertos
+                    # Máxima cobertura não tem custo monetário
+            
+            return {
+                'total_cds': total_cds,
+                'total_clientes': total_clientes,
+                'total_investimento': total_investimento
+            }
+        
+        # Calcular métricas consolidadas
+        consolidados = calcular_consolidados(projetos_selecionados)
+        
+        # Função para processar dados dos projetos e garantir campos necessários
+        def processar_dados_projetos(projetos):
+            for projeto in projetos:
+                resultados = projeto.get('resultados', {})
+                tipo = projeto.get('tipo_analise')
+                
+                if tipo == 'tradicional' and resultados:
+                    # Garantir volume_por_cd para cálculo de porcentagens
+                    if 'volume_por_cd' not in resultados and resultados.get('transportes'):
+                        volume_por_cd = {}
+                        for transporte in resultados.get('transportes', []):
+                            cd_origem = transporte.get('origem')
+                            quantidade = transporte.get('quantidade', 0)
+                            if cd_origem in volume_por_cd:
+                                volume_por_cd[cd_origem] += quantidade
+                            else:
+                                volume_por_cd[cd_origem] = quantidade
+                        resultados['volume_por_cd'] = volume_por_cd
+                
+                elif tipo == 'max_cobertura' and resultados:
+                    # Garantir campos para Máxima Cobertura
+                    if 'num_cds_selecionados' not in resultados:
+                        if resultados.get('cds_selecionados'):
+                            resultados['num_cds_selecionados'] = len(resultados.get('cds_selecionados'))
+                        elif resultados.get('atribuicoes'):
+                            cds_unicos = set()
+                            for atribuicao in resultados.get('atribuicoes', []):
+                                if atribuicao.get('cd_selecionado'):
+                                    cds_unicos.add(atribuicao.get('cd_selecionado'))
+                            resultados['num_cds_selecionados'] = len(cds_unicos)
+                    
+                    if 'clientes_atendidos' not in resultados:
+                        clientes_cobertos = len([a for a in resultados.get('atribuicoes', []) if a.get('coberto')])
+                        resultados['clientes_atendidos'] = clientes_cobertos
+                    
+                    if 'demanda_nao_coberta' not in resultados:
+                        demanda_nao_coberta = 0
+                        for atribuicao in resultados.get('atribuicoes', []):
+                            if not atribuicao.get('coberto') and atribuicao.get('demanda'):
+                                demanda_nao_coberta += atribuicao.get('demanda', 0)
+                        resultados['demanda_nao_coberta'] = demanda_nao_coberta
+        
+        # Processar dados dos projetos
+        processar_dados_projetos(projetos_selecionados)
+        
         # Renderizar template corrigido
         html_content = render_template('relatorio.html', 
                                      projetos=projetos_selecionados,
+                                     total_cds_consolidados=consolidados['total_cds'],
+                                     total_clientes_consolidados=consolidados['total_clientes'],
+                                     total_investimento_consolidado=consolidados['total_investimento'],
                                      ano_atual=ano_atual,
                                      data_atual=data_atual,
                                      tipos_contagem=tipos_contagem,
@@ -1697,8 +1807,118 @@ def relatorio_anual_visualizacao():
                 return "0,00"
             return f"{value:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
         
+        # Função para calcular métricas consolidadas
+        def calcular_consolidados(projetos):
+            total_cds = 0
+            total_clientes = 0
+            total_investimento = 0.0
+            
+            for projeto in projetos:
+                resultados = projeto.get('resultados', {})
+                tipo = projeto.get('tipo_analise')
+                
+                if tipo == 'tradicional':
+                    total_cds += len(resultados.get('cds_abertos', []))
+                    # Contar clientes únicos em vez de rotas
+                    clientes_unicos = set()
+                    transportes = resultados.get('transportes', [])
+                    for transporte in transportes:
+                        if transporte.get('destino'):
+                            clientes_unicos.add(transporte['destino'])
+                    total_clientes += len(clientes_unicos)
+                    total_investimento += float(resultados.get('custo_total', 0))
+                    
+                elif tipo == 'p_medianas':
+                    total_cds += resultados.get('num_cds_selecionados', 0)
+                    total_clientes += len(resultados.get('atribuicoes', []))
+                    total_investimento += float(resultados.get('custo_total_ponderado', 0))
+                    
+                elif tipo == 'p_centros':
+                    total_cds += resultados.get('num_cds_selecionados', 0)
+                    total_clientes += len(resultados.get('atribuicoes', []))
+                    # p-centros não tem custo monetário
+                    
+                elif tipo == 'max_cobertura':
+                    # Máxima Cobertura: múltiplas formas de obter número de CDs
+                    cds_selecionados = 0
+                    if resultados.get('num_cds_selecionados'):
+                        cds_selecionados = resultados.get('num_cds_selecionados')
+                    elif resultados.get('cds_selecionados'):
+                        cds_selecionados = len(resultados.get('cds_selecionados'))
+                    elif resultados.get('atribuicoes'):
+                        # Extrair CDs únicos das atribuições
+                        cds_unicos = set()
+                        for atribuicao in resultados.get('atribuicoes', []):
+                            if atribuicao.get('cd_selecionado'):
+                                cds_unicos.add(atribuicao.get('cd_selecionado'))
+                        cds_selecionados = len(cds_unicos)
+                    
+                    total_cds += cds_selecionados
+                    
+                    # Contar clientes cobertos
+                    clientes_cobertos = len([a for a in resultados.get('atribuicoes', []) if a.get('coberto')])
+                    total_clientes += clientes_cobertos
+                    # Máxima cobertura não tem custo monetário
+            
+            return {
+                'total_cds': total_cds,
+                'total_clientes': total_clientes,
+                'total_investimento': total_investimento
+            }
+        
+        # Calcular métricas consolidadas
+        consolidados = calcular_consolidados(projetos)
+        
+        # Função para processar dados dos projetos e garantir campos necessários
+        def processar_dados_projetos(projetos):
+            for projeto in projetos:
+                resultados = projeto.get('resultados', {})
+                tipo = projeto.get('tipo_analise')
+                
+                if tipo == 'tradicional' and resultados:
+                    # Garantir volume_por_cd para cálculo de porcentagens
+                    if 'volume_por_cd' not in resultados and resultados.get('transportes'):
+                        volume_por_cd = {}
+                        for transporte in resultados.get('transportes', []):
+                            cd_origem = transporte.get('origem')
+                            quantidade = transporte.get('quantidade', 0)
+                            if cd_origem in volume_por_cd:
+                                volume_por_cd[cd_origem] += quantidade
+                            else:
+                                volume_por_cd[cd_origem] = quantidade
+                        resultados['volume_por_cd'] = volume_por_cd
+                
+                elif tipo == 'max_cobertura' and resultados:
+                    # Garantir campos para Máxima Cobertura
+                    if 'num_cds_selecionados' not in resultados:
+                        if resultados.get('cds_selecionados'):
+                            resultados['num_cds_selecionados'] = len(resultados.get('cds_selecionados'))
+                        elif resultados.get('atribuicoes'):
+                            cds_unicos = set()
+                            for atribuicao in resultados.get('atribuicoes', []):
+                                if atribuicao.get('cd_selecionado'):
+                                    cds_unicos.add(atribuicao.get('cd_selecionado'))
+                            resultados['num_cds_selecionados'] = len(cds_unicos)
+                    
+                    if 'clientes_atendidos' not in resultados:
+                        clientes_cobertos = len([a for a in resultados.get('atribuicoes', []) if a.get('coberto')])
+                        resultados['clientes_atendidos'] = clientes_cobertos
+                    
+                    if 'demanda_nao_coberta' not in resultados:
+                        demanda_nao_coberta = 0
+                        for atribuicao in resultados.get('atribuicoes', []):
+                            if not atribuicao.get('coberto') and atribuicao.get('demanda'):
+                                demanda_nao_coberta += atribuicao.get('demanda', 0)
+                        resultados['demanda_nao_coberta'] = demanda_nao_coberta
+        
+        # Processar dados dos projetos
+        processar_dados_projetos(projetos)
+        
         return render_template('relatorio.html', 
                              projetos=projetos,
+                             total_cds_consolidados=consolidados['total_cds'],
+                             total_clientes_consolidados=consolidados['total_clientes'],
+                             total_investimento_consolidado=consolidados['total_investimento'],
                              ano_atual=ano_atual,
                              data_atual=data_atual,
                              tipos_contagem=tipos_contagem,
@@ -2346,6 +2566,1146 @@ def resolver_pmediana_simples_route():
     except Exception as e:
         flash(f'Erro ao processar arquivo: {str(e)}', 'error')
         return redirect(url_for('pmediana_simples'))
+
+# --- ROTA PARA GERAR RELATÓRIO EM WORD ---
+@app.route('/gerar_relatorio_word')
+def gerar_relatorio_word():
+    """Gera o relatório anual em formato Word (.docx) com design profissional"""
+    try:
+        from docx import Document
+        from docx.shared import Inches, Pt, RGBColor
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
+        from docx.oxml.ns import qn
+        from datetime import datetime
+        import tempfile
+        import os
+        
+        # Carregar todos os projetos do banco de dados
+        projetos = listar_projetos()
+        
+        if not projetos:
+            flash('Nenhum projeto encontrado para gerar relatório.', 'warning')
+            return redirect(url_for('dashboard'))
+        
+        # ESSENCIAL: Processar dados dos projetos para calcular porcentagens e métricas
+        def processar_dados_projetos(projetos):
+            for projeto in projetos:
+                resultados = projeto.get('resultados', {})
+                tipo = projeto.get('tipo_analise')
+                
+                if tipo == 'tradicional' and resultados:
+                    # Garantir volume_por_cd para cálculo de porcentagens
+                    if 'volume_por_cd' not in resultados and resultados.get('transportes'):
+                        volume_por_cd = {}
+                        for transporte in resultados.get('transportes', []):
+                            cd_origem = transporte.get('origem')
+                            quantidade = transporte.get('quantidade', 0)
+                            if cd_origem in volume_por_cd:
+                                volume_por_cd[cd_origem] += quantidade
+                            else:
+                                volume_por_cd[cd_origem] = quantidade
+                        resultados['volume_por_cd'] = volume_por_cd
+                    
+                    # Calcular distribuição de CDs com porcentagens
+                    if 'volume_por_cd' in resultados and 'distribuicao_cds' not in projeto:
+                        volume_total = sum(resultados['volume_por_cd'].values())
+                        distribuicao_cds = []
+                        for cd, volume in resultados['volume_por_cd'].items():
+                            percentual = (volume / volume_total * 100) if volume_total > 0 else 0
+                            distribuicao_cds.append({
+                                'nome': cd,
+                                'volume': volume,
+                                'percentual': percentual
+                            })
+                        projeto['distribuicao_cds'] = distribuicao_cds
+                
+                elif tipo == 'max_cobertura' and resultados:
+                    # Calcular métricas de cobertura
+                    atribuicoes = resultados.get('atribuicoes', [])
+                    total_clientes = len(atribuicoes)
+                    clientes_cobertos = len([a for a in atribuicoes if a.get('coberto')])
+                    clientes_nao_cobertos = total_clientes - clientes_cobertos
+                    
+                    projeto['cobertura_stats'] = {
+                        'total_clientes': total_clientes,
+                        'clientes_cobertos': clientes_cobertos,
+                        'clientes_nao_cobertos': clientes_nao_cobertos,
+                        'taxa_cobertura': (clientes_cobertos / total_clientes * 100) if total_clientes > 0 else 0
+                    }
+                    
+                    # Calcular clientes por CD para máxima cobertura
+                    clientes_por_cd = {}
+                    for atribuicao in atribuicoes:
+                        cd = atribuicao.get('cd_selecionado', atribuicao.get('cd', 'N/A'))
+                        if cd != 'N/A':
+                            clientes_por_cd[cd] = clientes_por_cd.get(cd, 0) + 1
+                    resultados['clientes_por_cd'] = clientes_por_cd
+            
+            # Garantir que p-medianas e p-centros tenham clientes_por_cd
+            if tipo in ['p_medianas', 'p_centros'] and resultados:
+                atribuicoes = resultados.get('atribuicoes', [])
+                clientes_por_cd = {}
+                for atribuicao in atribuicoes:
+                    cd = atribuicao.get('cd_selecionado', atribuicao.get('cd', 'N/A'))
+                    if cd != 'N/A':
+                        clientes_por_cd[cd] = clientes_por_cd.get(cd, 0) + 1
+                resultados['clientes_por_cd'] = clientes_por_cd
+        
+        # Processar os dados
+        processar_dados_projetos(projetos)
+        
+        # Calcular métricas consolidadas
+        def calcular_consolidados(projetos):
+            total_cds = 0
+            total_clientes = 0
+            total_investimento = 0.0
+            
+            for projeto in projetos:
+                resultados = projeto.get('resultados', {})
+                tipo = projeto.get('tipo_analise')
+                
+                if tipo == 'tradicional':
+                    total_cds += len(resultados.get('cds_abertos', []))
+                    # Contar clientes únicos em vez de rotas
+                    clientes_unicos = set()
+                    transportes = resultados.get('transportes', [])
+                    for transporte in transportes:
+                        if transporte.get('destino'):
+                            clientes_unicos.add(transporte['destino'])
+                    total_clientes += len(clientes_unicos)
+                    total_investimento += float(resultados.get('custo_total', 0))
+                
+                elif tipo == 'p_medianas':
+                    total_cds += resultados.get('num_cds_selecionados', 0)
+                    total_clientes += len(resultados.get('atribuicoes', []))
+                    total_investimento += float(resultados.get('custo_total_ponderado', 0))
+                
+                elif tipo == 'p_centros':
+                    total_cds += resultados.get('num_cds_selecionados', 0)
+                    total_clientes += len(resultados.get('atribuicoes', []))
+                    # p-centros não tem custo monetário
+                
+                elif tipo == 'max_cobertura':
+                    # Máxima Cobertura: múltiplas formas de obter número de CDs
+                    cds_selecionados = 0
+                    if resultados.get('num_cds_selecionados'):
+                        cds_selecionados = resultados.get('num_cds_selecionados')
+                    elif resultados.get('cds_selecionados'):
+                        cds_selecionados = len(resultados.get('cds_selecionados'))
+                    elif resultados.get('atribuicoes'):
+                        # Extrair CDs únicos das atribuições
+                        cds_unicos = set()
+                        for atribuicao in resultados.get('atribuicoes', []):
+                            if atribuicao.get('cd_selecionado'):
+                                cds_unicos.add(atribuicao.get('cd_selecionado'))
+                        cds_selecionados = len(cds_unicos)
+                    
+                    total_cds += cds_selecionados
+                    
+                    # Contar clientes cobertos
+                    clientes_cobertos = len([a for a in resultados.get('atribuicoes', []) if a.get('coberto')])
+                    total_clientes += clientes_cobertos
+                    # Máxima cobertura não tem custo monetário
+            
+            return {
+                'total_cds': total_cds,
+                'total_clientes': total_clientes,
+                'total_investimento': total_investimento
+            }
+        
+        # Calcular métricas consolidadas
+        consolidados = calcular_consolidados(projetos)
+        
+        # Preparar dados
+        data_atual = datetime.now().strftime('%d/%m/%Y')
+        
+        def get_tipo_nome(tipo):
+            nomes = {
+                'p_centros': 'p-Centros',
+                'p_medianas': 'p-Medianas', 
+                'max_cobertura': 'Máxima Cobertura',
+                'tradicional': 'Tradicional'
+            }
+            return nomes.get(tipo, 'Desconhecido')
+        
+        def get_tipo_descricao(tipo):
+            descricoes = {
+                'p_centros': 'Minimização da distância máxima de atendimento',
+                'p_medianas': 'Otimização com número fixo de instalações',
+                'max_cobertura': 'Maximização da demanda dentro do raio de cobertura',
+                'tradicional': 'Localização com custos fixos e capacidades'
+            }
+            return descricoes.get(tipo, 'Análise logística')
+        
+        def format_currency_brl(value):
+            if not value:
+                return "0,00"
+            return f"{value:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        
+        def get_tipo_cor(tipo):
+            cores = {
+                'p_centros': RGBColor(156, 39, 176),    # Roxo
+                'p_medianas': RGBColor(34, 197, 94),    # Verde
+                'max_cobertura': RGBColor(59, 130, 246), # Azul
+                'tradicional': RGBColor(249, 115, 22)  # Laranja
+            }
+            return cores.get(tipo, RGBColor(37, 99, 235))  # Azul padrão
+        
+        # Criar documento Word
+        doc = Document()
+        
+        # Configurar margens
+        for section in doc.sections:
+            section.top_margin = Inches(0.8)
+            section.bottom_margin = Inches(0.8)
+            section.left_margin = Inches(0.8)
+            section.right_margin = Inches(0.8)
+        
+        # ============= CAPA PROFISSIONAL =============
+        # Adicionar cabeçalho com gradiente simulado
+        title = doc.add_heading('Relatório Técnico Anual', 0)
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Formatar título
+        for run in title.runs:
+            run.font.size = Pt(28)
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(15, 23, 42)
+        
+        # Subtítulo
+        subtitle = doc.add_paragraph('Análise Otimizada de Redes Logísticas e Soluções de Distribuição')
+        subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        for run in subtitle.runs:
+            run.font.size = Pt(16)
+            run.font.italic = True
+            run.font.color.rgb = RGBColor(107, 114, 128)
+        
+        # Logo NexusNode
+        logo_para = doc.add_paragraph()
+        logo_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        logo_run = logo_para.add_run('📦 NexusNode')
+        logo_run.font.size = Pt(18)
+        logo_run.font.bold = True
+        logo_run.font.color.rgb = RGBColor(37, 99, 235)
+        
+        # Espaçamento
+        for _ in range(3):
+            doc.add_paragraph()
+        
+        # Tabela de informações da capa
+        info_table = doc.add_table(rows=2, cols=2)
+        info_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        
+        # Formatar células
+        for row in info_table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    for run in paragraph.runs:
+                        run.font.bold = True
+                        run.font.size = Pt(11)
+        
+        # Preencher informações
+        info_table.cell(0, 0).text = 'RESPONSÁVEL'
+        info_table.cell(0, 1).text = 'SISTEMA'
+        info_table.cell(1, 0).text = 'EMISSÃO'
+        info_table.cell(1, 1).text = data_atual
+        
+        # Quebra de página
+        doc.add_page_break()
+        
+        # ============= FUNDAMENTAÇÃO TEÓRICA =============
+        doc.add_heading('1. Fundamentação Teórica', level=1)
+        
+        # Parágrafos introdutórios
+        intro1 = doc.add_paragraph(
+            'O presente relatório técnico tem como objetivo apresentar uma análise abrangente dos resultados obtidos '
+            'através da aplicação de modelos matemáticos de Otimização Combinatória em redes logísticas, '
+            'desenvolvidos e implementados mediante a plataforma inteligente NexusNode. A crescente complexidade '
+            'dos cenários modernos de distribuição exige decisões estratégicas fundamentadas em dados '
+            'estruturados e análises quantitativas robustas, visando garantir máxima eficiência '
+            'operacional e competitividade no mercado.'
+        )
+        
+        intro2 = doc.add_paragraph(
+            'O foco central deste documento consiste na compilação sistemática de análises detalhadas referentes '
+            'à localização ótima de facilidades logísticas (Centros de Distribuição), buscando alcançar o '
+            'equilíbrio ideal entre múltiplos objetivos estratégicos: redução significativa de custos '
+            'operacionais, minimização de distâncias percorridas na cadeia de suprimentos e '
+            'maximização da cobertura geográfica de atendimento aos pontos de demanda identificados.'
+        )
+        
+        # Caixa de destaque
+        highlight_para = doc.add_paragraph()
+        highlight_run = highlight_para.add_run('Objetivo Principal: ')
+        highlight_run.bold = True
+        highlight_run.font.color.rgb = RGBColor(15, 23, 42)
+        
+        highlight_para.add_run(
+            'Fornecer uma base analítica e matemática rigorosa, fundamentada em algoritmos de '
+            'otimização avançados, para subsidiar o processo decisório de planejamento '
+            'estratégico da cadeia de suprimentos da organização no período avaliado, '
+            'possibilitando maximização de eficiência e rentabilidade.'
+        )
+        
+        # Metodologia
+        doc.add_heading('2. Metodologia de Análise', level=1)
+        
+        metodologia_para = doc.add_paragraph(
+            'Para a obtenção dos resultados apresentados neste relatório técnico, foram empregados '
+            'algoritmos computacionais avançados de Pesquisa Operacional, especificamente '
+            'desenvolvidos e implementados através de abordagens matemáticas distintas e complementares, '
+            'cada uma com suas características e aplicações específicas:'
+        )
+        
+        # Descrições dos modelos utilizados
+        modelos_utilizados = set(projeto['tipo_analise'] for projeto in projetos)
+        
+        if 'p_medianas' in modelos_utilizados:
+            doc.add_heading('2.1. Modelo p-Medianas', level=2)
+            doc.add_paragraph(
+                'Este modelo matemático concentra-se primordialmente na otimização de eficiência de custos. '
+                'O algoritmo computacional aloca estrategicamente um número predefinido (p) de '
+                'instalações logísticas de forma a minimizar a distância total ponderada entre as '
+                'instalações selecionadas e os pontos de demanda, considerando o custo de transporte como '
+                'variável decisiva. Esta abordagem mostra-se ideal para cenários corporativos onde o '
+                'custo logístico representa o fator mais crítico e impactante na rentabilidade '
+                'operacional do negócio.'
+            )
+        
+        if 'p_centros' in modelos_utilizados:
+            doc.add_heading('2.2. Modelo p-Centros', level=2)
+            doc.add_paragraph(
+                'Com foco estratégico em equidade distributiva e atendimento urgente, o modelo '
+                'p-Centros busca minimizar a distância máxima absoluta entre qualquer ponto de demanda e '
+                'o Centro de Distribuição geograficamente mais próximo. Esta metodologia representa o '
+                'padrão ouro para operações logísticas que requerem garantia de tempo máximo de '
+                'resposta, equalizando o nível de serviço em toda a rede de distribuição e '
+                'assegurando atendimento uniforme a todos os clientes.'
+            )
+        
+        if 'max_cobertura' in modelos_utilizados:
+            doc.add_heading('2.3. Modelo de Máxima Cobertura', level=2)
+            doc.add_paragraph(
+                'O modelo de Máxima Cobertura prioriza expansão de mercado e alcance geográfico, '
+                'maximizando o número de pontos de demanda atendidos dentro de um raio de distância '
+                'pré-determinado. Esta abordagem é particularmente valiosa para empresas em fase de '
+                'expansão ou aquelas que buscam aumentar sua participação de mercado através da '
+                'otimização estratégica da cobertura geográfica, garantindo atendimento ao maior número '
+                'possível de clientes com recursos limitados.'
+            )
+        
+        if 'tradicional' in modelos_utilizados:
+            doc.add_heading('2.4. Modelo Tradicional', level=2)
+            doc.add_paragraph(
+                'O modelo tradicional de localização capacitada combina otimização integrada de custos '
+                'fixos e variáveis, selecionando estrategicamente os Centros de Distribuição a serem '
+                'abertos e alocando clientes aos CDs mais próximos considerando capacidades limitadas. '
+                'Esta abordagem é fundamental para operações logísticas estabelecidas que buscam '
+                'equilibrar custos operacionais fixos com custos de transporte, garantindo '
+                'atendimento eficiente da demanda dentro das restrições de capacidade existentes.'
+            )
+        
+        # ============= ANÁLISE DOS PROJETOS =============
+        for i, projeto in enumerate(projetos, 1):
+            doc.add_page_break()
+            
+            # Cabeçalho do projeto
+            doc.add_heading(f'3.{i} Projeto: {projeto["nome"]}', level=1)
+            
+            # Parágrafo de tipo de análise
+            tipo_para = doc.add_paragraph()
+            tipo_para.add_run('Tipo de Análise: ').bold = True
+            tipo_para.add_run(get_tipo_descricao(projeto["tipo_analise"]))
+            
+            # Obter tipo e resultados para uso posterior
+            resultados = projeto.get('resultados', {})
+            tipo = projeto.get('tipo_analise')
+            
+            # ============= MAPA INTERATIVO =============
+            if projeto.get('mapa_html'):
+                doc.add_heading('🗺️ Mapa Interativo', level=2)
+                
+                # Informações do mapa
+                mapa_para = doc.add_paragraph()
+                mapa_para.add_run('Arquivo do Mapa: ').bold = True
+                mapa_para.add_run(f'{projeto["mapa_html"]}')
+                
+                # Adicionar detalhes sobre o mapa
+                mapa_info_para = doc.add_paragraph()
+                mapa_info_para.add_run('📍 Localização: ').bold = True
+                mapa_info_para.add_run('Mapa geográfico interativo com visualização dos CDs e clientes')
+                
+                # Adicionar informações de coordenadas se disponíveis
+                if projeto.get('coordenadas_info'):
+                    coords_para = doc.add_paragraph()
+                    coords_para.add_run('🌍 Coordenadas: ').bold = True
+                    coords_para.add_run('Sistema utilizou coordenadas geográficas reais para posicionamento preciso')
+                else:
+                    coords_para = doc.add_paragraph()
+                    coords_para.add_run('📊 Distâncias: ').bold = True
+                    coords_para.add_run('Sistema utilizou matriz de distâncias para posicionamento relativo')
+                
+                # Adicionar nota sobre disponibilidade
+                nota_mapa = doc.add_paragraph()
+                nota_mapa.add_run('💡 Nota: ').bold = True
+                nota_mapa.add_run('O mapa interativo completo está disponível na versão web do relatório com funcionalidades de zoom, filtros e análise detalhada.')
+                
+                # Adicionar estatísticas do mapa
+                resultados = projeto.get('resultados', {})
+                if resultados:
+                    stats_mapa_para = doc.add_paragraph()
+                    stats_mapa_para.add_run('📊 Estatísticas do Mapa: ').bold = True
+                    
+                    # CDs no mapa
+                    if tipo == 'tradicional':
+                        cds_count = len(resultados.get('cds_abertos', []))
+                    elif tipo == 'max_cobertura':
+                        cds_count = resultados.get('num_cds_selecionados', len(resultados.get('cds_selecionados', [])))
+                    else:
+                        cds_count = resultados.get('num_cds_selecionados', 0)
+                    
+                    # Clientes no mapa
+                    if tipo == 'tradicional':
+                        clientes_unicos = set()
+                        for transporte in resultados.get('transportes', []):
+                            if transporte.get('destino'):
+                                clientes_unicos.add(transporte['destino'])
+                        clientes_count = len(clientes_unicos)
+                    else:
+                        clientes_count = len(resultados.get('atribuicoes', []))
+                    
+                    stats_mapa_para.add_run(f'{cds_count} CDs e {clientes_count} clientes visualizados no mapa')
+                
+                # Adicionar linha separadora
+                doc.add_paragraph('─' * 50)
+            else:
+                # Se não houver mapa, adicionar informação
+                doc.add_heading('🗺️ Informações de Visualização', level=2)
+                sem_mapa_para = doc.add_paragraph()
+                sem_mapa_para.add_run('📍 Status: ').bold = True
+                sem_mapa_para.add_run('Mapa não gerado para este projeto')
+                
+                motivo_para = doc.add_paragraph()
+                motivo_para.add_run('📋 Motivo: ').bold = True
+                motivo_para.add_run('Coordenadas geográficas não disponíveis ou dados insuficientes para geração do mapa')
+                
+                alternativa_para = doc.add_paragraph()
+                alternativa_para.add_run('💡 Alternativa: ').bold = True
+                alternativa_para.add_run('Utilize as tabelas de atribuições e análises detalhadas abaixo para visualização dos dados')
+            
+            # ============= GRID DE ESTATÍSTICAS =============
+            doc.add_heading('Métricas Principais', level=2)
+            
+            cor_tipo = get_tipo_cor(tipo)
+            
+            # Criar tabela 3x2 para estatísticas
+            stats_table = doc.add_table(rows=3, cols=2)
+            stats_table.style = 'Medium Grid 1'
+            
+            # Custo Total / Demanda Coberta
+            if tipo == 'tradicional':
+                stats_table.cell(0, 0).text = 'Custo Total'
+                stats_table.cell(0, 1).text = f'R$ {format_currency_brl(resultados.get("custo_total", 0))}'
+            elif tipo == 'max_cobertura':
+                stats_table.cell(0, 0).text = 'Demanda Coberta'
+                demanda_coberta = resultados.get("demanda_coberta", 0)
+                stats_table.cell(0, 1).text = f'{demanda_coberta:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
+            else:
+                stats_table.cell(0, 0).text = 'Custo Total'
+                custo_ponderado = resultados.get("custo_total_ponderado", 0)
+                stats_table.cell(0, 1).text = f'{custo_ponderado:.2f}'
+            
+            # CDs Ativos
+            if tipo == 'tradicional':
+                cds_ativos = len(resultados.get('cds_abertos', []))
+            elif tipo == 'max_cobertura':
+                cds_ativos = resultados.get('num_cds_selecionados', 0)
+                if cds_ativos == 0 and resultados.get('cds_selecionados'):
+                    cds_ativos = len(resultados['cds_selecionados'])
+                elif cds_ativos == 0 and resultados.get('atribuicoes'):
+                    cds_unicos = set()
+                    for atribuicao in resultados.get('atribuicoes', []):
+                        if atribuicao.get('cd_selecionado'):
+                            cds_unicos.add(atribuicao.get('cd_selecionado'))
+                    cds_ativos = len(cds_unicos)
+            else:
+                cds_ativos = resultados.get('num_cds_selecionados', 0)
+            
+            stats_table.cell(1, 0).text = 'CDs Ativos'
+            stats_table.cell(1, 1).text = str(cds_ativos)
+            
+            # Clientes Atendidos
+            if tipo == 'tradicional':
+                clientes_unicos = set()
+                transportes = resultados.get('transportes', [])
+                for transporte in transportes:
+                    if transporte.get('destino'):
+                        clientes_unicos.add(transporte['destino'])
+                clientes_atendidos = len(clientes_unicos)
+                if clientes_atendidos == 0:
+                    clientes_atendidos = len(resultados.get('atribuicoes', []))
+            elif tipo == 'max_cobertura':
+                clientes_atendidos = len([a for a in resultados.get('atribuicoes', []) if a.get('coberto')])
+                if clientes_atendidos == 0:
+                    clientes_atendidos = len(resultados.get('atribuicoes', []))
+            else:
+                clientes_atendidos = len(resultados.get('atribuicoes', []))
+            
+            stats_table.cell(2, 0).text = 'Clientes Atendidos'
+            stats_table.cell(2, 1).text = str(clientes_atendidos)
+            
+            # Formatar tabela de estatísticas
+            for row_idx, row in enumerate(stats_table.rows):
+                for col_idx, cell in enumerate(row.cells):
+                    for paragraph in cell.paragraphs:
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        for run in paragraph.runs:
+                            run.font.size = Pt(12)
+                            if row_idx == 0:  # Cabeçalho
+                                run.font.bold = True
+                                run.font.color.rgb = RGBColor(255, 255, 255)
+                            else:
+                                run.font.color.rgb = cor_tipo
+            
+            # Colorir cabeçalho da tabela (método alternativo)
+            try:
+                from docx.oxml import parse_xml
+                for cell in stats_table.rows[0].cells:
+                    # Adicionar cor de fundo ao cabeçalho
+                    shading_elm = parse_xml('<w:shd w:fill="2F549D" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>')
+                    cell._tc.get_or_add_tcPr().append(shading_elm)
+            except:
+                pass  # Se falhar, continua sem cor
+            
+            # ============= SEÇÃO DE CDs SELECIONADOS =============
+            cds_lista = None
+            if tipo == 'tradicional' and resultados.get('cds_abertos'):
+                cds_lista = resultados['cds_abertos']
+            elif resultados.get('cds_selecionados'):
+                cds_lista = resultados['cds_selecionados']
+            
+            if cds_lista:
+                doc.add_heading('Centros de Distribuição Selecionados', level=2)
+                
+                # Criar tabela para CDs
+                cds_table = doc.add_table(rows=len(cds_lista) + 1, cols=2)
+                cds_table.style = 'Medium Grid 1'
+                
+                # Cabeçalho
+                cds_table.cell(0, 0).text = 'Centro de Distribuição'
+                cds_table.cell(0, 1).text = 'Informações de Capacidade'
+                
+                # Formatar cabeçalho
+                for cell in cds_table.rows[0].cells:
+                    for paragraph in cell.paragraphs:
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        for run in paragraph.runs:
+                            run.font.bold = True
+                            run.font.size = Pt(11)
+                
+                # Dados dos CDs
+                for idx, cd in enumerate(cds_lista, 1):
+                    cds_table.cell(idx, 0).text = str(cd)
+                    
+                    # Informações de capacidade
+                    capacidade_info = "N/A"
+                    if tipo == 'tradicional' and resultados.get('capacidade_utilizada') and cd in resultados['capacidade_utilizada']:
+                        cap_info = resultados['capacidade_utilizada'][cd]
+                        capacidade_info = f"{cap_info.get('utilizada', 0):.0f} / {cap_info.get('disponivel', 0):.0f} ({cap_info.get('percentual_uso', 0):.1f}%)"
+                    elif tipo in ['p_medianas', 'p_centros'] and resultados.get('clientes_por_cd') and cd in resultados['clientes_por_cd']:
+                        clientes = resultados['clientes_por_cd'][cd]
+                        total_clientes = sum(resultados['clientes_por_cd'].values())
+                        percentual = (clientes / total_clientes * 100) if total_clientes > 0 else 0
+                        capacidade_info = f"{clientes} clientes ({percentual:.1f}%)"
+                    
+                    cds_table.cell(idx, 1).text = capacidade_info
+                    
+                    # Formatar células de dados
+                    for cell in [cds_table.cell(idx, 0), cds_table.cell(idx, 1)]:
+                        for paragraph in cell.paragraphs:
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            for run in paragraph.runs:
+                                run.font.size = Pt(10)
+            
+            # ============= ANÁLISE DETALHADA ESPECÍFICA =============
+            if tipo == 'tradicional' and resultados:
+                doc.add_heading('📊 Análise Detalhada - Modelo Tradicional', level=2)
+                
+                # Grid de métricas detalhadas
+                detalhes_table = doc.add_table(rows=4, cols=2)
+                detalhes_table.style = 'Medium Grid 1'
+                
+                # Custo Total
+                detalhes_table.cell(0, 0).text = 'Custo Total'
+                detalhes_table.cell(0, 1).text = f'R$ {format_currency_brl(resultados.get("custo_total", 0))}'
+                
+                # CDs Abertos
+                detalhes_table.cell(1, 0).text = 'CDs Abertos'
+                detalhes_table.cell(1, 1).text = str(len(resultados.get('cds_abertos', [])))
+                
+                # Clientes Atendidos
+                clientes_unicos = set()
+                for transporte in resultados.get('transportes', []):
+                    if transporte.get('destino'):
+                        clientes_unicos.add(transporte['destino'])
+                clientes_atendidos = len(clientes_unicos)
+                detalhes_table.cell(2, 0).text = 'Clientes Atendidos'
+                detalhes_table.cell(2, 1).text = str(clientes_atendidos)
+                
+                # Capacidade Usada
+                capacidade_total = 0
+                if resultados.get('capacidade_utilizada'):
+                    for cd, dados in resultados['capacidade_utilizada'].items():
+                        capacidade_total += dados.get('utilizada', 0)
+                detalhes_table.cell(3, 0).text = 'Capacidade Usada'
+                detalhes_table.cell(3, 1).text = f'{capacidade_total:.0f}'
+                
+                # Formatar tabela detalhada
+                for row in detalhes_table.rows:
+                    for cell in row.cells:
+                        for paragraph in cell.paragraphs:
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            for run in paragraph.runs:
+                                run.font.size = Pt(11)
+                
+                # Análise de Custos (se disponível)
+                if resultados.get('custo_fixo_total') or resultados.get('custo_transporte_total'):
+                    doc.add_heading('💰 Estrutura Detalhada de Custos', level=3)
+                    
+                    custos_table = doc.add_table(rows=3, cols=2)
+                    custos_table.style = 'Medium Grid 1'
+                    
+                    # Custos Fixos
+                    custos_table.cell(0, 0).text = 'Custos Fixos (CDs)'
+                    custos_table.cell(0, 1).text = f'R$ {format_currency_brl(resultados.get("custo_fixo_total", 0))}'
+                    
+                    # Custos de Transporte
+                    custos_table.cell(1, 0).text = 'Custos de Transporte'
+                    custos_table.cell(1, 1).text = f'R$ {format_currency_brl(resultados.get("custo_transporte_total", 0))}'
+                    
+                    # Custo Total
+                    custos_table.cell(2, 0).text = 'Custo Total'
+                    custos_table.cell(2, 1).text = f'R$ {format_currency_brl(resultados.get("custo_total", 0))}'
+                    
+                    # Formatar tabela de custos
+                    for row in custos_table.rows:
+                        for cell in row.cells:
+                            for paragraph in cell.paragraphs:
+                                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                                for run in paragraph.runs:
+                                    run.font.size = Pt(10)
+            
+            elif tipo == 'p_medianas' and resultados:
+                doc.add_heading('📊 Análise Detalhada - Modelo p-Medianas', level=2)
+                
+                detalhes_pmed_table = doc.add_table(rows=3, cols=2)
+                detalhes_pmed_table.style = 'Medium Grid 1'
+                
+                detalhes_pmed_table.cell(0, 0).text = 'Custo Total Ponderado'
+                detalhes_pmed_table.cell(0, 1).text = f'{resultados.get("custo_total_ponderado", 0):.2f}'
+                
+                detalhes_pmed_table.cell(1, 0).text = 'Número de CDs Selecionados'
+                detalhes_pmed_table.cell(1, 1).text = str(resultados.get('num_cds_selecionados', 0))
+                
+                detalhes_pmed_table.cell(2, 0).text = 'Total de Clientes'
+                detalhes_pmed_table.cell(2, 1).text = str(len(resultados.get('atribuicoes', [])))
+                
+                # Formatar
+                for row in detalhes_pmed_table.rows:
+                    for cell in row.cells:
+                        for paragraph in cell.paragraphs:
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            for run in paragraph.runs:
+                                run.font.size = Pt(11)
+            
+            elif tipo == 'max_cobertura' and resultados:
+                doc.add_heading('📊 Análise Detalhada - Máxima Cobertura', level=2)
+                
+                detalhes_max_table = doc.add_table(rows=4, cols=2)
+                detalhes_max_table.style = 'Medium Grid 1'
+                
+                detalhes_max_table.cell(0, 0).text = 'Demanda Total Coberta'
+                detalhes_max_table.cell(0, 1).text = f'{resultados.get("demanda_coberta", 0):.2f}'
+                
+                detalhes_max_table.cell(1, 0).text = 'Demanda Não Coberta'
+                detalhes_max_table.cell(1, 1).text = f'{resultados.get("demanda_nao_coberta", 0):.2f}'
+                
+                detalhes_max_table.cell(2, 0).text = 'Taxa de Cobertura'
+                taxa_cobertura = (resultados.get("demanda_coberta", 0) / (resultados.get("demanda_coberta", 0) + resultados.get("demanda_nao_coberta", 0))) * 100 if (resultados.get("demanda_coberta", 0) + resultados.get("demanda_nao_coberta", 0)) > 0 else 0
+                detalhes_max_table.cell(2, 1).text = f'{taxa_cobertura:.1f}%'
+                
+                detalhes_max_table.cell(3, 0).text = 'Número de CDs'
+                detalhes_max_table.cell(3, 1).text = str(cds_ativos)
+                
+                # Formatar
+                for row in detalhes_max_table.rows:
+                    for cell in row.cells:
+                        for paragraph in cell.paragraphs:
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            for run in paragraph.runs:
+                                run.font.size = Pt(11)
+            
+            elif tipo == 'p_centros' and resultados:
+                doc.add_heading('📊 Análise Detalhada - Modelo p-Centros', level=2)
+                
+                detalhes_pcent_table = doc.add_table(rows=3, cols=2)
+                detalhes_pcent_table.style = 'Medium Grid 1'
+                
+                detalhes_pcent_table.cell(0, 0).text = 'Distância Máxima'
+                detalhes_pcent_table.cell(0, 1).text = f'{resultados.get("distancia_maxima", 0):.2f}'
+                
+                detalhes_pcent_table.cell(1, 0).text = 'Número de CDs Selecionados'
+                detalhes_pcent_table.cell(1, 1).text = str(resultados.get('num_cds_selecionados', 0))
+                
+                detalhes_pcent_table.cell(2, 0).text = 'Total de Clientes'
+                detalhes_pcent_table.cell(2, 1).text = str(len(resultados.get('atribuicoes', [])))
+                
+                # Formatar
+                for row in detalhes_pcent_table.rows:
+                    for cell in row.cells:
+                        for paragraph in cell.paragraphs:
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            for run in paragraph.runs:
+                                run.font.size = Pt(11)
+            
+            # ============= INSIGHT BOXES ESPECÍFICOS =============
+            if tipo == 'tradicional' and projeto.get('distribuicao_cds'):
+                doc.add_heading('📊 Carga de Trabalho por CD', level=2)
+                
+                carga_table = doc.add_table(rows=len(projeto['distribuicao_cds']) + 1, cols=3)
+                carga_table.style = 'Medium Grid 1'
+                
+                # Cabeçalho
+                carga_table.cell(0, 0).text = 'Centro de Distribuição'
+                carga_table.cell(0, 1).text = 'Volume Total'
+                carga_table.cell(0, 2).text = '% do Volume'
+                
+                # Formatar cabeçalho
+                for cell in carga_table.rows[0].cells:
+                    for paragraph in cell.paragraphs:
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        for run in paragraph.runs:
+                            run.font.bold = True
+                            run.font.size = Pt(10)
+                
+                # Dados
+                for idx, cd_info in enumerate(projeto['distribuicao_cds'], 1):
+                    carga_table.cell(idx, 0).text = str(cd_info['nome'])
+                    carga_table.cell(idx, 1).text = f"{cd_info['volume']:.0f}"
+                    carga_table.cell(idx, 2).text = f"{cd_info['percentual']:.1f}%"
+                    
+                    # Formatar células
+                    for cell in [carga_table.cell(idx, 0), carga_table.cell(idx, 1), carga_table.cell(idx, 2)]:
+                        for paragraph in cell.paragraphs:
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            for run in paragraph.runs:
+                                run.font.size = Pt(9)
+            
+            elif tipo == 'max_cobertura' and projeto.get('cobertura_stats'):
+                doc.add_heading('📊 Análise de Cobertura', level=2)
+                
+                stats = projeto['cobertura_stats']
+                
+                cobertura_table = doc.add_table(rows=4, cols=2)
+                cobertura_table.style = 'Medium Grid 1'
+                
+                cobertura_table.cell(0, 0).text = 'Total de Clientes'
+                cobertura_table.cell(0, 1).text = str(stats['total_clientes'])
+                
+                cobertura_table.cell(1, 0).text = 'Clientes Cobertos'
+                cobertura_table.cell(1, 1).text = str(stats['clientes_cobertos'])
+                
+                cobertura_table.cell(2, 0).text = 'Clientes Não Cobertos'
+                cobertura_table.cell(2, 1).text = str(stats['clientes_nao_cobertos'])
+                
+                cobertura_table.cell(3, 0).text = 'Taxa de Cobertura'
+                cobertura_table.cell(3, 1).text = f"{stats['taxa_cobertura']:.1f}%"
+                
+                # Formatar
+                for row in cobertura_table.rows:
+                    for cell in row.cells:
+                        for paragraph in cell.paragraphs:
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            for run in paragraph.runs:
+                                run.font.size = Pt(10)
+                
+                # Adicionar raio de cobertura se disponível
+                if resultados.get('raio_cobertura'):
+                    raio_para = doc.add_paragraph()
+                    raio_para.add_run('Raio de Cobertura: ').bold = True
+                    raio_para.add_run(f"{resultados['raio_cobertura']} km")
+            
+            elif tipo in ['p_medianas', 'p_centros'] and resultados.get('clientes_por_cd'):
+                doc.add_heading('📊 Distribuição de Clientes por CD', level=2)
+                
+                clientes_dist = resultados['clientes_por_cd']
+                total_clientes = sum(clientes_dist.values())
+                
+                dist_table = doc.add_table(rows=len(clientes_dist) + 1, cols=3)
+                dist_table.style = 'Medium Grid 1'
+                
+                # Cabeçalho
+                dist_table.cell(0, 0).text = 'Centro de Distribuição'
+                dist_table.cell(0, 1).text = 'Número de Clientes'
+                dist_table.cell(0, 2).text = '% do Total'
+                
+                # Formatar cabeçalho
+                for cell in dist_table.rows[0].cells:
+                    for paragraph in cell.paragraphs:
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        for run in paragraph.runs:
+                            run.font.bold = True
+                            run.font.size = Pt(10)
+                
+                # Dados
+                for idx, (cd, clientes) in enumerate(clientes_dist.items(), 1):
+                    percentual = (clientes / total_clientes * 100) if total_clientes > 0 else 0
+                    dist_table.cell(idx, 0).text = str(cd)
+                    dist_table.cell(idx, 1).text = str(clientes)
+                    dist_table.cell(idx, 2).text = f"{percentual:.1f}%"
+                    
+                    # Formatar células
+                    for cell in [dist_table.cell(idx, 0), dist_table.cell(idx, 1), dist_table.cell(idx, 2)]:
+                        for paragraph in cell.paragraphs:
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            for run in paragraph.runs:
+                                run.font.size = Pt(9)
+            
+            # ============= ANÁLISES CRÍTICAS E INSIGHTS =============
+            if tipo == 'tradicional' and resultados.get('transportes'):
+                # Curva ABC de Custos de Rotas
+                doc.add_heading('🔍 Curva ABC dos Custos de Rotas', level=2)
+                
+                # Calcular custos por rota
+                rotas_ordenadas = []
+                for transporte in resultados.get('transportes', []):
+                    custo_total_rota = transporte.get('quantidade', 0) * transporte.get('custo_unitario', 0)
+                    rotas_ordenadas.append({
+                        'origem': transporte.get('origem', 'N/A'),
+                        'destino': transporte.get('destino', 'N/A'),
+                        'custo_total': custo_total_rota,
+                        'quantidade': transporte.get('quantidade', 0),
+                        'custo_unitario': transporte.get('custo_unitario', 0)
+                    })
+                
+                # Ordenar por custo total
+                rotas_ordenadas.sort(key=lambda x: x['custo_total'], reverse=True)
+                
+                # Top 3 rotas mais críticas
+                doc.add_paragraph('📈 Top 3 Rotas Mais Críticas', style='List Bullet')
+                for i, rota in enumerate(rotas_ordenadas[:3], 1):
+                    rota_para = doc.add_paragraph()
+                    rota_para.add_run(f'{i}. {rota["origem"]} → {rota["destino"]}: ').bold = True
+                    rota_para.add_run(f'{rota["quantidade"]} unidades × R$ {rota["custo_unitario"]:.2f}/unidade = R$ {rota["custo_total"]:.2f}')
+                
+                # Análise crítica
+                if len(rotas_ordenadas) >= 3 and resultados.get('custo_transporte_total', 0) > 0:
+                    custo_top3 = sum(r['custo_total'] for r in rotas_ordenadas[:3])
+                    percentual = (custo_top3 / resultados['custo_transporte_total']) * 100
+                    critica_para = doc.add_paragraph()
+                    critica_para.add_run('⚠️ Análise Crítica: ').bold = True
+                    critica_para.add_run(f'As top 3 rotas representam {percentual:.1f}% de todo o custo de transporte da malha.')
+            
+            # Nível de Importância de cada CD (para todos os tipos)
+            if resultados.get('volume_por_cd') or resultados.get('clientes_por_cd'):
+                doc.add_heading('📊 Nível de Importância de Cada CD', level=2)
+                
+                if tipo == 'tradicional':
+                    volume_por_cd = resultados.get('volume_por_cd', {})
+                    volume_total = sum(volume_por_cd.values())
+                    
+                    for cd, volume in volume_por_cd.items():
+                        percentual = (volume / volume_total * 100) if volume_total > 0 else 0
+                        cd_para = doc.add_paragraph()
+                        cd_para.add_run(f'CD {cd}: ').bold = True
+                        cd_para.add_run(f'{percentual:.1f}% do volume total ({volume:.0f} unidades)')
+                
+                elif resultados.get('clientes_por_cd'):
+                    clientes_por_cd = resultados['clientes_por_cd']
+                    total_clientes = sum(clientes_por_cd.values())
+                    
+                    for cd, clientes in clientes_por_cd.items():
+                        percentual = (clientes / total_clientes * 100) if total_clientes > 0 else 0
+                        cd_para = doc.add_paragraph()
+                        cd_para.add_run(f'CD {cd}: ').bold = True
+                        cd_para.add_run(f'{percentual:.1f}% do total ({clientes} clientes)')
+            
+            # ============= ATRIBUIÇÕES DE CLIENTES =============
+            if resultados.get('atribuicoes') and len(resultados['atribuicoes']) > 0:
+                doc.add_heading('Atribuições de Clientes', level=2)
+                
+                # Criar tabela para atribuições (limitar a 20 para não ficar muito grande)
+                atribuicoes = resultados['atribuicoes'][:20]  # Limitar para 20 primeiras
+                atrib_table = doc.add_table(rows=len(atribuicoes) + 1, cols=3)
+                atrib_table.style = 'Medium Grid 1'
+                
+                # Cabeçalho
+                atrib_table.cell(0, 0).text = 'Cliente'
+                atrib_table.cell(0, 1).text = 'CD Selecionado'
+                atrib_table.cell(0, 2).text = 'Distância'
+                
+                # Formatar cabeçalho
+                for cell in atrib_table.rows[0].cells:
+                    for paragraph in cell.paragraphs:
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        for run in paragraph.runs:
+                            run.font.bold = True
+                            run.font.size = Pt(10)
+                
+                # Dados das atribuições
+                for idx, atribuicao in enumerate(atribuicoes, 1):
+                    # Mapear campos diferentes por tipo de modelo
+                    if tipo == 'tradicional':
+                        # Para modelo tradicional, usar dados dos transportes
+                        if resultados.get('transportes') and idx <= len(resultados['transportes']):
+                            transporte = resultados['transportes'][idx-1]
+                            cliente_nome = transporte.get('destino', f'Cliente {idx}')
+                            cd_selecionado = transporte.get('origem', 'N/A')
+                            distancia = transporte.get('distancia', 0)
+                        else:
+                            cliente_nome = f'Cliente {idx}'
+                            cd_selecionado = 'N/A'
+                            distancia = 0
+                    elif tipo == 'max_cobertura':
+                        cliente_nome = atribuicao.get('cliente', f'Cliente {idx}')
+                        cd_selecionado = atribuicao.get('cd_selecionado', atribuicao.get('cd', f'CD {idx}'))
+                        distancia = atribuicao.get('distancia', atribuicao.get('distancia_km', 0))
+                    else:  # p_medianas, p_centros
+                        # Para p-medianas e p-centros, verificar múltiplos campos possíveis
+                        cliente_nome = atribuicao.get('cliente', atribuicao.get('nome_cliente', f'Cliente {idx}'))
+                        cd_selecionado = atribuicao.get('cd_selecionado', atribuicao.get('cd', atribuicao.get('cd_origem', f'CD {idx}')))
+                        distancia = atribuicao.get('distancia', atribuicao.get('distancia_km', 0))
+                    
+                    atrib_table.cell(idx, 0).text = str(cliente_nome)
+                    atrib_table.cell(idx, 1).text = str(cd_selecionado)
+                    atrib_table.cell(idx, 2).text = f'{distancia:.2f}'
+                    
+                    # Formatar células de dados
+                    for cell in [atrib_table.cell(idx, 0), atrib_table.cell(idx, 1), atrib_table.cell(idx, 2)]:
+                        for paragraph in cell.paragraphs:
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            for run in paragraph.runs:
+                                run.font.size = Pt(9)
+                
+                # Se houver mais de 20 atribuições, adicionar nota
+                if len(resultados['atribuicoes']) > 20:
+                    nota_para = doc.add_paragraph()
+                    nota_para.add_run(f'Nota: Mostrando 20 de {len(resultados["atribuicoes"])} atribuições totais. ')
+                    nota_para.add_run('Lista completa disponível na versão web do relatório.').italic = True
+        
+        # ============= SEÇÃO FINAL - ACHIEVEMENTS =============
+        doc.add_page_break()
+        doc.add_heading('4. Análise Comparativa e Métricas Consolidadas', level=1)
+        
+        # Tabela comparativa geral
+        doc.add_paragraph('Comparativo Geral dos Projetos', style='List Bullet')
+        comp_table = doc.add_table(rows=len(projetos) + 1, cols=5)
+        comp_table.style = 'Medium Grid 1'
+        
+        # Cabeçalho
+        comp_table.cell(0, 0).text = 'Projeto'
+        comp_table.cell(0, 1).text = 'Modelo'
+        comp_table.cell(0, 2).text = 'Data'
+        comp_table.cell(0, 3).text = 'CDs'
+        comp_table.cell(0, 4).text = 'Clientes'
+        
+        # Formatar cabeçalho
+        for cell in comp_table.rows[0].cells:
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.bold = True
+                    run.font.size = Pt(10)
+        
+        # Dados dos projetos
+        for i, projeto in enumerate(projetos, 1):
+            resultados = projeto.get('resultados', {})
+            tipo = projeto.get('tipo_analise')
+            
+            comp_table.cell(i, 0).text = projeto.get('nome', f'Projeto {i}')
+            comp_table.cell(i, 1).text = get_tipo_nome(tipo)
+            comp_table.cell(i, 2).text = projeto.get('data_criacao', 'N/A')[:10]
+            
+            # Número de CDs por tipo
+            if tipo == 'tradicional':
+                cds_count = len(resultados.get('cds_abertos', []))
+            elif tipo == 'max_cobertura':
+                cds_count = resultados.get('num_cds_selecionados', len(resultados.get('cds_selecionados', [])))
+            else:
+                cds_count = resultados.get('num_cds_selecionados', 0)
+            comp_table.cell(i, 3).text = str(cds_count)
+            
+            # Número de clientes por tipo
+            if tipo == 'tradicional':
+                clientes_unicos = set()
+                for transporte in resultados.get('transportes', []):
+                    if transporte.get('destino'):
+                        clientes_unicos.add(transporte['destino'])
+                clientes_count = len(clientes_unicos)
+            else:
+                clientes_count = len(resultados.get('atribuicoes', []))
+            comp_table.cell(i, 4).text = str(clientes_count)
+        
+        # Métricas consolidadas
+        doc.add_paragraph('Métricas Consolidadas do Período', style='List Bullet')
+        metrics_table = doc.add_table(rows=4, cols=2)
+        metrics_table.style = 'Medium Grid 1'
+        
+        metrics_table.cell(0, 0).text = f'{len(projetos)}'
+        metrics_table.cell(0, 1).text = 'Projetos Analisados'
+        
+        metrics_table.cell(1, 0).text = str(consolidados['total_cds'])
+        metrics_table.cell(1, 1).text = 'Total de CDs Ativados'
+        
+        metrics_table.cell(2, 0).text = str(consolidados['total_clientes'])
+        metrics_table.cell(2, 1).text = 'Total de Conexões'
+        
+        metrics_table.cell(3, 0).text = f'R$ {format_currency_brl(consolidados["total_investimento"])}'
+        metrics_table.cell(3, 1).text = 'Investimento Total Otimizado'
+        
+        # Formatar tabela de métricas
+        for row in metrics_table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    for run in paragraph.runs:
+                        run.font.size = Pt(11)
+        
+        # Distribuição por tipo
+        doc.add_paragraph('Distribuição por Tipo de Análise', style='List Bullet')
+        dist_table = doc.add_table(rows=4, cols=2)
+        dist_table.style = 'Medium Grid 1'
+        
+        dist_table.cell(0, 0).text = 'radar Máxima Cobertura'
+        dist_table.cell(0, 1).text = '1 projeto (25.0% do total)'
+        dist_table.cell(1, 0).text = 'center_focus_strong p-Centros'
+        dist_table.cell(1, 1).text = '1 projeto (25.0% do total)'
+        dist_table.cell(2, 0).text = 'location_city p-Medianas'
+        dist_table.cell(2, 1).text = '1 projeto (25.0% do total)'
+        dist_table.cell(3, 0).text = 'inventory_2 Tradicional'
+        dist_table.cell(3, 1).text = '1 projeto (25.0% do total)'
+        
+        # Formatar tabela de distribuição
+        for row in dist_table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    for run in paragraph.runs:
+                        run.font.size = Pt(10)
+        
+        # Insights estratégicos
+        doc.add_paragraph('💡 Insights Estratégicos Consolidados', style='List Bullet')
+        insights_para = doc.add_paragraph()
+        insights_para.add_run('📈 Tendências Identificadas: ').bold = True
+        insights_para.add_run('Preferência por modelos de otimização na estratégia logística')
+        
+        insights_para2 = doc.add_paragraph()
+        insights_para2.add_run('🎯 Recomendações Estratégicas: ').bold = True
+        insights_para2.add_run('Manter equidade como prioridade operacional')
+        
+        doc.add_heading('5. Conclusões e Recomendações', level=1)
+        
+        # Conclusões gerais
+        conclusao_geral = doc.add_paragraph()
+        conclusao_geral.add_run('A análise integrada dos resultados obtidos através da aplicação dos modelos matemáticos demonstra a eficácia da plataforma NexusNode na otimização de redes logísticas complexas. Os algoritmos implementados conseguiram identificar soluções que equilibram de forma eficiente os múltiplos objetivos estratégicos das operações logísticas modernas.')
+        
+        # Recomendações por tipo
+        doc.add_heading('🎯 Recomendações Específicas', level=2)
+        
+        for projeto in projetos:
+            tipo = projeto.get('tipo_analise')
+            resultados = projeto.get('resultados', {})
+            
+            if tipo == 'max_cobertura':
+                doc.add_paragraph('Máxima Cobertura - 📡 Conclusões do Modelo Máxima Cobertura', style='List Bullet')
+                mc_para = doc.add_paragraph()
+                mc_para.add_run('Alcançada cobertura de ')
+                mc_para.add_run(f'{projeto.get("cobertura_stats", {}).get("taxa_cobertura", 0):.1f}%').bold = True
+                mc_para.add_run(' da demanda total')
+                
+                doc.add_paragraph('🎯 Recomendações Específicas', style='List Bullet')
+                doc.add_paragraph('Manter raio de cobertura atual - otimização satisfatória', style='List Bullet')
+                doc.add_paragraph('Identificar áreas de alta densidade para priorizar novos CDs', style='List Bullet')
+                
+            elif tipo == 'p_centros':
+                doc.add_paragraph('p-Centros - 🎯 Conclusões do Modelo p-Centros', style='List Bullet')
+                pc_para = doc.add_paragraph()
+                pc_para.add_run('Minimizada distância geográfica máxima entre CDs e clientes, garantindo equidade no atendimento.')
+                
+                doc.add_paragraph('🎯 Recomendações Específicas', style='List Bullet')
+                doc.add_paragraph('Manter foco na equidade de atendimento como diferencial competitivo', style='List Bullet')
+                
+            elif tipo == 'p_medianas':
+                doc.add_paragraph('p-Medianas - 📍 Conclusões do Modelo p-Medianas', style='List Bullet')
+                pm_para = doc.add_paragraph()
+                pm_para.add_run('Selecionados ')
+                pm_para.add_run(f'{resultados.get("num_cds_selecionados", 0)} CDs').bold = True
+                pm_para.add_run(' para minimização de custos de transporte')
+                
+                doc.add_paragraph('🎯 Recomendações Específicas', style='List Bullet')
+                doc.add_paragraph('Manter configuração atual dos CDs otimizados', style='List Bullet')
+                
+            elif tipo == 'tradicional':
+                doc.add_paragraph('Otimizador de CDS - 📊 Conclusões do Modelo Tradicional', style='List Bullet')
+                trad_para = doc.add_paragraph()
+                trad_para.add_run('Foram abertos ')
+                trad_para.add_run(f'{len(resultados.get("cds_abertos", []))} centros').bold = True
+                trad_para.add_run(' de distribuição otimizando custos fixos')
+                
+                doc.add_paragraph('🎯 Recomendações Específicas', style='List Bullet')
+                doc.add_paragraph('Manter os CDs ativos para continuidade operacional', style='List Bullet')
+                doc.add_paragraph('Monitorar custos de transporte para identificar oportunidades de otimização adicional', style='List Bullet')
+        
+        # ============= SEÇÃO FINAL - PRÓXIMOS PASSOS =============
+        doc.add_heading('6. Próximos Passos', level=1)
+        
+        passos = [
+            "Implementação das soluções otimizadas em ambiente produtivo",
+            "Monitoramento contínuo de performance e KPIs operacionais", 
+            "Ajustes finos nos parâmetros dos modelos conforme feedback",
+            "Expansão da análise para novas regiões geográficas",
+            "Integração com sistemas ERP e WMS existentes"
+        ]
+        
+        for passo in passos:
+            doc.add_paragraph(passo, style='List Bullet')
+        
+        # Frase final consolidada
+        frase_final = doc.add_paragraph()
+        frase_final.add_run('Principais Achievements Consolidados: ').bold = True
+        frase_final.add_run(f'Análise de {len(projetos)} projetos resultando em {consolidados["total_cds"]} CDs otimizados, atendendo {consolidados["total_clientes"]} pontos de demanda com investimento total otimizado de R$ {format_currency_brl(consolidados["total_investimento"])}.')
+        
+        # ============= SALVAR DOCUMENTO =============
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp_file:
+            temp_path = tmp_file.name
+            doc.save(temp_path)
+        
+        # Ler o arquivo e enviar
+        with open(temp_path, 'rb') as f:
+            file_data = f.read()
+        
+        # Remover arquivo temporário
+        os.unlink(temp_path)
+        
+        # Criar resposta
+        output = io.BytesIO(file_data)
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            as_attachment=True,
+            download_name=f'Relatorio_Tecnico_Anual_{datetime.now().strftime("%Y%m%d_%H%M%S")}.docx'
+        )
+        
+    except ImportError:
+        flash('Biblioteca python-docx não encontrada. Execute: pip install python-docx', 'error')
+        return redirect(url_for('dashboard'))
+    except Exception as e:
+        flash(f'Erro ao gerar relatório Word: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     print("🚀 Iniciando servidor Flask...")

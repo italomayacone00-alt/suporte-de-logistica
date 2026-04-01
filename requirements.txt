@@ -6,3 +6,4 @@ pulp==2.7.0
 Werkzeug==3.0.0
 gunicorn==21.2.0
 folium==0.14.0
+python-docx==0.8.11
