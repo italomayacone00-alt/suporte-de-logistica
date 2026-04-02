@@ -8,6 +8,38 @@
 .mapa-header {
     background: linear-gradient(135deg, #28a745 0%, #1e8e3e 100%);
 }
+
+/* Diminuir tamanho dos cards de métricas */
+.metrics-grid {
+    gap: 16px;
+}
+
+.metric-card {
+    padding: 16px;
+    min-height: 120px;
+}
+
+.metric-card .metric-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+}
+
+.metric-card .metric-content {
+    gap: 8px;
+}
+
+.metric-card .metric-label {
+    font-size: 13px;
+}
+
+.metric-card .metric-value {
+    font-size: 24px;
+}
+
+.metric-card .metric-subtitle {
+    font-size: 11px;
+}
 </style>
 {% endblock %}
 
@@ -190,28 +222,7 @@
                         </div>
                     </div>
                     
-                    <div class="mapa-legend">
-                        <h3>🎨 Legenda do Mapa</h3>
-                        <div class="legend-items">
-                            <div class="legend-item">
-                                <div class="legend-marker selected">
-                                    <span class="material-symbols-outlined">warehouse</span>
-                                </div>
-                                <span>CD Selecionado (Ativo)</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-marker not-selected">
-                                    <span class="material-symbols-outlined">close</span>
-                                </div>
-                                <span>CD Não Selecionado</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-marker influence-area"></div>
-                                <span>Área de Influência</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                    </div>
             </div>
         </div>
     </section>
@@ -254,6 +265,10 @@
         <!-- Resumo dos CDs -->
         <div class="cd-summary">
             <div class="summary-item">
+                <span class="summary-label">Total de Clientes:</span>
+                <span class="summary-value">{{ total_clientes }}</span>
+            </div>
+            <div class="summary-item">
                 <span class="summary-label">Taxa de Utilização:</span>
                 <span class="summary-value">{{ "%.1f"|format((resultado.num_cds_selecionados / resultado.p * 100) if resultado.p > 0 else 0) }}%</span>
             </div>
@@ -261,6 +276,50 @@
                 <span class="summary-label">Média por CD:</span>
                 <span class="summary-value">{{ "%.1f"|format((total_clientes / resultado.num_cds_selecionados) if total_clientes > 0 and resultado.num_cds_selecionados > 0 else 0) }} clientes</span>
             </div>
+        </div>
+    </section>
+
+    <!-- Client Assignments -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Atribuições Clientes-CDs</h2>
+            <div class="badge">{{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }} atribuições</div>
+        </div>
+        
+        <div class="table-container">
+            <table class="routes-table">
+                <thead>
+                    <tr>
+                        <th>CD Selecionado</th>
+                        <th>Cliente Atendido</th>
+                        <th>{% if resultado.tipo_valor == 'custo' %}Custo{% else %}Distância{% endif %} (d_ij)</th>
+                        <th>Quantidade Atendida</th>
+                        <th>Custo Ponderado</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if resultado.atribuicoes %}
+                    {% for atrib in resultado.atribuicoes %}
+                    <tr>
+                        <td><span class="tag">{{ atrib.cd }}</span></td>
+                        <td>{{ atrib.cliente }}</td>
+                        <td>{{ "%.2f"|format(atrib.valor) if atrib.valor is not none else '0,00' }}</td>
+                        <td>{{ "%.2f"|format(atrib.demanda_atendida) if atrib.demanda_atendida is not none else '0,00' }}</td>
+                        <td>{{ "%.2f"|format(atrib.custo_ponderado) if atrib.custo_ponderado is not none else '0,00' }}</td>
+                        <td><span class="badge success">Atendido</span></td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px;">
+                            <p><strong>Nenhuma atribuição encontrada</strong></p>
+                            <p>Verifique se os dados foram preenchidos corretamente na planilha</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </section>
 
@@ -416,50 +475,7 @@
         </div>
     </section>
 
-    <!-- Client Assignments -->
-    <section class="card">
-        <div class="card-header">
-            <h2>Atribuições Clientes-CDs</h2>
-            <div class="badge">{{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }} atribuições</div>
-        </div>
-        
-        <div class="table-container">
-            <table class="routes-table">
-                <thead>
-                    <tr>
-                        <th>CD Selecionado</th>
-                        <th>Cliente Atendido</th>
-                        <th>{% if resultado.tipo_valor == 'custo' %}Custo{% else %}Distância{% endif %} (d_ij)</th>
-                        <th>Quantidade Atendida</th>
-                        <th>Custo Ponderado</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if resultado.atribuicoes %}
-                    {% for atrib in resultado.atribuicoes %}
-                    <tr>
-                        <td><span class="tag">{{ atrib.cd }}</span></td>
-                        <td>{{ atrib.cliente }}</td>
-                        <td>{{ "%.2f"|format(atrib.valor) if atrib.valor is not none else '0,00' }}</td>
-                        <td>{{ "%.2f"|format(atrib.demanda_atendida) if atrib.demanda_atendida is not none else '0,00' }}</td>
-                        <td>{{ "%.2f"|format(atrib.custo_ponderado) if atrib.custo_ponderado is not none else '0,00' }}</td>
-                        <td><span class="badge success">Atendido</span></td>
-                    </tr>
-                    {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 20px;">
-                            <p><strong>Nenhuma atribuição encontrada</strong></p>
-                            <p>Verifique se os dados foram preenchidos corretamente na planilha</p>
-                        </td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-    </section>
-
+    
     <!-- Actions -->
     <section class="card">
         <div class="card-header">
@@ -467,12 +483,12 @@
         </div>
         <div class="form-actions">
             <button class="btn btn-outline" onclick="window.print()">
-                <span class="material-symbols-outlined">print</span>
-                Imprimir Relatório
+                <span class="material-symbols-outlined">picture_as_pdf</span>
+                Gerar PDF
             </button>
-            <button class="btn btn-success" onclick="exportResults()">
+            <button class="btn btn-primary" onclick="downloadResults()">
                 <span class="material-symbols-outlined">download</span>
-                Baixar Resultados
+                Exportar Planilha
             </button>
             <button class="btn btn-primary" onclick="showSaveDialog()">
                 <span class="material-symbols-outlined">save</span>
@@ -818,6 +834,7 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
 function exportResults() {
     // Redirecionar para rota de exportação
@@ -1086,5 +1103,63 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Função para exportar resultados em XLSX
+function downloadResults() {
+    const resultado = {{ resultado|tojson|safe }};
+    
+    // Criar workbook com múltiplas planilhas
+    const wb = XLSX.utils.book_new();
+    
+    // Planilha 1: Resumo da Análise
+    const dadosResumo = [
+        ["Métrica", "Valor"],
+        ["Modelo", "p-Medianas"],
+        ["CDs Selecionados", resultado.cds_selecionados ? resultado.cds_selecionados.length : 0],
+        ["Parâmetro p", resultado.p],
+        ["Tipo de Distância", resultado.tipo_valor],
+        ["Custo Total", resultado.custo_total || 0],
+        ["Data da Análise", new Date().toLocaleDateString('pt-BR')]
+    ];
+    const wsResumo = XLSX.utils.aoa_to_sheet(dadosResumo);
+    XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo da Análise");
+    
+    // Planilha 2: CDs Selecionados
+    const dadosCDs = [["CD Selecionado", "Status"]];
+    if (resultado.cds_selecionados && resultado.cds_selecionados.length > 0) {
+        resultado.cds_selecionados.forEach(cd => {
+            dadosCDs.push([cd, "Selecionado"]);
+        });
+    }
+    const wsCDs = XLSX.utils.aoa_to_sheet(dadosCDs);
+    XLSX.utils.book_append_sheet(wb, wsCDs, "CDs Selecionados");
+    
+    // Planilha 3: Atribuições Clientes-CDs
+    const dadosAtribuicoes = [["Cliente", "CD Atendimento", "Distância", "Quantidade Atendida", "Custo Ponderado", "Status"]];
+    if (resultado.atribuicoes && resultado.atribuicoes.length > 0) {
+        resultado.atribuicoes.forEach(atrib => {
+            const status = "Atendido";
+            const distancia = atrib.valor ? atrib.valor : '';
+            const quantidade = atrib.demanda_atendida ? atrib.demanda_atendida : '';
+            const custo = atrib.custo_ponderado ? atrib.custo_ponderado : '';
+            dadosAtribuicoes.push([
+                atrib.cliente,
+                atrib.cd,
+                distancia,
+                quantidade,
+                custo,
+                status
+            ]);
+        });
+    } else {
+        dadosAtribuicoes.push(["Nenhuma atribuição encontrada", "", "", "", "", "", ""]);
+    }
+    const wsAtribuicoes = XLSX.utils.aoa_to_sheet(dadosAtribuicoes);
+    XLSX.utils.book_append_sheet(wb, wsAtribuicoes, "Atribuições Clientes-CDs");
+    
+    // Gerar arquivo XLSX e fazer download
+    const nomeArquivo = `resultados_completos_p_medianas_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, nomeArquivo);
+}
 </script>
 {% endblock %}

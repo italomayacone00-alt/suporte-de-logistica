@@ -257,22 +257,31 @@ def gerar_mapa_tradicional(resultado, coordenadas):
                 folium.Circle(
                     location=[lat, lon],
                     radius=50000,  # 50km de raio
-                    popup=f'Área de Atendimento: {str(cd)}<br>Capacidade utilizada: {percentual:.1f}%',
-                    color='orange',
+                    popup=f'Área de Influência: {str(cd)}<br>Capacidade utilizada: {percentual:.1f}%',
+                    color='green',
                     fill=True,
-                    fill_color='rgba(255, 165, 0, 0.2)'
+                    fill_color='rgba(0, 255, 0, 0.2)'
                 ).add_to(mapa)
         
-        # Adicionar legenda personalizada
+        # Adicionar legenda personalizada atualizada
         legend_html = '''
         <div style="position: fixed; 
-                    bottom: 50px; left: 50px; width: 220px; height: 140px; 
-                    background-color: white; border:2px solid grey; z-index:9999; 
-                    font-size:14px; padding: 10px">
-            <h4>Legenda</h4>
-            <p><i class="fa fa-warehouse" style="color:green"></i> CD Aberto</p>
-            <p><i class="fa fa-times" style="color:gray"></i> CD Fechado</p>
-            <p><span style="background-color: rgba(255,165,0,0.2); border: 1px solid orange;">&nbsp;&nbsp;&nbsp;</span> Área de Atendimento</p>
+                    bottom: 50px; left: 50px; width: 260px; height: 160px; 
+                    background-color: white; border:2px solid #374151; z-index:9999; 
+                    font-size:14px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px; font-weight: 600;">Legenda do Mapa</h4>
+            <p style="margin: 10px 0; display: flex; align-items: center;">
+                <i class="fa fa-warehouse" style="color: #16a34a; margin-right: 10px; font-size: 16px;"></i> 
+                <span style="color: #374151;">CD Ativo (Atendimento)</span>
+            </p>
+            <p style="margin: 10px 0; display: flex; align-items: center;">
+                <i class="fa fa-warehouse" style="color: #dc2626; margin-right: 10px; font-size: 16px;"></i> 
+                <span style="color: #374151;">CD Inativo (Sem Atendimento)</span>
+            </p>
+            <p style="margin: 10px 0; display: flex; align-items: center;">
+                <span style="background-color: rgba(0, 255, 0, 0.2); border: 1px solid green; padding: 6px 12px; border-radius: 4px; margin-right: 10px;">&nbsp;&nbsp;&nbsp;</span> 
+                <span style="color: #374151;">Área de Influência (50 km)</span>
+            </p>
         </div>
         '''
         
@@ -358,21 +367,21 @@ def resolver_problema_logistica(df, tipo_dado='custo'):
         print(f"Colunas a serem excluídas: {df_principal.columns[0]}, Custo Fixo, Capacidade")
         
         # 3. Extrair os Dicionários de Parâmetros
-        demanda = {cliente: pd.to_numeric(linha_demanda[cliente].values[0]) for cliente in clientes}
+        demanda = {cliente: int(pd.to_numeric(linha_demanda[cliente].values[0])) for cliente in clientes}
         print(f"Demanda: {demanda}")
         
         # Extrair Custos Fixos
         custos_fixos = {}
         for index, row in df_cds.iterrows():
             cd_atual = str(row[nome_primeira_coluna])
-            custos_fixos[cd_atual] = pd.to_numeric(row['Custo Fixo'])
+            custos_fixos[cd_atual] = int(pd.to_numeric(row['Custo Fixo']))
         print(f"Custos fixos: {custos_fixos}")
         
         # Extrair Capacidades
         capacidades = {}
         for index, row in df_cds.iterrows():
             cd_atual = str(row[nome_primeira_coluna])
-            capacidades[cd_atual] = pd.to_numeric(row['Capacidade'])
+            capacidades[cd_atual] = int(pd.to_numeric(row['Capacidade']))
         print(f"Capacidades: {capacidades}")
         
         # Extrair Custos de Transporte (ou Distâncias)
@@ -382,7 +391,7 @@ def resolver_problema_logistica(df, tipo_dado='custo'):
             for cliente in clientes:
                 # Verificar se a coluna do cliente existe
                 if cliente in row.index:
-                    custos_transporte[(cd_atual, cliente)] = pd.to_numeric(row[cliente])
+                    custos_transporte[(cd_atual, cliente)] = float(pd.to_numeric(row[cliente]))
                 else:
                     print(f"⚠️ Cliente '{cliente}' não encontrado para CD '{cd_atual}', usando valor 0")
                     custos_transporte[(cd_atual, cliente)] = 0

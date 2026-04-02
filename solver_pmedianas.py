@@ -211,16 +211,25 @@ def gerar_mapa_pmedianas(resultado, coordenadas):
                     fill_color='rgba(0, 255, 0, 0.2)'
                 ).add_to(mapa)
         
-        # Adicionar legenda personalizada
+        # Adicionar legenda personalizada atualizada
         legend_html = '''
         <div style="position: fixed; 
-                    bottom: 50px; left: 50px; width: 200px; height: 120px; 
-                    background-color: white; border:2px solid grey; z-index:9999; 
-                    font-size:14px; padding: 10px">
-            <h4>Legenda</h4>
-            <p><i class="fa fa-warehouse" style="color:green"></i> CD Selecionado</p>
-            <p><i class="fa fa-times" style="color:gray"></i> CD Não Selecionado</p>
-            <p><span style="background-color: rgba(0,255,0,0.2); border: 1px solid green;">&nbsp;&nbsp;&nbsp;</span> Área de Influência</p>
+                    bottom: 50px; left: 50px; width: 260px; height: 160px; 
+                    background-color: white; border:2px solid #374151; z-index:9999; 
+                    font-size:14px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px; font-weight: 600;">Legenda do Mapa</h4>
+            <p style="margin: 10px 0; display: flex; align-items: center;">
+                <i class="fa fa-warehouse" style="color: #16a34a; margin-right: 10px; font-size: 16px;"></i> 
+                <span style="color: #374151;">CD Ativo (Influência)</span>
+            </p>
+            <p style="margin: 10px 0; display: flex; align-items: center;">
+                <i class="fa fa-warehouse" style="color: #dc2626; margin-right: 10px; font-size: 16px;"></i> 
+                <span style="color: #374151;">CD Inativo (Sem Influência)</span>
+            </p>
+            <p style="margin: 10px 0; display: flex; align-items: center;">
+                <span style="background-color: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; padding: 6px 12px; border-radius: 4px; margin-right: 10px;">&nbsp;&nbsp;&nbsp;</span> 
+                <span style="color: #374151;">Área de Influência (50 km)</span>
+            </p>
         </div>
         '''
         
@@ -281,16 +290,16 @@ def resolver_pmedianas(df, p, tipo_dado='distancia'):
         print(f"Clientes encontrados: {clientes}")
         
         # 3. DEMANDA DOS CLIENTES (como no original)
-        demanda = {cliente: float(df_principal.iloc[-1][cliente]) for cliente in clientes}
+        demanda = {cliente: int(df_principal.iloc[-1][cliente]) for cliente in clientes}
         
         # Pegando as colunas extras que o Excel usa no cálculo
         custos_fixos = {}
         capacidades = {}
         for idx, cd in enumerate(cds):
             if 'Custo Fixo' in df_principal.columns:
-                custos_fixos[cd] = float(df_principal.iloc[idx]['Custo Fixo'])
+                custos_fixos[cd] = int(df_principal.iloc[idx]['Custo Fixo'])
             if 'Capacidade' in df_principal.columns:
-                capacidades[cd] = float(df_principal.iloc[idx]['Capacidade'])
+                capacidades[cd] = int(df_principal.iloc[idx]['Capacidade'])
             
         # 4. MATRIZ DE VALORES (com suporte a coordenadas)
         valores_originais = {}

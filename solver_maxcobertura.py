@@ -157,10 +157,10 @@ def gerar_mapa_cobertura(resultado, coordenadas, raio_cobertura=0.0):
                     folium.Circle(
                         location=[coords['lat'], coords['lon']],
                         radius=raio_cobertura * 1000,  # Converter km para metros
-                        color='red',
+                        color='orange',
                         fill=True,
-                        fillColor='red',
-                        fillOpacity=0.2,
+                        fillColor='yellow',
+                        fillOpacity=0.3,
                         popup=f"CD {cd}<br>Raio: {raio_cobertura} km"
                     ).add_to(mapa)
                 
@@ -169,29 +169,38 @@ def gerar_mapa_cobertura(resultado, coordenadas, raio_cobertura=0.0):
                     location=[coords['lat'], coords['lon']],
                     popup=f"🏢 {cd}<br>📍 ({coords['lat']:.4f}, {coords['lon']:.4f})",
                     tooltip=f"CD {cd}",
-                    icon=folium.Icon(color='red', icon='warehouse', prefix='fa')
+                    icon=folium.Icon(color='green', icon='warehouse', prefix='fa')
                 ).add_to(mapa)
         
-        # Adicionar CDs não selecionados (em cinza)
+        # Adicionar CDs não selecionados
         for cd, coords in coordenadas.items():
             if cd not in resultado.get('cds_selecionados', []):
                 folium.Marker(
                     location=[coords['lat'], coords['lon']],
-                    popup=f"❌ {cd}<br>Não selecionado",
+                    popup=f"🏢 {cd}<br>Não selecionado<br>📍 ({coords['lat']:.4f}, {coords['lon']:.4f})",
                     tooltip=f"CD {cd} (não selecionado)",
-                    icon=folium.Icon(color='gray', icon='times', prefix='fa')
+                    icon=folium.Icon(color='red', icon='warehouse', prefix='fa')
                 ).add_to(mapa)
         
-        # Adicionar legenda
-        legend_html = '''
+        # Adicionar legenda atualizada
+        legend_html = f'''
         <div style="position: fixed; 
-                    bottom: 50px; left: 50px; width: 200px; height: 120px; 
-                    background-color: white; border:2px solid grey; z-index:9999; 
-                    font-size:14px; padding: 10px">
-        <h4>Legenda</h4>
-        <p><i class="fa fa-warehouse" style="color:red"></i> CD Selecionado</p>
-        <p><i class="fa fa-times" style="color:gray"></i> CD Não Selecionado</p>
-        <p><span style="background-color: rgba(255,0,0,0.2); border: 1px solid red;">&nbsp;&nbsp;&nbsp;</span> Área de Cobertura</p>
+                    bottom: 50px; left: 50px; width: 260px; height: 160px; 
+                    background-color: white; border:2px solid #374151; z-index:9999; 
+                    font-size:14px; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px; font-weight: 600;">Legenda do Mapa</h4>
+        <p style="margin: 10px 0; display: flex; align-items: center;">
+            <i class="fa fa-warehouse" style="color: #16a34a; margin-right: 10px; font-size: 16px;"></i> 
+            <span style="color: #374151;">CD Ativo (Cobertura)</span>
+        </p>
+        <p style="margin: 10px 0; display: flex; align-items: center;">
+            <i class="fa fa-warehouse" style="color: #dc2626; margin-right: 10px; font-size: 16px;"></i> 
+            <span style="color: #374151;">CD Inativo (Sem Cobertura)</span>
+        </p>
+        <p style="margin: 10px 0; display: flex; align-items: center;">
+            <span style="background-color: rgba(250, 204, 21, 0.3); border: 1px solid #facc15; padding: 6px 12px; border-radius: 4px; margin-right: 10px;">&nbsp;&nbsp;&nbsp;</span> 
+            <span style="color: #374151;">Área de Cobertura ({raio_cobertura} km)</span>
+        </p>
         </div>
         '''
         mapa.get_root().html.add_child(folium.Element(legend_html))
@@ -246,12 +255,12 @@ def resolver_maxcobertura(df, p, raio_cobertura=0.0, tipo_dado='distancia'):
         
         if ultima_linha_nome in ['demanda', 'demanda total', 'peso']:
             print("✅ Linha de demanda encontrada")
-            demanda = {cliente: float(df_principal.iloc[-1][cliente]) for cliente in df_principal.columns[1:]}
+            demanda = {cliente: int(df_principal.iloc[-1][cliente]) for cliente in df_principal.columns[1:]}
             cds = df_principal.iloc[:-1, 0].tolist()
             matriz_valores = df_principal.iloc[:-1]
         else:
             print("❌ Linha de demanda NÃO encontrada, usando peso = 1.0")
-            demanda = {cliente: 1.0 for cliente in df_principal.columns[1:]}
+            demanda = {cliente: 1 for cliente in df_principal.columns[1:]}
             cds = df_principal.iloc[:, 0].tolist()
             matriz_valores = df_principal
         
