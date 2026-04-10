@@ -33,10 +33,27 @@
         </div>
     </div>
 
+    <div class="info-card" style="margin-bottom: 4rem;">
+        <div class="info-icon">
+            <span class="material-symbols-outlined">lightbulb</span>
+        </div>
+        <div class="info-content">
+            <h3>Sobre os p-Centros</h3>
+            <p>Este modelo seleciona exatamente <strong>p</strong> localizações para minimizar a <strong>maior distância</strong> ou <strong>maior custo</strong> entre qualquer cliente e o CD que o atende. Ideal para serviços emergenciais onde o tempo máximo de resposta é crítico.</p>
+            <button class="learn-more-btn" onclick="toggleLearnMoreModal()">
+                <span class="material-symbols-outlined">info</span>
+                Saiba Mais
+            </button>
+        </div>
+    </div>
+
     <!-- Step 1: Configuration -->
     <div class="card" id="step1">
         <div class="card-header">
             <h2>Configuração do Problema p-Centros</h2>
+            <button class="help-btn" onclick="toggleHelpModal()" title="Como usar">
+                <span class="material-symbols-outlined">help_outline</span>
+            </button>
         </div>
         
         <form action="/gerar_template_pcentros" method="POST">
@@ -121,7 +138,7 @@
             <input type="hidden" id="tipo_dado_hidden" name="tipo_dado" value="">
             
             <div class="upload-area" id="dropZone">
-                <input type="file" id="arquivo_planilha" name="file" accept=".xlsx" required>
+                <input type="file" id="arquivo_planilha" name="arquivo_planilha" accept=".xlsx" required>
                 <div class="upload-content">
                     <span class="material-symbols-outlined upload-icon">cloud_upload</span>
                     <p>Arraste o arquivo ou clique para selecionar</p>
@@ -142,79 +159,563 @@
         </form>
     </div>
 
-    <!-- Info Card -->
-    <div class="info-card">
-        <div class="info-icon">
-            <span class="material-symbols-outlined">lightbulb</span>
-        </div>
-        <div class="info-content">
-            <h3>Sobre os p-Centros</h3>
-            <p>Este modelo seleciona exatamente <strong>p</strong> localizações para minimizar a <strong>maior distância</strong> ou <strong>maior custo</strong> entre qualquer cliente e o CD que o atende. Ideal para serviços emergenciais onde o tempo máximo de resposta é crítico.</p>
+    <!-- Help Modal -->
+    <div class="help-modal" id="helpModal">
+        <div class="help-modal-backdrop" onclick="toggleHelpModal()"></div>
+        <div class="help-modal-content">
+            <div class="help-modal-header">
+                <h3>📚 Como Usar a Ferramenta p-Centros</h3>
+                <button class="help-modal-close" onclick="toggleHelpModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="help-modal-body">
+                <div class="help-section">
+                    <h4>🏢 Configuração Inicial</h4>
+                    <div class="help-item">
+                        <div class="help-item-icon">
+                            <span class="material-symbols-outlined">warehouse</span>
+                        </div>
+                        <div class="help-item-content">
+                            <strong>CDs Candidatos:</strong> Número de centros de distribuição disponíveis para seleção. São todas as opções possíveis que podem ser escolhidas pelo modelo.
+                            <br><small><em>Exemplo: 5 CDs disponíveis em diferentes cidades</em></small>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-item-icon">
+                            <span class="material-symbols-outlined">location_on</span>
+                        </div>
+                        <div class="help-item-content">
+                            <strong>Clientes:</strong> Número de pontos de entrega que precisam ser atendidos. Podem ser lojas, residências ou empresas.
+                            <br><small><em>Exemplo: 20 clientes em diferentes localidades</em></small>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-item-icon">
+                            <span class="material-symbols-outlined">pin_drop</span>
+                        </div>
+                        <div class="help-item-content">
+                            <strong>CDs a Abrir (p):</strong> Número exato de CDs que serão selecionados/abertos pelo modelo. Este é o parâmetro principal do p-Centros.
+                            <br><small><em>Exemplo: Abrir apenas 3 CDs dos 5 disponíveis</em></small>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-item-icon">
+                            <span class="material-symbols-outlined">swap_horiz</span>
+                        </div>
+                        <div class="help-item-content">
+                            <strong>Matriz de Otimização:</strong> Tipo de dado que será usado para calcular as distâncias/custos na planilha.
+                            <ul>
+                                <li><strong>📍 Distâncias:</strong> Use para otimização baseada em quilômetros ou tempo de viagem</li>
+                                <li><strong>💰 Custos Financeiros:</strong> Use para otimização baseada em custos de transporte (R$/ton, R$/unidade)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>📋 Passo a Passo</h4>
+                    <div class="step-guide">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <strong>Configure os parâmetros</strong> acima conforme sua necessidade
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <strong>Clique em "Baixar Planilha"</strong> para gerar o arquivo Excel
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <strong>Preencha a planilha</strong> com as distâncias ou custos entre CDs e clientes
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <strong>Faça upload</strong> da planilha preenchida e clique em "Otimizar"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-tip">
+                    <div class="tip-icon">
+                        <span class="material-symbols-outlined">tips_and_updates</span>
+                    </div>
+                    <div class="tip-content">
+                        <strong>Dica:</strong> A planilha gerada já vem com exemplos e instruções detalhadas na aba "Como Usar". Use-a como referência!
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Examples Card -->
-    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
-        <div class="card-header">
-            <h4>🌍 Exemplos de Aplicação</h4>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
-            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
-                <h5 style="color: #1F4E78; margin-bottom: 10px;">🚑 Serviços de Emergência</h5>
-                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    <li><strong>Instalações:</strong> Hospitais, bombeiros</li>
-                    <li><strong>Pontos:</strong> Bairros da cidade</li>
-                    <li><strong>Objetivo:</strong> Minimizar tempo máximo de resposta</li>
-                    <li><strong>Métrica:</strong> Tempo em minutos</li>
-                </ul>
+    <!-- Learn More Modal -->
+    <div class="help-modal" id="learnMoreModal">
+        <div class="help-modal-backdrop" onclick="toggleLearnMoreModal()"></div>
+        <div class="help-modal-content">
+            <div class="help-modal-header">
+                <h3>📖 Entenda o Problema dos p-Centros</h3>
+                <button class="help-modal-close" onclick="toggleLearnMoreModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
             </div>
-            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
-                <h5 style="color: #28a745; margin-bottom: 10px;">🚚 Serviços de Taxi</h5>
-                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    <li><strong>Instalações:</strong> Bases de táxi</li>
-                    <li><strong>Pontos:</strong> Pontos de demanda</li>
-                    <li><strong>Objetivo:</strong> Reduzir espera máxima</li>
-                    <li><strong>Métrica:</strong> Tempo em minutos</li>
-                </ul>
-            </div>
-            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
-                <h5 style="color: #dc3545; margin-bottom: 10px;">📦 Entregas Urgentes</h5>
-                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    <li><strong>Instalações:</strong> Centros de distribuição</li>
-                    <li><strong>Pontos:</strong> Clientes prioritários</li>
-                    <li><strong>Objetivo:</strong> Garantir entrega rápida</li>
-                    <li><strong>Métrica:</strong> Custo por entrega</li>
-                </ul>
+            <div class="help-modal-body">
+                <div class="help-section">
+                    <h4>🎯 O Que é o Problema dos p-Centros?</h4>
+                    
+                    <div class="concept-box">
+                        <div class="concept-icon">
+                            <span class="material-symbols-outlined">analytics</span>
+                        </div>
+                        <div class="concept-content">
+                            <p>O <strong>problema dos p-Centros</strong> é um modelo de otimização min-max que seleciona exatamente <strong>p instalações</strong> (centros) para minimizar a <strong>maior distância</strong> ou <strong>maior custo</strong> entre qualquer cliente e o centro que o atende.</p>
+                            <br>
+                            <p><strong>Diferença Chave:</strong> Ao contrário das p-Medianas (minimiza soma total), os p-Centros focam no <strong>pior caso</strong> - garantindo que nenhum cliente fique excessivamente longe de um centro.</p>
+                            <br>
+                            <p><strong>Contexto Histórico:</strong> Introduzido por Hakimi (1964) em seu trabalho seminal sobre "Optimum Locations of Switching Centers and the Absolute Centers and Medians of a Graph", revolucionou a <strong>localização de instalações</strong> com aplicações críticas onde o tempo máximo de resposta é vital.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>📍 Visualização Interativa</h4>
+                    
+                    <div class="illustration-container">
+                        <div class="illustration-title">
+                            <h5>Exemplo p-Centros: p = 3 CDs para 15 Clientes</h5>
+                            <p><strong style="color: #7c3aed;">Minimizar a maior distância individual (pior caso)</strong></p>
+                            <p>Clique nos botões para ver diferentes soluções</p>
+                        </div>
+                        
+                        <div class="simulation-controls">
+                            <button class="control-btn active" onclick="showSolutionStep(1)">Todos CDs</button>
+                            <button class="control-btn" onclick="showSolutionStep(2)">p = 1</button>
+                            <button class="control-btn" onclick="showSolutionStep(3)">p = 2</button>
+                            <button class="control-btn" onclick="showSolutionStep(4)">p = 3 (Ótimo)</button>
+                        </div>
+                        
+                        <div class="map-container">
+                            <div class="map-area" id="mapArea">
+                                <div class="grid-background"></div>
+                                
+                                <!-- Clientes -->
+                                <div class="client-point" style="top: 15%; left: 20%;" data-demand="150" data-client="C1">🏪 C1</div>
+                                <div class="client-point" style="top: 25%; left: 35%;" data-demand="80" data-client="C2">🏢 C2</div>
+                                <div class="client-point" style="top: 10%; left: 50%;" data-demand="45" data-client="C3">🏭 C3</div>
+                                <div class="client-point" style="top: 30%; left: 65%;" data-demand="120" data-client="C4">🏪 C4</div>
+                                <div class="client-point" style="top: 20%; left: 80%;" data-demand="90" data-client="C5">🏢 C5</div>
+                                <div class="client-point" style="top: 45%; left: 15%;" data-demand="35" data-client="C6">🏭 C6</div>
+                                <div class="client-point" style="top: 55%; left: 30%;" data-demand="75" data-client="C7">🏪 C7</div>
+                                <div class="client-point" style="top: 40%; left: 45%;" data-demand="110" data-client="C8">🏢 C8</div>
+                                <div class="client-point" style="top: 50%; left: 60%;" data-demand="40" data-client="C9">🏭 C9</div>
+                                <div class="client-point" style="top: 35%; left: 75%;" data-demand="85" data-client="C10">🏪 C10</div>
+                                <div class="client-point" style="top: 65%; left: 25%;" data-demand="30" data-client="C11">🏢 C11</div>
+                                <div class="client-point" style="top: 70%; left: 40%;" data-demand="130" data-client="C12">🏭 C12</div>
+                                <div class="client-point" style="top: 60%; left: 55%;" data-demand="70" data-client="C13">🏪 C13</div>
+                                <div class="client-point" style="top: 75%; left: 70%;" data-demand="25" data-client="C14">🏢 C14</div>
+                                <div class="client-point" style="top: 80%; left: 85%;" data-demand="95" data-client="C15">🏭 C15</div>
+                                
+                                <!-- CDs Candidatos -->
+                                <div class="cd-candidate" style="top: 25%; left: 25%;" data-cd="CD1" data-cost="500000">📍 CD1</div>
+                                <div class="cd-candidate" style="top: 50%; left: 50%;" data-cd="CD2" data-cost="450000">📍 CD2</div>
+                                <div class="cd-candidate" style="top: 65%; left: 75%;" data-cd="CD3" data-cost="400000">📍 CD3</div>
+                                <div class="cd-candidate" style="top: 40%; left: 35%;" data-cd="CD4" data-cost="550000">📍 CD4</div>
+                                <div class="cd-candidate" style="top: 30%; left: 70%;" data-cd="CD5" data-cost="480000">📍 CD5</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-panel">
+                            <div class="stat-item">
+                                <div class="stat-label">CDs Selecionados:</div>
+                                <div class="stat-value" id="selectedCDs">5</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Maior Distância:</div>
+                                <div class="stat-value" id="maxDistance">45km</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Pior Caso:</div>
+                                <div class="stat-value" id="worstCase">C15 → CD3</div>
+                            </div>
+                        </div>
+                        
+                        <div class="solution-details" id="solutionDetails">
+                            <strong>Análise:</strong> Todos os 5 CDs disponíveis<br>
+                            <strong>Maior Distância:</strong> 45km (cliente mais distante)<br>
+                            <strong>Atendimento:</strong> 100% (15/15 clientes)
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>🧮 Formulação Matemática Detalhada</h4>
+                    
+                    <div class="math-formulation">
+                        <!-- Função Objetivo -->
+                        <div class="math-section objective">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="material-symbols-outlined">functions</span>
+                                </div>
+                                <h5>Função Objetivo</h5>
+                                <div class="section-badge">Minimização</div>
+                            </div>
+                            <div class="formula-display">
+                                <div class="formula-main">
+                                    <span class="formula-operator">Minimizar</span>
+                                    <div class="formula-expression">
+                                        <span class="formula-operator">Z</span>
+                                        <div class="formula-terms">
+                                            <span class="operator">sujeito a:</span>
+                                            <span class="term">Z &ge; d<sub>ij</sub> &times; X<sub>ij</sub></span>
+                                            <span class="for-all">&forall; i&isin;I, j&isin;J</span>
+                                        </div>
+                                    </div>
+                                    <p><strong>Onde:</strong></p>
+                                </div>
+                                <div class="formula-description">
+                                    <ul>
+                                        <li><strong>Z</strong> = Variável auxiliar que representa a máxima distância/custo de atendimento</li>
+                                        <li><strong>d<sub>ij</sub></strong> = Distância/custo entre CD <strong>i</strong> e cliente <strong>j</strong></li>
+                                        <li><strong>X<sub>ij</sub></strong> = Variável binária (1 se cliente j é atendido pelo CD i, 0 caso contrário)</li>
+                                        <li><strong>Y<sub>i</sub></strong> = Variável binária (1 se CD i está aberto, 0 caso contrário)</li>
+                                        <li><strong>&forall; i&isin;I, j&isin;J</strong> = Para todos os CDs i e clientes j</li>
+                                    </ul>
+                                    <br>
+                                    <p><strong>Explicação:</strong> O modelo minimiza Z, que é forçado a ser maior ou igual a todas as distâncias de atendimento. Assim, Z representa o <strong>pior caso</strong> (maior distância) que queremos minimizar.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Restrições -->
+                        <div class="math-section constraints">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="material-symbols-outlined">rule</span>
+                                </div>
+                                <h5>Restrições Principais</h5>
+                                <div class="section-badge">Obrigatórias</div>
+                            </div>
+                            <div class="constraints-grid">
+                                <div class="constraint-item">
+                                    <div class="constraint-formula">
+                                        <span class="sigma">Σ</span>
+                                        <span class="subscript">i∈I</span>
+                                        <span class="constraint-term">Y<sub>i</sub></span>
+                                        <span class="operator">=</span>
+                                        <span class="constraint-value">p</span>
+                                    </div>
+                                    <div class="constraint-description">
+                                        <h6>Número de Instalações</h6>
+                                        <p>Exatamente <strong>p</strong> CDs devem ser abertos/ativados</p>
+                                    </div>
+                                </div>
+
+                                <div class="constraint-item">
+                                    <div class="constraint-formula">
+                                        <span class="sigma">Σ</span>
+                                        <span class="subscript">i∈I</span>
+                                        <span class="constraint-term">X<sub>ij</sub></span>
+                                        <span class="operator">=</span>
+                                        <span class="constraint-value">1</span>
+                                        <span class="for-all">∀ j∈J</span>
+                                    </div>
+                                    <div class="constraint-description">
+                                        <h6>Atendimento Completo</h6>
+                                        <p>Cada cliente deve ser atendido por exatamente um CD</p>
+                                    </div>
+                                </div>
+
+                                <div class="constraint-item">
+                                    <div class="constraint-formula">
+                                        <span class="constraint-term">X<sub>ij</sub></span>
+                                        <span class="operator">≤</span>
+                                        <span class="constraint-term">Y<sub>i</sub></span>
+                                        <span class="for-all">∀ i∈I, j∈J</span>
+                                    </div>
+                                    <div class="constraint-description">
+                                        <h6>Vínculo Lógico</h6>
+                                        <p>Um cliente só pode ser atendido por um CD que esteja aberto</p>
+                                    </div>
+                                </div>
+
+                                <div class="constraint-item">
+                                    <div class="constraint-formula">
+                                        <span class="constraint-term">X<sub>ij</sub>, Y<sub>i</sub></span>
+                                        <span class="operator">∈</span>
+                                        <span class="constraint-value">{0,1}</span>
+                                        <span class="for-all">∀ i∈I, j∈J</span>
+                                    </div>
+                                    <div class="constraint-description">
+                                        <h6>Natureza das Variáveis</h6>
+                                        <p>Variáveis binárias (Programação Linear Inteira)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interpretação -->
+                        <div class="math-section interpretation">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="material-symbols-outlined">psychology</span>
+                                </div>
+                                <h5>Interpretação Intuitiva</h5>
+                                <div class="section-badge">Conceito</div>
+                            </div>
+                            <div class="interpretation-grid">
+                                <div class="interpretation-item">
+                                    <div class="interpretation-icon">
+                                        <span class="material-symbols-outlined">balance</span>
+                                    </div>
+                                    <div class="interpretation-content">
+                                        <h6>Equidade Min-Max</h6>
+                                        <p>Garante que a <strong>maior distância</strong> seja minimizada, protegendo os clientes mais desfavorecidos geograficamente</p>
+                                    </div>
+                                </div>
+
+                                <div class="interpretation-item">
+                                    <div class="interpretation-icon">
+                                        <span class="material-symbols-outlined">timer</span>
+                                    </div>
+                                    <div class="interpretation-content">
+                                        <h6>Garantia de SLA</h6>
+                                        <p>Estabelece um <strong>tempo máximo garantido</strong> para todos os clientes, fundamental para contratos de serviço</p>
+                                    </div>
+                                </div>
+
+                                <div class="interpretation-item">
+                                    <div class="interpretation-icon">
+                                        <span class="material-symbols-outlined">emergency</span>
+                                    </div>
+                                    <div class="interpretation-content">
+                                        <h6>Resposta Crítica</h6>
+                                        <p>Otimiza para <strong>situações de emergência</strong> onde cada minuto conta e não há margem para atrasos</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Complexidade -->
+                        <div class="math-section complexity">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="material-symbols-outlined">memory</span>
+                                </div>
+                                <h5>Complexidade Computacional</h5>
+                                <div class="section-badge">NP-Difícil</div>
+                            </div>
+                            <div class="complexity-content">
+                                <div class="complexity-info">
+                                    <div class="complexity-metric">
+                                        <h6>Classe de Complexidade</h6>
+                                        <div class="complexity-badge np-hard">NP-Hard</div>
+                                        <p>Problema computacionalmente difícil para grandes instâncias</p>
+                                    </div>
+                                    <div class="complexity-metric">
+                                        <h6>Tamanho do Espaço de Busca</h6>
+                                        <div class="complexity-formula">
+                                            C(m,p) = <span class="combination">m</span>! / [p! × (<span class="combination">m</span>-p)!]
+                                        </div>
+                                        <p>Onde <strong>m</strong> = CDs candidatos, <strong>p</strong> = CDs a selecionar</p>
+                                    </div>
+                                </div>
+                                <div class="complexity-approaches">
+                                    <h6>Abordagens de Solução</h6>
+                                    <div class="approaches-grid">
+                                        <div class="approach-item exact">
+                                            <span class="approach-icon">✓</span>
+                                            <h7>Exatas</h7>
+                                            <p>Branch-and-Bound, Cutting Planes</p>
+                                            <small>Viável para pequenas instâncias</small>
+                                        </div>
+                                        <div class="approach-item heuristic">
+                                            <span class="approach-icon">≈</span>
+                                            <h7>Heurísticas</h7>
+                                            <p>Greedy, Lagrangean Relaxation</p>
+                                            <small>Soluções boas em tempo razoável</small>
+                                        </div>
+                                        <div class="approach-item metaheuristic">
+                                            <span class="approach-icon">∞</span>
+                                            <h7>Meta-heurísticas</h7>
+                                            <p>Genetic Algorithms, Tabu Search</p>
+                                            <small>Excelentes soluções para grandes problemas</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Aplicações Práticas dos p-Centros</h4>
+                    
+                    <div class="applications-optimized">
+                        <!-- Aplicações Principais Simplificadas -->
+                        <div class="apps-grid">
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">emergency</span>
+                                </div>
+                                <h5>Defesa Civil e Emergência</h5>
+                                <p>Posicionamento estratégico de hospitais, postos de bombeiros, delegacias e unidades de SAMU para garantir que qualquer cidadão tenha acesso em tempo máximo tolerável.</p>
+                                <div class="app-benefit">-45% tempo resposta crítico</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">cell_tower</span>
+                                </div>
+                                <h5>Infraestrutura Crítica</h5>
+                                <p>Localização de subestações elétricas, torres de comunicação, repetidoras de rádio e centros de controle para garantir cobertura mínima vital.</p>
+                                <div class="app-benefit">+99.5% disponibilidade mínima</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">local_shipping</span>
+                                </div>
+                                <h5>Logística de Alta Prioridade</h5>
+                                <p>Centros de distribuição para medicamentos vacinas, órgãos para transplante e peças críticas onde o tempo máximo determina a viabilidade.</p>
+                                <div class="app-benefit">-70% perdas por tempo</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">local_hospital</span>
+                                </div>
+                                <h5>Saúde de Urgência</h5>
+                                <p>Posicionamento de hospitais de emergência, clínicas 24h e laboratórios para garantir tempo máximo de resposta crítica.</p>
+                                <div class="app-benefit">-55% tempo mortalidade</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">security</span>
+                                </div>
+                                <h5>Serviços de Segurança</h5>
+                                <p>Distribuição de delegacias, postos policiais e bases de patrulhamento para cobertura máxima em tempo mínimo.</p>
+                                <div class="app-benefit">-40% tempo resposta ocorrência</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">directions_car</span>
+                                </div>
+                                <h5>Transporte Público</h5>
+                                <p>Localização de estações de metrô, pontos de ônibus e terminais para minimizar distância máxima dos usuários.</p>
+                                <div class="app-benefit">+85% população coberta</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">atm</span>
+                                </div>
+                                <h5>Serviços Financeiros</h5>
+                                <p>Posicionamento de caixas eletrônicos, agências bancárias e postos de atendimento para acesso universal em tempo máximo.</p>
+                                <div class="app-benefit">-60% fila espera</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">fire_truck</span>
+                                </div>
+                                <h5>Proteção Civil</h5>
+                                <p>Distribuição de quartéis de bombeiros, postos de resgate e centros de defesa civil para resposta em tempo crítico.</p>
+                                <div class="app-benefit">-50% tempo resposta emergência</div>
+                            </div>
+                        </div>
+
+                        <!-- Benefícios Principais -->
+                        <div class="benefits-summary">
+                            <h6>Principais Benefícios do Modelo</h6>
+                            <div class="benefits-list">
+                                <div class="benefit-item">
+                                    <span class="benefit-icon">
+                                        <span class="material-symbols-outlined">timer</span>
+                                    </span>
+                                    <div class="benefit-text">
+                                        <h7>Tempo Máximo Garantido</h7>
+                                        <p>Estabelece limite superior para tempo de resposta a qualquer cliente</p>
+                                    </div>
+                                </div>
+                                <div class="benefit-item">
+                                    <span class="benefit-icon">
+                                        <span class="material-symbols-outlined">balance</span>
+                                    </span>
+                                    <div class="benefit-text">
+                                        <h7>Equidade no Atendimento</h7>
+                                        <p>Garante tratamento justo para clientes mais distantes</p>
+                                    </div>
+                                </div>
+                                <div class="benefit-item">
+                                    <span class="benefit-icon">
+                                        <span class="material-symbols-outlined">gavel</span>
+                                    </span>
+                                    <div class="benefit-text">
+                                        <h7>Conformidade com SLA</h7>
+                                        <p>Atende contratos de nível de serviço com penalidades</p>
+                                    </div>
+                                </div>
+                                <div class="benefit-item">
+                                    <span class="benefit-icon">
+                                        <span class="material-symbols-outlined">shield</span>
+                                    </span>
+                                    <div class="benefit-text">
+                                        <h7>Segurança Operacional</h7>
+                                        <p>Minimiza riscos críticos em situações emergenciais</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exemplo Prático Simplificado -->
+                        <div class="practical-example">
+                            <h6>Exemplo de Aplicação Real</h6>
+                            <div class="example-content">
+                                <div class="example-case">
+                                    <div class="case-header">
+                                        <div class="case-icon">
+                                            <span class="material-symbols-outlined">emergency</span>
+                                        </div>
+                                        <div class="case-title">
+                                            <h7>Serviço de Ambulância</h7>
+                                            <p>Sistema de saúde municipal</p>
+                                        </div>
+                                    </div>
+                                    <div class="case-details">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Problema:</span>
+                                            <span class="detail-value">Tempo de resposta variando de 5 a 45 minutos</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Solução:</span>
+                                            <span class="detail-value">Otimização de 4 bases para tempo máximo de 15 minutos</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Resultado:</span>
+                                            <span class="detail-value">Redução de 67% no pior caso e 100% cobertura em 15min</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Comparison Card -->
-    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
-        <div class="card-header">
-            <h4>🔄 p-Centros vs Outros Modelos</h4>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
-            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
-                <h5 style="color: #1F4E78; margin-bottom: 10px;">p-Centros (Min-Max)</h5>
-                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    <li>Minimiza maior distância/custo</li>
-                    <li>Foco em equidade máxima</li>
-                    <li>Sem demanda ou custo fixo</li>
-                    <li>Atendimento emergencial</li>
-                </ul>
-            </div>
-            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
-                <h5 style="color: #28a745; margin-bottom: 10px;">p-Medianas (Min-Sum)</h5>
-                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    <li>Minimiza soma total</li>
-                    <li>Foco em eficiência global</li>
-                    <li>Com demanda ponderada</li>
-                    <li>Atendimento otimizado</li>
-                </ul>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
@@ -308,6 +809,321 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkedRadio = document.querySelector('input[name="tipo_dado"]:checked');
     if (checkedRadio) {
         checkedRadio.dispatchEvent(new Event('change'));
+    }
+    
+    // Inicializar modais como ocultos
+    const helpModal = document.getElementById('helpModal');
+    const learnMoreModal = document.getElementById('learnMoreModal');
+    if (helpModal) helpModal.style.display = 'none';
+    if (learnMoreModal) learnMoreModal.style.display = 'none';
+});
+
+// Funções para controlar os modais
+function toggleHelpModal() {
+    const modal = document.getElementById('helpModal');
+    if (modal) {
+        modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+    }
+}
+
+function toggleLearnMoreModal() {
+    const modal = document.getElementById('learnMoreModal');
+    if (modal) {
+        const isVisible = modal.style.display === 'flex';
+        modal.style.display = isVisible ? 'none' : 'flex';
+        
+        if (!isVisible) {
+            setTimeout(() => { showSolutionStep(1); }, 150);
+        }
+    }
+}
+
+// Função para mostrar diferentes passos da solução
+function showSolutionStep(step) {
+    document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.control-btn')[step-1].classList.add('active');
+    
+    const cds = document.querySelectorAll('.cd-candidate');
+    const maxValue = document.getElementById('maxDistance');
+    const selectedCDs = document.getElementById('selectedCDs');
+    const worstCase = document.getElementById('worstCase');
+    const solutionDetails = document.getElementById('solutionDetails');
+    
+    // Remove todas as linhas existentes
+    document.querySelectorAll('.connection-line').forEach(line => line.remove());
+    
+    // Reset todos os CDs
+    cds.forEach(cd => {
+        cd.classList.remove('selected', 'not-selected');
+        cd.style.opacity = '1';
+    });
+    
+    switch(step) {
+        case 1:
+            // Todos os CDs visíveis
+            if (maxValue) maxValue.textContent = '95km';
+            if (selectedCDs) selectedCDs.textContent = '5';
+            if (worstCase) worstCase.textContent = 'C15 -> CD5';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Análise:</strong> Todos os 5 CDs disponíveis<br><strong>Maior Distância:</strong> 95km (C15 até CD5)<br><strong>Atendimento:</strong> 100% (15/15 clientes)<br><em style="color: #6b7280;">Muita redundância, pior caso ainda alto</em>';
+            break;
+        case 2:
+            // p = 1 (CD3 - melhor posição central para minimizar máximo)
+            cds.forEach((cd, index) => {
+                if (index === 2) {
+                    cd.classList.add('selected');
+                } else {
+                    cd.classList.add('not-selected');
+                    cd.style.opacity = '0.3';
+                }
+            });
+            if (maxValue) maxValue.textContent = '135km';
+            if (selectedCDs) selectedCDs.textContent = '1';
+            if (worstCase) worstCase.textContent = 'C1 -> CD3';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução p=1:</strong> CD3 selecionado (melhor central)<br><strong>Maior Distância:</strong> 135km (C1 até CD3)<br><strong>Atendimento:</strong> 100%<br><em style="color: #6b7280;">Um CD só, pior caso muito alto</em>';
+            break;
+        case 3:
+            // p = 2 (CDs 1 e 4 - melhor distribuição para minimizar máximo)
+            cds.forEach((cd, index) => {
+                if (index === 0 || index === 3) {
+                    cd.classList.add('selected');
+                } else {
+                    cd.classList.add('not-selected');
+                    cd.style.opacity = '0.3';
+                }
+            });
+            if (maxValue) maxValue.textContent = '78km';
+            if (selectedCDs) selectedCDs.textContent = '2';
+            if (worstCase) worstCase.textContent = 'C15 -> CD4';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução p=2:</strong> CDs {1, 4} selecionados<br><strong>Maior Distância:</strong> 78km (C15 até CD4)<br><strong>Atendimento:</strong> 100%<br><em style="color: #6b7280;">Bom equilíbrio, redução significativa do pior caso</em>';
+            break;
+        case 4:
+            // p = 3 (CDs 1, 3, 5) - Ótimo p-Centros (diferente do p-Medianas!)
+            cds.forEach((cd, index) => {
+                if (index === 0 || index === 2 || index === 4) {
+                    cd.classList.add('selected');
+                } else {
+                    cd.classList.add('not-selected');
+                    cd.style.opacity = '0.3';
+                }
+            });
+            if (maxValue) maxValue.textContent = '45km';
+            if (selectedCDs) selectedCDs.textContent = '3';
+            if (worstCase) worstCase.textContent = 'C13 -> CD5';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução Ótima p=3:</strong> CDs {1, 3, 5} selecionados<br><strong>Maior Distância:</strong> 45km (C13 até CD5)<br><strong>Atendimento:</strong> 100%<br><em style="color: #16a34a;">Pior caso minimizado! Garantia de 45km máximo</em>';
+            break;
+    }
+    
+    // Desenha linhas de conexão
+    setTimeout(() => drawConnectionLines(step), 100);
+}
+
+// Função otimizada para desenhar linhas de conexão
+function drawConnectionLines(currentStep) {
+    try {
+        const selectedCDs = document.querySelectorAll('.cd-candidate.selected');
+        const clients = document.querySelectorAll('.client-point');
+        const mapArea = document.getElementById('mapArea');
+        
+        // Remove todas as linhas existentes com animação suave
+        const existingLines = document.querySelectorAll('.connection-line');
+        existingLines.forEach((line, index) => {
+            setTimeout(() => {
+                line.style.opacity = '0';
+                setTimeout(() => line.remove(), 300);
+            }, index * 50);
+        });
+        
+        if (!mapArea || selectedCDs.length === 0 || clients.length === 0) return;
+        
+        // Aguarda um pouco para as linhas antigas desaparecerem
+        setTimeout(() => {
+            const mapRect = mapArea.getBoundingClientRect();
+            
+            // Mapeamento otimizado de clientes por CD para p-Centros (diferente do p-Medianas!)
+            // Mapeamento dinâmico baseado no step atual
+            let cdClientMap = {};
+            
+            // Usa o step passado como parâmetro
+            const stepNumber = currentStep || 1;
+            
+            switch(stepNumber) {
+                case 1: // Todos CDs
+                    cdClientMap = {
+                        'CD1': ['C1', 'C2', 'C3'],
+                        'CD2': ['C4', 'C5', 'C6'],
+                        'CD3': ['C7', 'C8', 'C9'],
+                        'CD4': ['C10', 'C11', 'C12'],
+                        'CD5': ['C13', 'C14', 'C15'] // C15 atendido por CD5
+                    };
+                    break;
+                case 2: // p = 1 (CD3)
+                    cdClientMap = {
+                        'CD3': ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C11', 'C12', 'C13', 'C14', 'C15'] // Todos atendidos por CD3, C1 é o mais distante
+                    };
+                    break;
+                case 3: // p = 2 (CDs 1,4)
+                    cdClientMap = {
+                        'CD1': ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'],
+                        'CD4': ['C9', 'C10', 'C11', 'C12', 'C13', 'C14', 'C15'] // C15 atendido por CD4
+                    };
+                    break;
+                case 4: // p = 3 (CDs 1,3,5)
+                    cdClientMap = {
+                        'CD1': ['C1', 'C2', 'C3', 'C4', 'C5'],
+                        'CD3': ['C6', 'C7', 'C8', 'C9', 'C10'],
+                        'CD5': ['C11', 'C12', 'C13', 'C14', 'C15'] // C13 atendido por CD5
+                    };
+                    break;
+            }
+            
+            // Array para armazenar todas as novas linhas
+            const newLines = [];
+            
+            // Remove círculos de cobertura existentes
+            document.querySelectorAll('.coverage-circle').forEach(circle => circle.remove());
+            
+            selectedCDs.forEach((cd, cdIndex) => {
+                const cdId = cd.dataset.cd;
+                if (!cdId) return;
+                
+                const cdStyle = cd.style;
+                const cdTop = parseFloat(cdStyle.top);
+                const cdLeft = parseFloat(cdStyle.left);
+                
+                const assignedClients = cdClientMap[cdId] || [];
+                
+                // Calcula raio dinâmico baseado nos clientes atribuídos
+                let maxDistance = 0;
+                assignedClients.forEach(clientId => {
+                    const client = document.querySelector(`[data-client="${clientId}"]`);
+                    if (client) {
+                        const clientStyle = client.style;
+                        const clientTop = parseFloat(clientStyle.top);
+                        const clientLeft = parseFloat(clientStyle.left);
+                        
+                        const distance = Math.sqrt(
+                            Math.pow(cdTop - clientTop, 2) + 
+                            Math.pow(cdLeft - clientLeft, 2)
+                        );
+                        
+                        if (distance > maxDistance) {
+                            maxDistance = distance;
+                        }
+                    }
+                });
+                
+                // Adiciona círculo de cobertura
+                const radiusInPixels = Math.max(maxDistance * 100 + 40, 100);
+                const coverageCircle = document.createElement('div');
+                coverageCircle.className = 'coverage-circle';
+                coverageCircle.style.cssText = `
+                    position: absolute;
+                    left: ${cdLeft}%;
+                    top: ${cdTop}%;
+                    width: ${radiusInPixels * 2}px;
+                    height: ${radiusInPixels * 2}px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, rgba(147, 51, 234, 0.05) 50%, rgba(147, 51, 234, 0.02) 100%);
+                    border: 2px dashed rgba(147, 51, 234, 0.6);
+                    transform: translate(-50%, -50%);
+                    pointer-events: none;
+                    z-index: 1;
+                    animation: pulse 2s infinite;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                `;
+                
+                mapArea.appendChild(coverageCircle);
+                
+                // Animação de aparecimento do círculo
+                setTimeout(() => {
+                    coverageCircle.style.opacity = '1';
+                }, cdIndex * 100);
+                
+                const cdRect = cd.getBoundingClientRect();
+                const cdCenterX = (cdRect.left - mapRect.left) + (cdRect.width / 2);
+                const cdCenterY = (cdRect.top - mapRect.top) + (cdRect.height / 2);
+                
+                assignedClients.forEach((clientId, clientIndex) => {
+                    const client = Array.from(clients).find(c => c.dataset.client === clientId);
+                    if (!client) return;
+                    
+                    const clientRect = client.getBoundingClientRect();
+                    const clientCenterX = (clientRect.left - mapRect.left) + (clientRect.width / 2);
+                    const clientCenterY = (clientRect.top - mapRect.top) + (clientRect.height / 2);
+                    
+                    // Cálculo preciso da distância e ângulo
+                    const deltaX = clientCenterX - cdCenterX;
+                    const deltaY = clientCenterY - cdCenterY;
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    const angleRad = Math.atan2(deltaY, deltaX);
+                    const angleDeg = angleRad * (180 / Math.PI);
+                    
+                    // Criação da linha com propriedades otimizadas para p-Centros
+                    const line = document.createElement('div');
+                    line.className = 'connection-line';
+                    line.style.cssText = `
+                        position: absolute;
+                        left: ${cdCenterX}px;
+                        top: ${cdCenterY}px;
+                        width: ${distance}px;
+                        height:3px;
+                        background: linear-gradient(90deg, 
+                            rgba(147, 51, 234, 0.8) 0%, 
+                            rgba(79, 70, 229, 0.6) 100%);
+                        border-radius: 2px;
+                        transform-origin: 0 50%;
+                        transform: rotate(${angleDeg}deg);
+                        z-index: 5;
+                        pointer-events: none;
+                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                        opacity: 0;
+                        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                    `;
+                    
+                    // Adiciona seta no final da linha
+                    const arrow = document.createElement('div');
+                    arrow.style.cssText = `
+                        position: absolute;
+                        right: -6px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        width: 0;
+                        height: 0;
+                        border-left: 6px solid rgba(79, 70, 229, 0.8);
+                        border-top: 3px solid transparent;
+                        border-bottom: 3px solid transparent;
+                    `;
+                    line.appendChild(arrow);
+                    
+                    mapArea.appendChild(line);
+                    newLines.push(line);
+                    
+                    // Animação de entrada sequencial
+                    setTimeout(() => {
+                        line.style.opacity = '1';
+                    }, (cdIndex * 100) + (clientIndex * 50));
+                });
+            });
+        }, existingLines.length * 50);
+        
+    } catch (error) {
+        console.error('Erro ao desenhar linhas de conexão:', error);
+    }
+}
+
+// Fechar modal com a tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const helpModal = document.getElementById('helpModal');
+        const learnMoreModal = document.getElementById('learnMoreModal');
+        
+        if (helpModal && helpModal.style.display === 'flex') {
+            helpModal.style.display = 'none';
+        }
+        if (learnMoreModal && learnMoreModal.style.display === 'flex') {
+            learnMoreModal.style.display = 'none';
+        }
     }
 });
 </script>

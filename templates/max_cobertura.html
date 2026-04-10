@@ -11,7 +11,7 @@
             <p>Maximize a cobertura de pontos dentro de um raio limitado (genérico para qualquer aplicação)</p>
         </div>
         <div class="tool-icon-large blue">
-            <span class="material-symbols-outlined">radar</span>
+            <span class="material-symbols-outlined radar">radar</span>
         </div>
     </section>
 
@@ -33,10 +33,27 @@
         </div>
     </div>
 
+    <div class="info-card" style="margin-bottom: 4rem;">
+        <div class="info-icon">
+            <span class="material-symbols-outlined">lightbulb</span>
+        </div>
+        <div class="info-content">
+            <h3>Sobre a Máxima Cobertura</h3>
+            <p>Este modelo seleciona exatamente <strong>p</strong> instalações para maximizar a <strong>cobertura ponderada</strong> dentro de um raio predefinido. Ideal para serviços onde o alcance geográfico é o fator principal.</p>
+            <button class="learn-more-btn" onclick="toggleLearnMoreModal()">
+                <span class="material-symbols-outlined">info</span>
+                Saiba Mais
+            </button>
+        </div>
+    </div>
+
     <!-- Step 1: Configuration -->
     <div class="card" id="step1">
         <div class="card-header">
             <h2>Configuração do Problema Máxima Cobertura</h2>
+            <button class="help-btn" onclick="toggleHelpModal()" title="Como usar">
+                <span class="material-symbols-outlined">help_outline</span>
+            </button>
         </div>
         
         <form action="/gerar_template_maxcobertura" method="POST">
@@ -152,57 +169,641 @@
         </form>
     </div>
 
-    <!-- Info Card -->
-    <div class="info-card">
-        <div class="info-icon">
-            <span class="material-symbols-outlined">lightbulb</span>
-        </div>
-        <div class="info-content">
-            <h3>Sobre a Máxima Cobertura (Genérica)</h3>
-            <p>Este modelo seleciona exatamente <strong>p</strong> instalações para maximizar a <strong>cobertura ponderada</strong> dentro de um raio predefinido. É uma ferramenta universal aplicável a qualquer cenário de cobertura.</p>
+    <!-- Help Modal -->
+    <div class="help-modal" id="helpModal">
+        <div class="help-modal-backdrop" onclick="toggleHelpModal()"></div>
+        <div class="help-modal-content">
+            <div class="help-modal-header">
+                <h3>Como Usar a Ferramenta Máxima Cobertura</h3>
+                <button class="help-modal-close" onclick="toggleHelpModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="help-modal-body">
+                <div class="help-section">
+                    <h4>Configuração Inicial</h4>
+                    <div class="help-item">
+                        <div class="help-item-icon">
+                            <span class="material-symbols-outlined">warehouse</span>
+                        </div>
+                        <div class="help-item-content">
+                            <strong>CDs Candidatos:</strong> Número de locais disponíveis para instalação. São todas as opções possíveis que podem ser escolhidas pelo modelo.
+                            <br><small><em>Exemplo: 5 antenas disponíveis em diferentes locais</em></small>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-item-icon">
+                            <span class="material-symbols-outlined">location_on</span>
+                        </div>
+                        <div class="help-item-content">
+                            <strong>Pontos de Cobertura:</strong> Quantidade de locais que precisam ser atendidos (bairros, clientes, etc.).
+                            <br><small><em>Exemplo: 20 bairros que precisam de cobertura</em></small>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-item-icon">
+                            <span class="material-symbols-outlined">pin_drop</span>
+                        </div>
+                        <div class="help-item-content">
+                            <strong>CDs a Abrir (p):</strong> Número exato de instalações que serão selecionadas para maximizar cobertura. Este é o parâmetro principal do Máxima Cobertura.
+                            <br><small><em>Exemplo: Abrir apenas 2 antenas das 5 disponíveis</em></small>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-item-icon">
+                            <span class="material-symbols-outlined">track_changes</span>
+                        </div>
+                        <div class="help-item-content">
+                            <strong>Raio de Cobertura:</strong> Distância máxima para considerar um ponto como coberto (0 = matriz binária).
+                            <br><small><em>Exemplo: 3km de alcance para cada antena</em></small>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-item-icon">
+                            <span class="material-symbols-outlined">swap_horiz</span>
+                        </div>
+                        <div class="help-item-content">
+                            <strong>Matriz de Otimização:</strong> Tipo de dado que será usado para calcular as distâncias/custos na planilha.
+                            <ul>
+                                <li><strong>Distâncias:</strong> Use para otimização baseada em quilômetros ou tempo de viagem</li>
+                                <li><strong>Custos Financeiros:</strong> Use para otimização baseada em custos de transporte (R$/ton, R$/unidade)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Passo a Passo</h4>
+                    <div class="step-guide">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <strong>Configure os parâmetros</strong> acima conforme sua necessidade
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <strong>Clique em "Baixar Planilha"</strong> para gerar o arquivo Excel
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <strong>Preencha a planilha</strong> com as distâncias ou custos entre CDs e pontos de cobertura
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <strong>Faça upload</strong> da planilha preenchida e clique em "Otimizar"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-tip">
+                    <div class="tip-icon">
+                        <span class="material-symbols-outlined">tips_and_updates</span>
+                    </div>
+                    <div class="tip-content">
+                        <strong>Dica:</strong> A planilha gerada já vem com exemplos e instruções detalhadas na aba "Como Usar". Use-a como referência!
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Examples Card -->
-    <div class="card" style="margin-top: 20px; background: #f8f9fa;">
-        <div class="card-header">
-            <h4>🌍 Exemplos de Aplicação</h4>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
-            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #1F4E78;">
-                <h5 style="color: #1F4E78; margin-bottom: 10px;">📡 Telecomunicações</h5>
-                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    <li><strong>Instalações:</strong> Antenas 5G</li>
-                    <li><strong>Pontos:</strong> Bairros da cidade</li>
-                    <li><strong>Peso:</strong> População por bairro</li>
-                    <li><strong>Raio:</strong> 2 km de alcance</li>
-                </ul>
+    <!-- Learn More Modal -->
+    <div class="help-modal" id="learnMoreModal">
+        <div class="help-modal-backdrop" onclick="toggleLearnMoreModal()"></div>
+        <div class="help-modal-content">
+            <div class="help-modal-header">
+                <h3>Entenda o Problema da Máxima Cobertura</h3>
+                <button class="help-modal-close" onclick="toggleLearnMoreModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
             </div>
-            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
-                <h5 style="color: #28a745; margin-bottom: 10px;">🚔 Segurança Pública</h5>
-                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    <li><strong>Instalações:</strong> Bases policiais</li>
-                    <li><strong>Pontos:</strong> Zonas de ocorrência</li>
-                    <li><strong>Peso:</strong> Nº de ocorrências/mês</li>
-                    <li><strong>Raio:</strong> 5 min de resposta</li>
-                </ul>
-            </div>
-            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
-                <h5 style="color: #dc3545; margin-bottom: 10px;">🎥 Vigilância</h5>
-                <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
-                    <li><strong>Instalações:</strong> Câmeras de segurança</li>
-                    <li><strong>Pontos:</strong> Corredores de acesso</li>
-                    <li><strong>Peso:</strong> Valor em estoque</li>
-                    <li><strong>Raio:</strong> 50m de visão</li>
-                </ul>
+            <div class="help-modal-body">
+                <div class="help-section">
+                    <h4>O Que é o Problema da Máxima Cobertura?</h4>
+                    
+                    <div class="concept-box">
+                        <div class="concept-icon">
+                            <span class="material-symbols-outlined">radar</span>
+                        </div>
+                        <div class="concept-content">
+                            <p>O <strong>problema da Máxima Cobertura</strong> é um modelo de otimização que seleciona exatamente <strong>p instalações</strong> para maximizar a <strong>cobertura ponderada</strong> dentro de um <strong>raio predefinido</strong>, onde cada ponto tem um peso específico (população, demanda, etc.).</p>
+                            <br>
+                            <p><strong>Diferença Chave:</strong> Ao contrário dos p-Centros (minimiza maior distância) e p-Medianas (minimiza soma total), a Máxima Cobertura foca em <strong>maximizar o número de pontos atendidos</strong> dentro de um limite de distância.</p>
+                            <br>
+                            <p><strong>Contexto Histórico:</strong> Introduzido por Church e ReVelle (1974) em seu trabalho seminal sobre "The Maximal Covering Location Problem", revolucionou a <strong>localização de serviços</strong> com aplicações críticas onde o alcance geográfico é o fator principal.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>📍 Visualização Interativa</h4>
+                    
+                    <div class="illustration-container">
+                        <div class="illustration-title">
+                            <h5>Exemplo Máxima Cobertura: p = 2 Antenas, Raio = 3km</h5>
+                            <p><strong style="color: #1f4e78;">Maximizar população coberta dentro do raio</strong></p>
+                            <p>Clique nos botões para ver diferentes soluções</p>
+                        </div>
+                        
+                        <div class="simulation-controls">
+                            <button class="control-btn active" onclick="showSolutionStepMC(1)">Todas Antenas</button>
+                            <button class="control-btn" onclick="showSolutionStepMC(2)">p = 1</button>
+                            <button class="control-btn" onclick="showSolutionStepMC(3)">p = 2 (Ótimo)</button>
+                        </div>
+                        
+                        <div class="map-container">
+                            <div class="map-area" id="mapAreaMC">
+                                <div class="grid-background"></div>
+                                
+                                <!-- Bairros -->
+                                <div class="client-point" style="top: 20%; left: 20%;" data-demand="5000" data-client="B1"> B1<br><small>5k</small></div>
+                                <div class="client-point" style="top: 30%; left: 30%;" data-demand="8000" data-client="B2"> B2<br><small>8k</small></div>
+                                <div class="client-point" style="top: 15%; left: 50%;" data-demand="3000" data-client="B3"> B3<br><small>3k</small></div>
+                                <div class="client-point" style="top: 35%; left: 60%;" data-demand="12000" data-client="B4"> B4<br><small>12k</small></div>
+                                <div class="client-point" style="top: 25%; left: 75%;" data-demand="7000" data-client="B5"> B5<br><small>7k</small></div>
+                                <div class="client-point" style="top: 60%; left: 25%;" data-demand="15000" data-client="B6"> B6<br><small>15k</small></div>
+                                <div class="client-point" style="top: 65%; left: 45%;" data-demand="6000" data-client="B7"> B7<br><small>6k</small></div>
+                                <div class="client-point" style="top: 50%; left: 65%;" data-demand="4000" data-client="B8"> B8<br><small>4k</small></div>
+                                
+                                <!-- Antenas Candidatas -->
+                                <div class="cd-candidate" style="top: 35%; left: 35%;" data-cd="A1" data-cost="500000"> A1</div>
+                                <div class="cd-candidate" style="top: 45%; left: 55%;" data-cd="A2" data-cost="450000"> A2</div>
+                                <div class="cd-candidate" style="top: 70%; left: 70%;" data-cd="A3" data-cost="400000"> A3</div>
+                                <div class="cd-candidate" style="top: 25%; left: 25%;" data-cd="A4" data-cost="550000"> A4</div>
+                                <div class="cd-candidate" style="top: 20%; left: 70%;" data-cd="A5" data-cost="480000"> A5</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-panel">
+                            <div class="stat-item">
+                                <div class="stat-label">Antenas Selecionadas:</div>
+                                <div class="stat-value" id="selectedAntennas">5</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Cobertura Total:</div>
+                                <div class="stat-value" id="totalCoverage">60k</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">% Cobertura:</div>
+                                <div class="stat-value" id="percentCoverage">100%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="solution-details" id="solutionDetails">
+                            <strong>Análise:</strong> Todas as 5 antenas disponíveis<br>
+                            <strong>Cobertura:</strong> 60k habitantes (100%)<br>
+                            <strong>Alcance:</strong> Todas cobertas
+                        </div>
+                    </div>
+                </div>
+                                
+                <div class="help-section">
+                    <h4>Formulação Matemática</h4>
+                    
+                    <div class="math-formulation">
+                        <!-- Função Objetivo -->
+                        <div class="math-section objective">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="material-symbols-outlined">functions</span>
+                                </div>
+                                <h5>Função Objetivo</h5>
+                                <div class="section-badge">Maximização</div>
+                            </div>
+                            <div class="formula-display">
+                                <div class="formula-main">
+                                    <span class="formula-operator">Maximizar</span>
+                                    <div class="formula-expression">
+                                        <span class="sigma">&Sigma;</span>
+                                        <div class="formula-subscript">
+                                            <span>i &isin; I</span>
+                                        </div>
+                                        <span class="formula-term">w<sub>i</sub> &times; y<sub>i</sub></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="formula-description">
+                                <p><strong>Onde:</strong></p>
+                                <ul>
+                                    <li><strong>w<sub>i</sub></strong> = Peso do ponto i (população, demanda)</li>
+                                    <li><strong>y<sub>i</sub></strong> = 1 se ponto i é coberto, 0 caso contrário</li>
+                                    <li><strong>I</strong> = Conjunto de todos os pontos de cobertura</li>
+                                </ul>
+                                <br>
+                                <p><strong>Explicação:</strong> O modelo maximiza a soma dos pesos dos pontos cobertos, onde um ponto é considerado coberto se está dentro do raio de pelo menos uma instalação selecionada.</p>
+                            </div>
+                        </div>
+
+                        <!-- Restrições -->
+                        <div class="math-section constraints">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="material-symbols-outlined">rule</span>
+                                </div>
+                                <h5>Restrições Principais</h5>
+                                <div class="section-badge">Obrigatórias</div>
+                            </div>
+                            <div class="constraints-grid">
+                                <div class="constraint-item">
+                                    <div class="constraint-formula">
+                                        <span class="sigma">&Sigma;</span>
+                                        <span class="subscript">j&isin;J</span>
+                                        <span class="constraint-term">x<sub>j</sub></span>
+                                        <span class="operator">=</span>
+                                        <span class="constraint-value">p</span>
+                                    </div>
+                                    <div class="constraint-description">
+                                        <h6>Número de Instalações</h6>
+                                        <p>Exatamente <strong>p</strong> instalações devem ser selecionadas</p>
+                                    </div>
+                                </div>
+
+                                <div class="constraint-item">
+                                    <div class="constraint-formula">
+                                        <span class="sigma">&Sigma;</span>
+                                        <span class="subscript">j&isin;N<sub>i</sub></span>
+                                        <span class="constraint-term">x<sub>j</sub></span>
+                                        <span class="operator">&ge;</span>
+                                        <span class="constraint-term">y<sub>i</sub></span>
+                                        <span class="for-all">&forall; i&isin;I</span>
+                                    </div>
+                                    <div class="constraint-description">
+                                        <h6>Garantia de Cobertura</h6>
+                                        <p>Ponto i só é coberto se pelo menos uma instalação j dentro do raio for selecionada</p>
+                                    </div>
+                                </div>
+
+                                <div class="constraint-item">
+                                    <div class="constraint-formula">
+                                        <span class="constraint-term">x<sub>j</sub>, y<sub>i</sub></span>
+                                        <span class="operator">&isin;</span>
+                                        <span class="constraint-value">{0,1}</span>
+                                        <span class="for-all">&forall; j&isin;J, i&isin;I</span>
+                                    </div>
+                                    <div class="constraint-description">
+                                        <h6>Variáveis Binárias</h6>
+                                        <p>Instalações e pontos só podem ser selecionados (1) ou não (0)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h4>Interpretação Intuitiva</h4>
+                    
+                    <div class="math-formulation">
+                        <!-- Interpretação -->
+                        <div class="math-section interpretation">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="material-symbols-outlined">psychology</span>
+                                </div>
+                                <h5>Conceito</h5>
+                                <div class="section-badge">Intuitivo</div>
+                            </div>
+                            <div class="interpretation-content">
+                                <div class="interpretation-item">
+                                    <div class="interpretation-icon">
+                                        <span class="material-symbols-outlined">balance</span>
+                                    </div>
+                                    <div class="interpretation-content">
+                                        <h6>Alcance Máximo</h6>
+                                        <p>Maximiza o número de pessoas atendidas dentro do raio, priorizando cobertura populacional.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="interpretation-item">
+                                    <div class="interpretation-icon">
+                                        <span class="material-symbols-outlined">cell_tower</span>
+                                    </div>
+                                    <div class="interpretation-content">
+                                        <h6>Serviços Universais</h6>
+                                        <p>Garante acesso máximo a serviços essenciais como saúde, educação e comunicação.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="interpretation-item">
+                                    <div class="interpretation-icon">
+                                        <span class="material-symbols-outlined">public</span>
+                                    </div>
+                                    <div class="interpretation-content">
+                                        <h6>Justiça Espacial</h6>
+                                        <p>Promove equidade no acesso a infraestrutura pública e serviços básicos.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Complexidade -->
+                        <div class="math-section complexity">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <span class="material-symbols-outlined">memory</span>
+                                </div>
+                                <h5>Complexidade Computacional</h5>
+                                <div class="section-badge">NP-Difícil</div>
+                            </div>
+                            <div class="complexity-content">
+                                <div class="complexity-info">
+                                    <div class="complexity-metric">
+                                        <h6>Classe de Complexidade</h6>
+                                        <div class="complexity-badge np-hard">NP-Hard</div>
+                                        <p>Problema computacionalmente difícil para grandes instâncias</p>
+                                    </div>
+                                    <div class="complexity-metric">
+                                        <h6>Tamanho do Espaço de Busca</h6>
+                                        <div class="complexity-formula">
+                                            C(m,p) = <span class="combination">m</span>! / [p! × (<span class="combination">m</span>-p)!]
+                                        </div>
+                                        <p>Onde <strong>m</strong> = instalações candidatas, <strong>p</strong> = instalações a selecionar</p>
+                                    </div>
+                                </div>
+                                <div class="complexity-approaches">
+                                    <h6>Abordagens de Solução</h6>
+                                    <div class="approaches-grid">
+                                        <div class="approach-item exact">
+                                            <span class="approach-icon">?</span>
+                                            <h7>Exatas</h7>
+                                            <p>Branch-and-Bound, Cutting Planes</p>
+                                            <small>Viável para pequenas instâncias</small>
+                                        </div>
+                                        <div class="approach-item heuristic">
+                                            <span class="approach-icon">~</span>
+                                            <h7>Heurísticas</h7>
+                                            <p>Greedy, Lagrangean Relaxation</p>
+                                            <small>Soluções boas em tempo razoável</small>
+                                        </div>
+                                        <div class="approach-item metaheuristic">
+                                            <span class="approach-icon">?</span>
+                                            <h7>Meta-heurísticas</h7>
+                                            <p>Genetic Algorithms, Tabu Search</p>
+                                            <small>Excelentes soluções para grandes problemas</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h4>Aplicações Práticas da Máxima Cobertura</h4>
+                    
+                    <div class="applications-optimized">
+                        <!-- Aplicações Principais Simplificadas -->
+                        <div class="apps-grid">
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">cell_tower</span>
+                                </div>
+                                <h5>Telecomunicações</h5>
+                                <p>Posicionamento de antenas 5G, torres de celular e repetidoras para maximizar cobertura populacional em áreas urbanas e rurais.</p>
+                                <div class="app-benefit">+85% cobertura</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">local_hospital</span>
+                                </div>
+                                <h5>Saúde Pública</h5>
+                                <p>Localização de postos de saúde, clínicas e unidades de vacinação para atender o máximo possível de pessoas dentro de distância acessível.</p>
+                                <div class="app-benefit">-60% tempo espera</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">school</span>
+                                </div>
+                                <h5>Educação</h5>
+                                <p>Posicionamento estratégico de escolas e bibliotecas para garantir acesso educacional ao maior número de estudantes.</p>
+                                <div class="app-benefit">+75% acesso</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">local_fire_department</span>
+                                </div>
+                                <h5>Segurança Pública</h5>
+                                <p>Localização de delegacias, postos policias e hidrantes para proteger o máximo de cidadãos em área de cobertura.</p>
+                                <div class="app-benefit">-40% tempo resposta</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">directions_bus</span>
+                                </div>
+                                <h5>Transporte Público</h5>
+                                <p>Definição de rotas de ônibus e estações de metrô para atender a maior população possível com recursos limitados.</p>
+                                <div class="app-benefit">+90% conectividade</div>
+                            </div>
+
+                            <div class="app-card-optimized">
+                                <div class="app-icon-optimized">
+                                    <span class="material-symbols-outlined">shopping_cart</span>
+                                </div>
+                                <h5>Varejo</h5>
+                                <p>Localização de lojas, centros de distribuição e pontos de venda para maximizar cobertura de mercado dentro do raio de atração.</p>
+                                <div class="app-benefit">+55% market share</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interpretação -->
+                <div class="help-section">
+                    <h4>Interpretação Intuitiva</h4>
+                    
+                    <div class="math-section interpretation">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <span class="material-symbols-outlined">psychology</span>
+                            </div>
+                            <h5>Interpretação Intuitiva</h5>
+                            <div class="section-badge">Conceito</div>
+                        </div>
+                        <div class="interpretation-grid">
+                            <div class="interpretation-item">
+                                <div class="interpretation-icon">
+                                    <span class="material-symbols-outlined">radar</span>
+                                </div>
+                                <div class="interpretation-content">
+                                    <h6>Alcance Geográfico</h6>
+                                    <p>Foca em maximizar o <strong>número de pontos atendidos</strong> dentro de um raio predefinido</p>
+                                </div>
+                            </div>
+
+                            <div class="interpretation-item">
+                                <div class="interpretation-icon">
+                                    <span class="material-symbols-outlined">groups</span>
+                                </div>
+                                <div class="interpretation-content">
+                                    <h6>População Ponderada</h6>
+                                    <p>Considera o <strong>peso/demanda</strong> de cada ponto, não apenas contagem simples</p>
+                                </div>
+                            </div>
+
+                            <div class="interpretation-item">
+                                <div class="interpretation-icon">
+                                    <span class="material-symbols-outlined">tune</span>
+                                </div>
+                                <div class="interpretation-content">
+                                    <h6>Raio Controlado</h6>
+                                    <p>Permite ajustar o <strong>limite de distância</strong> conforme restrições operacionais</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complexidade -->
+                <div class="help-section">
+                    <h4>Complexidade Computacional</h4>
+                    
+                    <div class="math-section complexity">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <span class="material-symbols-outlined">memory</span>
+                            </div>
+                            <h5>Complexidade Computacional</h5>
+                            <div class="section-badge">NP-Difícil</div>
+                        </div>
+                        <div class="complexity-content">
+                            <div class="complexity-info">
+                                <div class="complexity-metric">
+                                    <h6>Classe de Complexidade</h6>
+                                    <div class="complexity-badge np-hard">NP-Hard</div>
+                                    <p>Problema computacionalmente difícil para grandes instâncias</p>
+                                </div>
+                                <div class="complexity-metric">
+                                    <h6>Tamanho do Espaço de Busca</h6>
+                                    <div class="complexity-formula">
+                                        C(m,p) = <span class="combination">m</span>! / [p! × (<span class="combination">m</span>-p)!]
+                                    </div>
+                                    <p>Onde <strong>m</strong> = locais candidatos, <strong>p</strong> = instalações a selecionar</p>
+                                </div>
+                            </div>
+                            <div class="complexity-approaches">
+                                <h6>Abordagens de Solução</h6>
+                                <div class="approaches-grid">
+                                    <div class="approach-item exact">
+                                        <span class="approach-icon">·</span>
+                                        <h7>Exatas</h7>
+                                        <p>Branch-and-Bound, Cutting Planes</p>
+                                        <small>Viável para pequenas instâncias</small>
+                                    </div>
+                                    <div class="approach-item heuristic">
+                                        <span class="approach-icon">~</span>
+                                        <h7>Heurísticas</h7>
+                                        <p>Greedy, Lagrangean Relaxation</p>
+                                        <small>Soluções boas em tempo razoável</small>
+                                    </div>
+                                    <div class="approach-item metaheuristic">
+                                        <span class="approach-icon">~</span>
+                                        <h7>Meta-heurísticas</h7>
+                                        <p>Genetic Algorithms, Tabu Search</p>
+                                        <small>Excelentes soluções para grandes problemas</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benefícios Principais -->
+                <div class="benefits-summary">
+                    <h6>Principais Benefícios do Modelo</h6>
+                    <div class="benefits-list">
+                        <div class="benefit-item">
+                            <span class="benefit-icon">
+                                <span class="material-symbols-outlined">radar</span>
+                            </span>
+                            <div class="benefit-text">
+                                <h7>Máxima Cobertura</h7>
+                                <p>Otimiza o número de pontos atendidos dentro do raio especificado</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <span class="benefit-icon">
+                                <span class="material-symbols-outlined">scale</span>
+                            </span>
+                            <div class="benefit-text">
+                                <h7>Demanda Ponderada</h7>
+                                <p>Considera importância/população de cada ponto de atendimento</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <span class="benefit-icon">
+                                <span class="material-symbols-outlined">tune</span>
+                            </span>
+                            <div class="benefit-text">
+                                <h7>Raio Flexível</h7>
+                                <p>Permite ajustar alcance conforme restrições operacionais</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <span class="benefit-icon">
+                                <span class="material-symbols-outlined">public</span>
+                            </span>
+                            <div class="benefit-text">
+                                <h7>Impacto Social</h7>
+                                <p>Maximiza acesso da população a serviços essenciais</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exemplo Prático Simplificado -->
+                <div class="practical-example">
+                    <h6>Exemplo de Aplicação Real</h6>
+                    <div class="example-content">
+                        <div class="example-case">
+                            <div class="case-header">
+                                <div class="case-icon">
+                                    <span class="material-symbols-outlined">cell_tower</span>
+                                </div>
+                                <div class="case-title">
+                                    <h7>Rede 5G Urbana</h7>
+                                    <p>Operadora de telecomunicações</p>
+                                </div>
+                            </div>
+                            <div class="case-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Problema:</span>
+                                    <span class="detail-value">Cobertura baixa em áreas densamente povoadas</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Solução:</span>
+                                    <span class="detail-value">Otimização de 8 antenas com raio de 3km para máxima cobertura</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Resultado:</span>
+                                    <span class="detail-value">Aumento de 85% na cobertura populacional com mesmo investimento</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 <script>
 // Validações antes de avançar ou baixar template
 document.querySelector('form[action="/gerar_template_maxcobertura"]').addEventListener('submit', function(e) {
@@ -325,6 +926,301 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkedRadio = document.querySelector('input[name="tipo_dado"]:checked');
     if (checkedRadio) {
         checkedRadio.dispatchEvent(new Event('change'));
+    }
+    
+    // Inicializar modais como ocultos
+    const helpModal = document.getElementById('helpModal');
+    const learnMoreModal = document.getElementById('learnMoreModal');
+    if (helpModal) helpModal.style.display = 'none';
+    if (learnMoreModal) learnMoreModal.style.display = 'none';
+});
+
+// Funções para controlar os modais
+function toggleHelpModal() {
+    const modal = document.getElementById('helpModal');
+    if (modal) {
+        modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+    }
+}
+
+function toggleLearnMoreModal() {
+    const modal = document.getElementById('learnMoreModal');
+    if (modal) {
+        const isVisible = modal.style.display === 'flex';
+        modal.style.display = isVisible ? 'none' : 'flex';
+        
+        if (!isVisible) {
+            // Garantir que o modal esteja visível antes de inicializar
+            setTimeout(() => { 
+                showSolutionStepMC(1); 
+                // NÃO desenhar raios automaticamente - só quando clicar nos botões
+            }, 300);
+        }
+    }
+}
+
+// Função para mostrar diferentes passos da solução Máxima Cobertura
+function showSolutionStepMC(step) {
+    document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.control-btn')[step-1].classList.add('active');
+    
+    const antennas = document.querySelectorAll('.cd-candidate');
+    const bairros = document.querySelectorAll('.client-point');
+    const selectedAntennasEl = document.getElementById('selectedAntennas');
+    const totalCoverage = document.getElementById('totalCoverage');
+    const percentCoverage = document.getElementById('percentCoverage');
+    const solutionDetails = document.getElementById('solutionDetails');
+    
+    // Remove todos os círculos existentes
+    document.querySelectorAll('.coverage-circle').forEach(circle => circle.remove());
+    
+    // Reset todas as antenas
+    antennas.forEach(antenna => {
+        antenna.classList.remove('selected', 'not-selected');
+        antenna.style.opacity = '1';
+    });
+    
+    // Reset todos os bairros
+    bairros.forEach(bairro => {
+        bairro.classList.remove('covered', 'not-covered');
+        bairro.style.opacity = '1';
+    });
+    
+    const totalPopulation = 60000; // Total: 5+8+3+12+7+15+6+4 = 60k
+    
+    switch(step) {
+        case 1:
+            // Todas as antenas visíveis
+            if (selectedAntennasEl) selectedAntennasEl.textContent = '5';
+            if (totalCoverage) totalCoverage.textContent = '60k';
+            if (percentCoverage) percentCoverage.textContent = '100%';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Análise:</strong> Todas as 5 antenas disponíveis<br><strong>Cobertura:</strong> 60k habitantes (100%)<br><strong>Alcance:</strong> Todas cobertas<br><em style="color: #6b7280;">Máxima cobertura, mas alto custo</em>';
+            break;
+        case 2:
+            // p = 1 (A2 - melhor posição individual para cobertura)
+            antennas.forEach((antenna, index) => {
+                if (index === 1) { // A2
+                    antenna.classList.add('selected');
+                } else {
+                    antenna.classList.add('not-selected');
+                    antenna.style.opacity = '0.3';
+                }
+            });
+            
+            // Bairros cobertos pela A2 (raio 3km): B2, B3, B4, B5, B7, B8
+            const covered2 = ['B2', 'B3', 'B4', 'B5', 'B7', 'B8'];
+            const population2 = 8 + 3 + 12 + 7 + 6 + 4; // 40k
+            
+            bairros.forEach(bairro => {
+                const bairroId = bairro.dataset.client;
+                if (covered2.includes(bairroId)) {
+                    bairro.classList.add('covered');
+                } else {
+                    bairro.classList.add('not-covered');
+                    bairro.style.opacity = '0.3';
+                }
+            });
+            
+            if (selectedAntennasEl) selectedAntennasEl.textContent = '1';
+            if (totalCoverage) totalCoverage.textContent = '40k';
+            if (percentCoverage) percentCoverage.textContent = '67%';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução p=1:</strong> Antena A2 selecionada (melhor individual)<br><strong>Cobertura:</strong> 40k de 60k habitantes<br><strong>Alcance:</strong> 6/8 bairros<br><em style="color: #6b7280;">Uma antena só, cobertura parcial</em>';
+            break;
+        case 3:
+            // p = 2 (A1 e A2) - Ótimo Máxima Cobertura
+            antennas.forEach((antenna, index) => {
+                if (index === 0 || index === 1) { // A1 e A2
+                    antenna.classList.add('selected');
+                } else {
+                    antenna.classList.add('not-selected');
+                    antenna.style.opacity = '0.3';
+                }
+            });
+            
+            // Bairros cobertos por A1 e A2: Todos os 8 bairros
+            const covered3 = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8'];
+            const population3 = 5 + 8 + 3 + 12 + 7 + 15 + 6 + 4; // 60k
+            
+            bairros.forEach(bairro => {
+                const bairroId = bairro.dataset.client;
+                if (covered3.includes(bairroId)) {
+                    bairro.classList.add('covered');
+                } else {
+                    bairro.classList.add('not-covered');
+                    bairro.style.opacity = '0.3';
+                }
+            });
+            
+            if (selectedAntennasEl) selectedAntennasEl.textContent = '2';
+            if (totalCoverage) totalCoverage.textContent = '60k';
+            if (percentCoverage) percentCoverage.textContent = '100%';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução Ótima p=2:</strong> Antenas {A1, A2} selecionadas<br><strong>Cobertura:</strong> 60k de 60k habitantes<br><strong>Alcance:</strong> 8/8 bairros<br><em style="color: #16a34a;">Cobertura total com custo otimizado!</em>';
+            break;
+    }
+    
+    // Desenha círculos de cobertura imediatamente
+    drawCoverageCirclesMC(step);
+}
+
+// Função para desenhar círculos de cobertura - versão simplificada
+function drawCoverageCirclesMC(currentStep) {
+    const mapArea = document.getElementById('mapAreaMC');
+    if (!mapArea) return;
+    
+    // Remove todos os círculos existentes
+    document.querySelectorAll('.coverage-circle').forEach(circle => circle.remove());
+    
+    // Define quais antenas estão selecionadas em cada step
+    let selectedAntennas = [];
+    switch(currentStep) {
+        case 1:
+            selectedAntennas = []; // NENHUMA antena - não mostra raios
+            break;
+        case 2:
+            selectedAntennas = [1]; // A2 apenas - mostra raios
+            break;
+        case 3:
+            selectedAntennas = [0, 1]; // A1 e A2 - mostra raios
+            break;
+    }
+    
+    // Desenha círculos apenas para antenas selecionadas
+    const allAntennas = document.querySelectorAll('.cd-candidate');
+    
+    selectedAntennas.forEach(index => {
+        const antenna = allAntennas[index];
+        if (!antenna) return;
+        
+        // Cria círculo de cobertura para antena selecionada
+        const coverageCircle = document.createElement('div');
+        coverageCircle.className = 'coverage-circle';
+        
+        // Usa posição relativa ao container do mapa
+        const antennaRect = antenna.getBoundingClientRect();
+        const mapRect = mapArea.getBoundingClientRect();
+        
+        // Calcula posição relativa ao mapa
+        const relativeLeft = ((antennaRect.left + antennaRect.width/2) - mapRect.left) / mapRect.width * 100;
+        const relativeTop = ((antennaRect.top + antennaRect.height/2) - mapRect.top) / mapRect.height * 100;
+        
+        coverageCircle.style.cssText = `
+            position: absolute;
+            left: ${relativeLeft}%;
+            top: ${relativeTop}%;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.15) 25%, rgba(34, 197, 94, 0.08) 50%, rgba(34, 197, 94, 0.03) 75%, transparent 100%);
+            border: 2px solid rgba(34, 197, 94, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 45;
+            pointer-events: none;
+            opacity: 0.9;
+        `;
+        
+        mapArea.appendChild(coverageCircle);
+    });
+}
+
+// Adicionar CSS para animação dos círculos de cobertura
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+        50% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.6; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+    }
+    
+    .coverage-area {
+        transition: all 0.3s ease;
+    }
+    
+    .coverage-area:hover {
+        background: radial-gradient(circle, rgba(31, 78, 120, 0.3) 0%, rgba(31, 78, 120, 0.15) 50%, rgba(31, 78, 120, 0.08) 100%);
+        border-color: rgba(31, 78, 120, 0.6);
+    }
+    
+    /* Estilos robustos para círculos de cobertura */
+    .coverage-circle {
+        position: absolute !important;
+        border-radius: 50% !important;
+        background: rgba(59, 130, 246, 0.25) !important;
+        border: 2px solid rgb(59, 130, 246) !important;
+        transform: translate(-50%, -50%) !important;
+        z-index: 50 !important;
+        pointer-events: none !important;
+        animation: pulse 2s infinite !important;
+    }
+    
+    .coverage-circle::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border-radius: 50%;
+        border: 1px dashed rgba(59, 130, 246, 0.5);
+        animation: rotate 10s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .coverage-circle {
+        position: absolute !important;
+        border-radius: 50% !important;
+        background: radial-gradient(circle, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0.2) 40%, rgba(34, 197, 94, 0.1) 70%, rgba(34, 197, 94, 0.05) 100%) !important;
+        border: 3px dashed rgba(34, 197, 94, 0.9) !important;
+        transform: translate(-50%, -50%) !important;
+        pointer-events: none !important;
+        z-index: 20 !important;
+        opacity: 0.8 !important;
+        transition: opacity 0.3s ease !important;
+        box-sizing: border-box !important;
+        animation: pulse 2s infinite !important;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.2) !important;
+    }
+    
+    /* Garante que o mapa tenha contexto de empilhamento correto */
+    #mapAreaMC {
+        position: relative !important;
+        z-index: 1 !important;
+        overflow: visible !important;
+    }
+    
+    /* Força visibilidade dos círculos */
+    .map-container {
+        position: relative !important;
+        z-index: 1 !important;
+    }
+`;
+document.head.appendChild(style);
+
+// Inicializar raios quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    // Pequeno delay para garantir que todos os elementos estejam carregados
+    setTimeout(() => {
+        const mapArea = document.getElementById('mapAreaMC');
+        if (mapArea) {
+            drawCoverageCirclesMC(1);
+        }
+    }, 1000);
+});
+
+// Fechar modal com a tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const helpModal = document.getElementById('helpModal');
+        const learnMoreModal = document.getElementById('learnMoreModal');
+        
+        if (helpModal && helpModal.style.display === 'flex') {
+            helpModal.style.display = 'none';
+        }
+        if (learnMoreModal && learnMoreModal.style.display === 'flex') {
+            learnMoreModal.style.display = 'none';
+        }
     }
 });
 </script>
