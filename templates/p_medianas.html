@@ -110,7 +110,7 @@
                 </div>
             </div>
             
-            <button type="submit" class="btn btn-primary btn-large" onclick="mostrarPasso2()">
+            <button type="submit" class="btn btn-primary btn-large" id="downloadBtn">
                 <span class="material-symbols-outlined">download</span>
                 Baixar Planilha
             </button>
@@ -909,29 +909,46 @@ function drawConnectionLines() {
     }
 }
 
-// Validação do formulário
-document.querySelector('form[action="/gerar_template_pmedianas"]').addEventListener('submit', function(e) {
-    const numCds = parseInt(document.getElementById('num_cds').value);
-    const pCds = parseInt(document.getElementById('p_cds').value);
-    
-    if (pCds > numCds) {
-        e.preventDefault();
-        alert('O número de CDs a abrir (p) não pode ser maior que o número de CDs candidatos.');
-    }
-});
-
 // Funções de navegação entre passos
 function mostrarPasso2() {
-    document.getElementById('step1').classList.add('hidden');
-    document.getElementById('step2').classList.remove('hidden');
-    document.getElementById('step1Indicator').classList.remove('active');
-    document.getElementById('step2Indicator').classList.add('active');
+    console.log('mostrarPasso2() chamada!');
+    
+    // Verificar se os elementos existem
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step1Indicator = document.getElementById('step1Indicator');
+    const step2Indicator = document.getElementById('step2Indicator');
+    
+    console.log('Elementos encontrados:', {
+        step1: !!step1,
+        step2: !!step2,
+        step1Indicator: !!step1Indicator,
+        step2Indicator: !!step2Indicator
+    });
+    
+    if (step1) step1.classList.add('hidden');
+    if (step2) step2.classList.remove('hidden');
+    if (step1Indicator) step1Indicator.classList.remove('active');
+    if (step2Indicator) step2Indicator.classList.add('active');
+    
+    console.log('Classes aplicadas!');
     
     // Salvar os valores nos campos ocultos
     const pCds = document.getElementById('p_cds').value;
     const tipoDado = document.querySelector('input[name="tipo_dado"]:checked').value;
     document.getElementById('p_cds_hidden').value = pCds;
     document.getElementById('tipo_dado_hidden').value = tipoDado;
+    
+    console.log('Valores salvos:', { pCds, tipoDado });
+    
+    // Submeter o formulário para baixar a planilha após a navegação
+    setTimeout(() => {
+        const form = document.querySelector('form[action="/gerar_template_pmedianas"]');
+        if (form) {
+            console.log('Submetendo formulário...');
+            form.submit();
+        }
+    }, 100);
 }
 
 function backToStep1() {
@@ -941,9 +958,63 @@ function backToStep1() {
     document.getElementById('step1Indicator').classList.add('active');
 }
 
+// Event listener para o botão de download
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // Impedir submissão do formulário
+            
+            console.log('Botão de download clicado!');
+            
+            // Navegação visual
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const step1Indicator = document.getElementById('step1Indicator');
+            const step2Indicator = document.getElementById('step2Indicator');
+            
+            if (step1) step1.classList.add('hidden');
+            if (step2) step2.classList.remove('hidden');
+            if (step1Indicator) step1Indicator.classList.remove('active');
+            if (step2Indicator) step2Indicator.classList.add('active');
+            
+            console.log('Navegação visual aplicada!');
+            
+            // Salvar valores nos campos ocultos
+            const pCds = document.getElementById('p_cds').value;
+            const tipoDado = document.querySelector('input[name="tipo_dado"]:checked').value;
+            document.getElementById('p_cds_hidden').value = pCds;
+            document.getElementById('tipo_dado_hidden').value = tipoDado;
+            
+            console.log('Valores salvos:', { pCds, tipoDado });
+            
+            // Submeter formulário para download
+            setTimeout(() => {
+                const form = document.querySelector('form[action="/gerar_template_pmedianas"]');
+                if (form) {
+                    console.log('Submetendo formulário...');
+                    form.submit();
+                }
+            }, 100);
+        });
+    }
+});
+
 // Garantir que p seja salvo antes do upload
 document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    const pCds = document.getElementById('p_cds_hidden').value;
+    // Tentar obter o valor do passo 1 se não estiver no hidden
+    let pCds = document.getElementById('p_cds_hidden').value;
+    
+    // Se não tiver valor, tentar obter do campo original do passo 1
+    if (!pCds || pCds === '0') {
+        const pCdsOriginal = document.getElementById('p_cds');
+        if (pCdsOriginal && pCdsOriginal.value) {
+            pCds = pCdsOriginal.value;
+            document.getElementById('p_cds_hidden').value = pCds;
+        }
+    }
+    
+    // Verificação final
     if (!pCds || pCds === '0') {
         e.preventDefault();
         alert('Por favor, configure o número de CDs a abrir (p) primeiro.');
@@ -971,6 +1042,46 @@ document.querySelectorAll('input[name="tipo_dado"]').forEach(radio => {
     });
 });
 
+// Função de notificação direta para garantir que apareça no p_medianas
+function showNotificationPMedianas(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <span class="notification-icon">${type === 'success' ? 'success' : type === 'error' ? 'error' : 'info'}</span>
+        <span class="notification-message">${message}</span>
+        <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Estilos inline para a notificação
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        max-width: 400px;
+        border-left: 4px solid ${type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#1d4ed8'};
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remover após 4 segundos
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 4000);
+}
+
 // Inicializar com o estado correto do radio selecionado
 document.addEventListener('DOMContentLoaded', function() {
     const checkedRadio = document.querySelector('input[name="tipo_dado"]:checked');
@@ -983,6 +1094,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const learnMoreModal = document.getElementById('learnMoreModal');
     if (helpModal) helpModal.style.display = 'none';
     if (learnMoreModal) learnMoreModal.style.display = 'none';
+    
+    // Adicionar evento específico para o campo de arquivo no p_medianas
+    const arquivoInput = document.getElementById('arquivo_planilha');
+    if (arquivoInput) {
+        arquivoInput.addEventListener('change', function(e) {
+            console.log("=== DEBUG - Arquivo selecionado no p_medianas ===");
+            const file = e.target.files[0];
+            if (file) {
+                console.log(`Arquivo: ${file.name}, Tipo: ${file.type}`);
+                
+                if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                    // Visual feedback
+                    const dropZone = document.getElementById('dropZone');
+                    const uploadBtn = document.getElementById('uploadBtn');
+                    
+                    if (dropZone) {
+                        dropZone.classList.add('has-file');
+                        const uploadContent = dropZone.querySelector('.upload-content');
+                        if (uploadContent) {
+                            const p = uploadContent.querySelector('p');
+                            const span = uploadContent.querySelector('span');
+                            if (p) p.textContent = file.name;
+                            if (span) span.textContent = 'Arquivo selecionado';
+                        }
+                    }
+                    
+                    // Habilitar botão
+                    if (uploadBtn) {
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Otimizar';
+                    }
+                    
+                    // Mostrar notificação usando função local
+                    showNotificationPMedianas('Arquivo selecionado com sucesso!', 'success');
+                } else {
+                    showNotificationPMedianas('Formato de arquivo inválido!', 'error');
+                }
+            }
+        });
+    }
 });
 
 // Fechar modal com a tecla ESC

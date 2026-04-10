@@ -838,6 +838,46 @@ document.querySelectorAll('input[name="tipo_dado"]').forEach(radio => {
     });
 });
 
+// Função de notificação direta para garantir que apareça no otimizador_cds
+function showNotificationOtimizadorCds(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <span class="notification-icon">${type === 'success' ? 'success' : type === 'error' ? 'error' : 'info'}</span>
+        <span class="notification-message">${message}</span>
+        <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Estilos inline para a notificação
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        max-width: 400px;
+        border-left: 4px solid ${type === 'success' ? '#059669' : type === 'error' ? '#dc2626' : '#1d4ed8'};
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remover após 4 segundos
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 4000);
+}
+
 // Inicializar com o estado correto do radio selecionado
 document.addEventListener('DOMContentLoaded', function() {
     const checkedRadio = document.querySelector('input[name="tipo_dado"]:checked');
@@ -852,6 +892,46 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 showSolutionStepCD(1); // Mostrar estado inicial
             }, 100);
+        });
+    }
+    
+    // Adicionar evento específico para o campo de arquivo no otimizador_cds
+    const arquivoInput = document.getElementById('arquivo_planilha');
+    if (arquivoInput) {
+        arquivoInput.addEventListener('change', function(e) {
+            console.log("=== DEBUG - Arquivo selecionado no otimizador_cds ===");
+            const file = e.target.files[0];
+            if (file) {
+                console.log(`Arquivo: ${file.name}, Tipo: ${file.type}`);
+                
+                if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                    // Visual feedback
+                    const dropZone = document.getElementById('dropZone');
+                    const uploadBtn = document.getElementById('uploadBtn');
+                    
+                    if (dropZone) {
+                        dropZone.classList.add('has-file');
+                        const uploadContent = dropZone.querySelector('.upload-content');
+                        if (uploadContent) {
+                            const p = uploadContent.querySelector('p');
+                            const span = uploadContent.querySelector('span');
+                            if (p) p.textContent = file.name;
+                            if (span) span.textContent = 'Arquivo selecionado';
+                        }
+                    }
+                    
+                    // Habilitar botão
+                    if (uploadBtn) {
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Otimizar';
+                    }
+                    
+                    // Mostrar notificação usando função local
+                    showNotificationOtimizadorCds('Arquivo selecionado com sucesso!', 'success');
+                } else {
+                    showNotificationOtimizadorCds('Formato de arquivo inválido!', 'error');
+                }
+            }
         });
     }
 });
