@@ -8,43 +8,194 @@
     <!-- Hero Section -->
     <section class="hero">
         <h1>Sistema de Planejamento Logístico</h1>
-        <p>Selecione uma ferramenta para iniciar sua análise ou gere relatórios profissionais dos dados salvos.</p>
+        <p>Encontre a ferramenta ideal para seu desafio logístico com nosso assistente inteligente.</p>
     </section>
 
-    <!-- Tools Grid -->
+    <!-- Assistant Section -->
+    <section class="assistant-section">
+        <div class="assistant-card">
+            <div class="assistant-header">
+                <div class="assistant-icon">
+                    <span class="material-symbols-outlined">psychology</span>
+                </div>
+                <div class="assistant-content">
+                    <h3>Não sabe qual ferramenta usar?</h3>
+                    <p>Responda algumas perguntas rápidas e vamos recomendar a solução perfeita para você.</p>
+                </div>
+                <button class="btn btn-primary" onclick="startAssistant()">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                    Iniciar Assistente
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Assistant Modal -->
+    <div id="assistantModal" class="modal" style="display: none;">
+        <div class="modal-backdrop" onclick="closeAssistant()"></div>
+        <div class="assistant-modal-content">
+            <div class="assistant-modal-header">
+                <h3>Assistente de Escolha</h3>
+                <button class="close-btn" onclick="closeAssistant()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="assistant-modal-body">
+                <div id="assistantQuestion" class="question-step">
+                    <h4>Qual é o seu principal objetivo?</h4>
+                    <div class="options-grid">
+                        <button class="option-btn" onclick="selectObjective('minimize-cost')">
+                            <span class="material-symbols-outlined">savings</span>
+                            <strong>Minimizar custos</strong>
+                            <span>Reduzir despesas operacionais e de transporte</span>
+                        </button>
+                        <button class="option-btn" onclick="selectObjective('maximize-coverage')">
+                            <span class="material-symbols-outlined">radar</span>
+                            <strong>Maximizar cobertura</strong>
+                            <span>Atender o maior número de clientes possível</span>
+                        </button>
+                        <button class="option-btn" onclick="selectObjective('minimize-distance')">
+                            <span class="material-symbols-outlined">route</span>
+                            <strong>Minimizar distâncias</strong>
+                            <span>Reduzir tempo de entrega e distâncias máximas</span>
+                        </button>
+                        <button class="option-btn" onclick="selectObjective('optimize-flow')">
+                            <span class="material-symbols-outlined">hub</span>
+                            <strong>Otimizar fluxo</strong>
+                            <span>Balancear demanda e capacidade de atendimento</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="assistantResult" class="result-step" style="display: none;">
+                    <div class="recommendation">
+                        <h4>Recomendação:</h4>
+                        <div id="recommendedTool" class="tool-recommendation"></div>
+                        <button class="btn btn-primary btn-large" onclick="useRecommendedTool()">
+                            Usar esta ferramenta
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tools Section -->
     <section class="tools-section">
+        <div class="section-header">
+            <h2>Ferramentas Disponíveis</h2>
+            <p>Explore todas as ferramentas de otimização logística</p>
+        </div>
+        
         <div class="tools-grid">
             <a href="{{ url_for('p_medianas') }}" class="tool-card">
-                <div class="tool-icon">
+                <div class="tool-icon green">
                     <span class="material-symbols-outlined">location_city</span>
                 </div>
-                <h3>p-Medianas</h3>
-                <p>Otimização com número fixo de instalações</p>
+                <div class="tool-content">
+                    <h3>p-Medianas</h3>
+                    <p>Minimiza a distância total percorrida atendendo todos os clientes com número fixo de instalações.</p>
+                    <div class="tool-use-cases">
+                        <span class="use-case-tag">Distância mínima</span>
+                        <span class="use-case-tag">p fixo</span>
+                    </div>
+                </div>
             </a>
             
             <a href="{{ url_for('p_centros') }}" class="tool-card">
-                <div class="tool-icon">
+                <div class="tool-icon blue">
                     <span class="material-symbols-outlined">center_focus_strong</span>
                 </div>
-                <h3>p-Centros</h3>
-                <p>Minimize a distância máxima de atendimento</p>
+                <div class="tool-content">
+                    <h3>p-Centros</h3>
+                    <p>Minimiza a distância máxima para garantir atendimento rápido e equitativo com número fixo de instalações.</p>
+                    <div class="tool-use-cases">
+                        <span class="use-case-tag">Tempo mínimo</span>
+                        <span class="use-case-tag">Serviços críticos</span>
+                    </div>
+                </div>
             </a>
             
             <a href="{{ url_for('max_cobertura') }}" class="tool-card">
-                <div class="tool-icon">
+                <div class="tool-icon red">
                     <span class="material-symbols-outlined">radar</span>
                 </div>
-                <h3>Máxima Cobertura</h3>
-                <p>Maximize a demanda dentro de um raio de cobertura</p>
+                <div class="tool-content">
+                    <h3>Máxima Cobertura</h3>
+                    <p>Maximiza o número de clientes atendidos dentro de um raio de distância com número fixo de instalações.</p>
+                    <div class="tool-use-cases">
+                        <span class="use-case-tag">Raio de cobertura</span>
+                        <span class="use-case-tag">Demanda máxima</span>
+                    </div>
+                </div>
             </a>
             
             <a href="{{ url_for('tradicional') }}" class="tool-card">
-                <div class="tool-icon">
-                    <span class="material-symbols-outlined">inventory_2</span>
+                <div class="tool-icon yellow">
+                    <span class="material-symbols-outlined">hub</span>
                 </div>
-                <h3>Problema Tradicional</h3>
-                <p>Localização com custos fixos e capacidades</p>
+                <div class="tool-content">
+                    <h3>Otimização de CDs</h3>
+                    <p>Dimensionamento ideal de centros de distribuição com equilíbrio entre custos fixos e variáveis.</p>
+                    <div class="tool-use-cases">
+                        <span class="use-case-tag">Custos fixos</span>
+                        <span class="use-case-tag">Número variável</span>
+                    </div>
+                </div>
             </a>
+        </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section class="comparison-section">
+        <div class="section-header">
+            <h2>Comparação Rápida</h2>
+            <p>Entenda as diferenças entre as ferramentas</p>
+        </div>
+        
+        <div class="comparison-table">
+            <div class="comparison-header">
+                <div class="tool-name">Ferramenta</div>
+                <div class="criteria">Objetivo Principal</div>
+                <div class="criteria">Número de CDs</div>
+                <div class="criteria">Ideal Para</div>
+            </div>
+            <div class="comparison-row">
+                <div class="tool-name">
+                    <span class="tool-indicator green"></span>
+                    p-Medianas
+                </div>
+                <div class="criteria">Minimizar distância total</div>
+                <div class="criteria">Fixo (p)</div>
+                <div class="criteria">Distribuição eficiente</div>
+            </div>
+            <div class="comparison-row">
+                <div class="tool-name">
+                    <span class="tool-indicator blue"></span>
+                    p-Centros
+                </div>
+                <div class="criteria">Minimizar distância máxima</div>
+                <div class="criteria">Fixo (p)</div>
+                <div class="criteria">Serviços emergenciais</div>
+            </div>
+            <div class="comparison-row">
+                <div class="tool-name">
+                    <span class="tool-indicator red"></span>
+                    Máxima Cobertura
+                </div>
+                <div class="criteria">Maximizar clientes atendidos</div>
+                <div class="criteria">Fixo (p)</div>
+                <div class="criteria">Expansão de mercado</div>
+            </div>
+            <div class="comparison-row">
+                <div class="tool-name">
+                    <span class="tool-indicator yellow"></span>
+                    Otimização de CDs
+                </div>
+                <div class="criteria">Minimizar custo total</div>
+                <div class="criteria">Variável (otimizado)</div>
+                <div class="criteria">Logística tradicional</div>
+            </div>
         </div>
     </section>
 
@@ -93,8 +244,8 @@
                         <span class="material-symbols-outlined">radar</span>
                         <span>Máxima Cobertura</span>
                         {% else %}
-                        <span class="material-symbols-outlined">inventory_2</span>
-                        <span>Tradicional</span>
+                        <span class="material-symbols-outlined">hub</span>
+                        <span>Otimização de CDs</span>
                         {% endif %}
                     </div>
                     <div class="project-date-modern">
@@ -243,7 +394,7 @@ function getTipoIcone(tipo) {
         'p_centros': '<span class="material-symbols-outlined">center_focus_strong</span>',
         'p_medianas': '<span class="material-symbols-outlined">location_city</span>',
         'max_cobertura': '<span class="material-symbols-outlined">radar</span>',
-        'tradicional': '<span class="material-symbols-outlined">inventory_2</span>'
+        'tradicional': '<span class="material-symbols-outlined">hub</span>'
     };
     return icones[tipo] || icones['tradicional'];
 }
@@ -253,9 +404,9 @@ function getTipoNome(tipo) {
         'p_centros': 'p-Centros',
         'p_medianas': 'p-Medianas',
         'max_cobertura': 'Máxima Cobertura',
-        'tradicional': 'Tradicional'
+        'tradicional': 'Otimização de CDs'
     };
-    return nomes[tipo] || 'Tradicional';
+    return nomes[tipo] || 'Otimização de CDs';
 }
 
 function formatarData(dataString) {
@@ -588,6 +739,359 @@ function deleteProject(projectId) {
     background: #d1d5db;
 }
 
+/* Assistant Section Styles */
+.assistant-section {
+    margin-bottom: 3rem;
+}
+
+.assistant-card {
+    background: linear-gradient(135deg, var(--primary-light), var(--white));
+    border: 2px solid var(--primary);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+}
+
+.assistant-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.assistant-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.assistant-content {
+    flex: 1;
+}
+
+.assistant-content h3 {
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.assistant-content p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.assistant-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 1rem;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.assistant-modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.assistant-modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: var(--gray-light);
+}
+
+.assistant-modal-body {
+    padding: 2rem;
+    max-height: calc(80vh - 80px);
+    overflow-y: auto;
+}
+
+/* Question Step */
+.question-step h4 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+}
+
+.options-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.option-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.option-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+.option-btn .material-symbols-outlined {
+    color: var(--primary);
+    font-size: 1.5rem;
+}
+
+.option-btn strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.option-btn span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Result Step */
+.result-step {
+    text-align: center;
+}
+
+.recommendation h4 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.tool-recommendation {
+    background: var(--primary-light);
+    border: 2px solid var(--primary);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.tool-recommendation h5 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.tool-recommendation p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.recommendation-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: left;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.feature-item .material-symbols-outlined {
+    color: var(--success);
+    font-size: 1rem;
+}
+
+/* Section Headers */
+.section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+}
+
+.section-header p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Tool Cards Enhanced */
+.tool-card {
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 1rem;
+    padding: 2rem;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.tool-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+    transform: translateY(-4px);
+    text-decoration: none;
+    color: inherit;
+}
+
+.tool-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.tool-icon .material-symbols-outlined {
+    font-size: 1.75rem;
+    color: white;
+}
+
+.tool-icon.green { background: var(--green); }
+.tool-icon.blue { background: var(--blue); }
+.tool-icon.red { background: var(--red); }
+.tool-icon.yellow { background: var(--yellow); }
+
+.tool-content h3 {
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+}
+
+.tool-content p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.tool-use-cases {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.use-case-tag {
+    background: var(--gray-light);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Comparison Table */
+.comparison-section {
+    margin-bottom: 3rem;
+}
+
+.comparison-table {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.comparison-header {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1.5fr 1.5fr;
+    background: var(--gray-light);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.comparison-header > div {
+    padding: 1rem;
+    border-right: 1px solid var(--border);
+}
+
+.comparison-header > div:last-child {
+    border-right: none;
+}
+
+.comparison-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1.5fr 1.5fr;
+    border-top: 1px solid var(--border);
+}
+
+.comparison-row > div {
+    padding: 1rem;
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+}
+
+.comparison-row > div:last-child {
+    border-right: none;
+}
+
+.tool-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+.tool-indicator.green { background: var(--green); }
+.tool-indicator.blue { background: var(--blue); }
+.tool-indicator.red { background: var(--red); }
+.tool-indicator.yellow { background: var(--yellow); }
+
 /* Responsive */
 @media (max-width: 768px) {
     .projects-toolbar {
@@ -603,6 +1107,147 @@ function deleteProject(projectId) {
     .projects-grid-modern {
         grid-template-columns: 1fr;
     }
+    
+    .assistant-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .assistant-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tools-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-header,
+    .comparison-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-header > div,
+    .comparison-row > div {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .comparison-header > div:last-child,
+    .comparison-row > div:last-child {
+        border-bottom: none;
+    }
 }
 </style>
+
+<script>
+// Assistant functionality
+let recommendedToolUrl = '';
+
+function startAssistant() {
+    document.getElementById('assistantModal').style.display = 'flex';
+    document.getElementById('assistantQuestion').style.display = 'block';
+    document.getElementById('assistantResult').style.display = 'none';
+}
+
+function closeAssistant() {
+    document.getElementById('assistantModal').style.display = 'none';
+}
+
+function selectObjective(objective) {
+    let recommendation = {};
+    
+    switch(objective) {
+        case 'minimize-cost':
+            recommendation = {
+                name: 'Otimização de CDs',
+                description: 'Esta ferramenta é ideal para minimizar custos totais, equilibrando custos fixos de instalação com custos variáveis de transporte.',
+                features: [
+                    'Número variável de CDs (determinado automaticamente)',
+                    'Equilíbrio ótimo entre custos fixos e variáveis',
+                    'Solução de custo mínimo total'
+                ],
+                url: '{{ url_for("tradicional") }}'
+            };
+            break;
+            
+        case 'maximize-coverage':
+            recommendation = {
+                name: 'Máxima Cobertura',
+                description: 'Perfeita para atender o máximo de clientes possível dentro de um raio de distância definido.',
+                features: [
+                    'Maximiza número de clientes atendidos',
+                    'Trabalha com raio de cobertura',
+                    'Ideal para expansão de mercado'
+                ],
+                url: '{{ url_for("max_cobertura") }}'
+            };
+            break;
+            
+        case 'minimize-distance':
+            recommendation = {
+                name: 'p-Centros',
+                description: 'Especializada em minimizar a distância máxima, garantindo atendimento rápido e equitativo.',
+                features: [
+                    'Minimiza distância máxima de atendimento',
+                    'Garante tempo máximo de entrega',
+                    'Perfeita para serviços críticos'
+                ],
+                url: '{{ url_for("p_centros") }}'
+            };
+            break;
+            
+        case 'optimize-flow':
+            recommendation = {
+                name: 'p-Medianas',
+                description: 'Otimiza o fluxo minimizando a distância total percorrida para atendimento completo.',
+                features: [
+                    'Minimiza distância total percorrida',
+                    'Atendimento completo de todos os clientes',
+                    'Eficiência na distribuição'
+                ],
+                url: '{{ url_for("p_medianas") }}'
+            };
+            break;
+    }
+    
+    // Show result
+    document.getElementById('assistantQuestion').style.display = 'none';
+    document.getElementById('assistantResult').style.display = 'block';
+    
+    // Update recommendation content
+    const recommendationHtml = `
+        <h5>${recommendation.name}</h5>
+        <p>${recommendation.description}</p>
+        <div class="recommendation-features">
+            ${recommendation.features.map(feature => `
+                <div class="feature-item">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span>${feature}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    document.getElementById('recommendedTool').innerHTML = recommendationHtml;
+    recommendedToolUrl = recommendation.url;
+}
+
+function useRecommendedTool() {
+    if (recommendedToolUrl) {
+        window.location.href = recommendedToolUrl;
+    }
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAssistant();
+    }
+});
+</script>
 {% endblock %}
