@@ -60,8 +60,14 @@ def carregar_coordenadas_cds(df):
         coordenadas = {}
         for _, row in coords_df.iterrows():
             cd_nome = str(row['CD']).strip()
-            lat = float(row['Latitude']) if pd.notna(row['Latitude']) else None
-            lon = float(row['Longitude']) if pd.notna(row['Longitude']) else None
+            
+            # Converter coordenadas aceitando tanto ponto quanto vírgula
+            lat_raw = str(row['Latitude']) if pd.notna(row['Latitude']) else None
+            lon_raw = str(row['Longitude']) if pd.notna(row['Longitude']) else None
+            
+            lat = float(lat_raw.replace(',', '.')) if lat_raw else None
+            lon = float(lon_raw.replace(',', '.')) if lon_raw else None
+            
             coordenadas[cd_nome] = {'lat': lat, 'lon': lon}
         
         print(f"✅ Coordenadas carregadas: {len(coordenadas)} CDs")
