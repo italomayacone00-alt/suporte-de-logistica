@@ -209,7 +209,8 @@ def gerar_template():
                 ['• Custos de transporte devem ser por unidade de produto', ''],
                 ['• O sistema decidirá quais CDs abrir e fechar automaticamente', ''],
                 ['• Com coordenadas, você terá mapas interativos detalhados', ''],
-                ['• Coordenadas aceitam formato: (-23.5505, -46.6333) ou (-23,5505, -46,6333)', ''],
+                ['• Coordenadas aceitam formato:', '(-23.5505, -46.6333) ou (-23,5505, -46,6333)'],
+
                 ['', ''],
                 ['🔍 VALIDAÇÕES ESSENCIAIS:', ''],
                 ['• Capacidade Total ≥ Demanda Total', 'Verifique se a soma das capacidades dos CDs atende à demanda total'],
@@ -787,12 +788,12 @@ def gerar_template_maxcobertura():
             instructions_data = [
                 ['📋 GUIA DE USO - MÁXIMA COBERTURA', ''],
                 ['', ''],
-                ['🎯 OBJETIVO', f'Abrir exatamente {p_cds} CDs para maximizar a demanda coberta dentro do {"raio de " + str(raio_cobertura) + " km" if raio_cobertura > 0 else "matriz binária"}'],
+                ['🎯 OBJETIVO', f'Abrir exatamente {p_cds} CDs para maximizar a demanda coberta {"dentro do raio de " + str(raio_cobertura) + " km" if raio_cobertura > 0 else "dentro da matriz binária"}'],
                 ['', ''],
                 ['📝 COMO PREENCHER A PLANILHA "Maxima_Cobertura":', ''],
                 ['1. DISTÂNCIAS/CUSTOS (Células Cinzas)', f'Informe {"distâncias (km, tempo)" if tipo_dado == "distancia" else "custos (R$/unidade)"} de cada CD para cada cliente'],
                 ['2. DEMANDA DOS CLIENTES (Linha "Demanda Total")', 'Informe a demanda mensal (unidades) de cada cliente'],
-                ['3. MODO BINÁRIO (Opcional)', 'Se não tiver valores exatos, use 1 (coberto) ou 0 (não coberto). Neste caso, defina raio=0 no sistema.'],
+                ['3. MODO BINÁRIO (Opcional)', 'Se não tiver valores exatos de distâncias/custos, use 1 (coberto) ou 0 (não coberto). Neste caso, defina raio=0 no sistema.'],
                 ['', ''],
                 ['🎨 GUIA VISUAL DAS CORES:', ''],
                 ['AZUL ESCURO (Cabeçalho)', 'Títulos das colunas - não editar'],
@@ -811,7 +812,7 @@ def gerar_template_maxcobertura():
                 ['• Use números sem formatação', f'Ex: 15.5 para {"distância" if tipo_dado == "distancia" else "custo"}, não {"15,5 km" if tipo_dado == "distancia" else "R$ 15,50"}'],
                 ['• Raio de Cobertura', f'Configure {raio_cobertura} km no sistema para filtrar clientes'],
                 ['• Demanda é Importante', 'Clientes com maior demanda priorizam a otimização'],
-                ['• Coordenadas aceitam formato: (-23.5505, -46.6333) ou (-23,5505, -46,6333)', ''],
+                ['• Coordenadas aceitam formato:', '(-23.5505, -46.6333) ou (-23,5505, -46,6333)'],
                 ['', ''],
                 ['🔍 VALIDAÇÕES ESSENCIAIS:', ''],
                 ['• Raio de Cobertura', f'Verifique se {raio_cobertura} km é adequado para seu negócio'],
@@ -1134,7 +1135,7 @@ def gerar_template_pcentros():
                 ['• Use números sem formatação', f'Ex: 15.5 para {"distância" if tipo_dado == "distancia" else "custo"}, não {"15,5 km" if tipo_dado == "distancia" else "R$ 15,50"}'],
                 ['• Foco no Pior Cenário', 'O sistema garante que nenhum cliente fique muito longe'],
                 ['• Ideal para Serviços Críticos', 'Perfeito para emergências, segurança, etc.'],
-                ['• Coordenadas aceitam formato: (-23.5505, -46.6333) ou (-23,5505, -46,6333)', ''],
+                ['• Coordenadas aceitam formato:', '(-23.5505, -46.6333) ou (-23,5505, -46,6333)'],
                 ['', ''],
                 ['🔍 VALIDAÇÕES ESSENCIAIS:', ''],
                 ['• Matriz Completa', 'Todos os CDs devem ter valores para todos os clientes'],
@@ -2290,7 +2291,8 @@ def gerar_template_pmedianas():
                 ['• Use números sem formatação (ex: 5.50, não R$ 5,50)', ''],
                 ['• O sistema atribuirá cada cliente ao CD mais próximo', ''],
                 ['• Demanda pondera a importância de cada cliente', ''],
-                ['• Coordenadas aceitam formato: (-23.5505, -46.6333) ou (-23,5505, -46,6333)', ''],
+                ['• Coordenadas aceitam formato:', '(-23.5505, -46.6333) ou (-23,5505, -46,6333)'],
+
                 ['', ''],
                 ['🔍 VALIDAÇÕES ESSENCIAIS:', ''],
                 ['• Matriz Completa', 'Todos os CDs devem ter valores para todos os clientes'],
@@ -3797,3 +3799,4 @@ if __name__ == '__main__':
 if __name__ == "__main__":
     # O use_reloader=False ajuda a evitar processos duplicados que travam a porta
     app.run(debug=True, port=5000, use_reloader=False)
+

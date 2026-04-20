@@ -283,14 +283,14 @@
         <div class="help-modal-backdrop" onclick="toggleLearnMoreModal()"></div>
         <div class="help-modal-content">
             <div class="help-modal-header">
-                <h3>Entenda o Problema da Máxima Cobertura</h3>
+                <h3>📖 Entenda o Problema da Máxima Cobertura</h3>
                 <button class="help-modal-close" onclick="toggleLearnMoreModal()">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <div class="help-modal-body">
                 <div class="help-section">
-                    <h4>O Que é o Problema da Máxima Cobertura?</h4>
+                    <h4>🎯 O Que é o Problema da Máxima Cobertura?</h4>
                     
                     <div class="concept-box">
                         <div class="concept-icon">
@@ -392,16 +392,16 @@
                                         <span class="formula-term">w<sub>i</sub> &times; y<sub>i</sub></span>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="formula-description">
-                                <p><strong>Onde:</strong></p>
-                                <ul>
-                                    <li><strong>w<sub>i</sub></strong> = Peso do ponto i (população, demanda)</li>
-                                    <li><strong>y<sub>i</sub></strong> = 1 se ponto i é coberto, 0 caso contrário</li>
-                                    <li><strong>I</strong> = Conjunto de todos os pontos de cobertura</li>
-                                </ul>
-                                <br>
-                                <p><strong>Explicação:</strong> O modelo maximiza a soma dos pesos dos pontos cobertos, onde um ponto é considerado coberto se está dentro do raio de pelo menos uma instalação selecionada.</p>
+                                <div class="formula-description">
+                                    <p><strong>Onde:</strong></p>
+                                    <ul>
+                                        <li><strong>w<sub>i</sub></strong> = Peso do ponto i (população, demanda)</li>
+                                        <li><strong>y<sub>i</sub></strong> = 1 se ponto i é coberto, 0 caso contrário</li>
+                                        <li><strong>I</strong> = Conjunto de todos os pontos de cobertura</li>
+                                    </ul>
+                                    <br>
+                                    <p><strong>Explicação:</strong> O modelo maximiza a soma dos pesos dos pontos cobertos, onde um ponto é considerado coberto se está dentro do raio de pelo menos uma instalação selecionada.</p>
+                                </div>
                             </div>
                         </div>
 
@@ -462,8 +462,6 @@
                 </div>
 
                 <div class="help-section">
-                    <h4>Interpretação Intuitiva</h4>
-                    
                     <div class="math-formulation">
                         <!-- Interpretação -->
                         <div class="math-section interpretation">
@@ -471,10 +469,10 @@
                                 <div class="section-icon">
                                     <span class="material-symbols-outlined">psychology</span>
                                 </div>
-                                <h5>Conceito</h5>
-                                <div class="section-badge">Intuitivo</div>
+                                <h5>Interpretação Intuitiva</h5>
+                                <div class="section-badge">Conceito</div>
                             </div>
-                            <div class="interpretation-content">
+                            <div class="interpretation-grid">
                                 <div class="interpretation-item">
                                     <div class="interpretation-icon">
                                         <span class="material-symbols-outlined">balance</span>
@@ -535,19 +533,19 @@
                                     <h6>Abordagens de Solução</h6>
                                     <div class="approaches-grid">
                                         <div class="approach-item exact">
-                                            <span class="approach-icon">?</span>
+                                            <span class="approach-icon">✓</span>
                                             <h7>Exatas</h7>
                                             <p>Branch-and-Bound, Cutting Planes</p>
                                             <small>Viável para pequenas instâncias</small>
                                         </div>
                                         <div class="approach-item heuristic">
-                                            <span class="approach-icon">~</span>
+                                            <span class="approach-icon">≈</span>
                                             <h7>Heurísticas</h7>
                                             <p>Greedy, Lagrangean Relaxation</p>
                                             <small>Soluções boas em tempo razoável</small>
                                         </div>
                                         <div class="approach-item metaheuristic">
-                                            <span class="approach-icon">?</span>
+                                            <span class="approach-icon">∞</span>
                                             <h7>Meta-heurísticas</h7>
                                             <p>Genetic Algorithms, Tabu Search</p>
                                             <small>Excelentes soluções para grandes problemas</small>
@@ -617,106 +615,6 @@
                                 <h5>Varejo</h5>
                                 <p>Localização de lojas, centros de distribuição e pontos de venda para maximizar cobertura de mercado dentro do raio de atração.</p>
                                 <div class="app-benefit">+55% market share</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Interpretação -->
-                <div class="help-section">
-                    <h4>Interpretação Intuitiva</h4>
-                    
-                    <div class="math-section interpretation">
-                        <div class="section-header">
-                            <div class="section-icon">
-                                <span class="material-symbols-outlined">psychology</span>
-                            </div>
-                            <h5>Interpretação Intuitiva</h5>
-                            <div class="section-badge">Conceito</div>
-                        </div>
-                        <div class="interpretation-grid">
-                            <div class="interpretation-item">
-                                <div class="interpretation-icon">
-                                    <span class="material-symbols-outlined">radar</span>
-                                </div>
-                                <div class="interpretation-content">
-                                    <h6>Alcance Geográfico</h6>
-                                    <p>Foca em maximizar o <strong>número de pontos atendidos</strong> dentro de um raio predefinido</p>
-                                </div>
-                            </div>
-
-                            <div class="interpretation-item">
-                                <div class="interpretation-icon">
-                                    <span class="material-symbols-outlined">groups</span>
-                                </div>
-                                <div class="interpretation-content">
-                                    <h6>População Ponderada</h6>
-                                    <p>Considera o <strong>peso/demanda</strong> de cada ponto, não apenas contagem simples</p>
-                                </div>
-                            </div>
-
-                            <div class="interpretation-item">
-                                <div class="interpretation-icon">
-                                    <span class="material-symbols-outlined">tune</span>
-                                </div>
-                                <div class="interpretation-content">
-                                    <h6>Raio Controlado</h6>
-                                    <p>Permite ajustar o <strong>limite de distância</strong> conforme restrições operacionais</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Complexidade -->
-                <div class="help-section">
-                    <h4>Complexidade Computacional</h4>
-                    
-                    <div class="math-section complexity">
-                        <div class="section-header">
-                            <div class="section-icon">
-                                <span class="material-symbols-outlined">memory</span>
-                            </div>
-                            <h5>Complexidade Computacional</h5>
-                            <div class="section-badge">NP-Difícil</div>
-                        </div>
-                        <div class="complexity-content">
-                            <div class="complexity-info">
-                                <div class="complexity-metric">
-                                    <h6>Classe de Complexidade</h6>
-                                    <div class="complexity-badge np-hard">NP-Hard</div>
-                                    <p>Problema computacionalmente difícil para grandes instâncias</p>
-                                </div>
-                                <div class="complexity-metric">
-                                    <h6>Tamanho do Espaço de Busca</h6>
-                                    <div class="complexity-formula">
-                                        C(m,p) = <span class="combination">m</span>! / [p! × (<span class="combination">m</span>-p)!]
-                                    </div>
-                                    <p>Onde <strong>m</strong> = locais candidatos, <strong>p</strong> = instalações a selecionar</p>
-                                </div>
-                            </div>
-                            <div class="complexity-approaches">
-                                <h6>Abordagens de Solução</h6>
-                                <div class="approaches-grid">
-                                    <div class="approach-item exact">
-                                        <span class="approach-icon">·</span>
-                                        <h7>Exatas</h7>
-                                        <p>Branch-and-Bound, Cutting Planes</p>
-                                        <small>Viável para pequenas instâncias</small>
-                                    </div>
-                                    <div class="approach-item heuristic">
-                                        <span class="approach-icon">~</span>
-                                        <h7>Heurísticas</h7>
-                                        <p>Greedy, Lagrangean Relaxation</p>
-                                        <small>Soluções boas em tempo razoável</small>
-                                    </div>
-                                    <div class="approach-item metaheuristic">
-                                        <span class="approach-icon">~</span>
-                                        <h7>Meta-heurísticas</h7>
-                                        <p>Genetic Algorithms, Tabu Search</p>
-                                        <small>Excelentes soluções para grandes problemas</small>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>

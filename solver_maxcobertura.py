@@ -276,12 +276,25 @@ def resolver_maxcobertura(df, p, raio_cobertura=0.0, tipo_dado='distancia'):
         print(f"Clientes encontrados: {clientes}")
         print(f"Demanda extraída: {demanda}")
         
-        # 3. MATRIZ DE VALORES (com suporte a coordenadas)
+        # 3. MATRIZ DE VALORES (com suporte a coordenadas e tratamento de erros)
         valores_originais = {}
         for idx, cd in enumerate(cds):
             valores_originais[cd] = {}
             for cliente in clientes:
-                valores_originais[cd][cliente] = float(matriz_valores.iloc[idx][cliente])
+                valor_celula = matriz_valores.iloc[idx][cliente]
+                try:
+                    # Converter para float, tratando valores vazios ou inválidos
+                    if pd.isna(valor_celula) or valor_celula == '' or valor_celula is None:
+                        # Se célula vazia, usar infinito (não pode atender)
+                        valores_originais[cd][cliente] = float('inf')
+                        print(f" célula vazia para {cd}-{cliente}, usando infinito")
+                    else:
+                        # Tentar converter para float
+                        valores_originais[cd][cliente] = float(valor_celula)
+                except (ValueError, TypeError) as e:
+                    # Se erro na conversão, usar infinito
+                    valores_originais[cd][cliente] = float('inf')
+                    print(f" erro ao converter '{valor_celula}' para float em {cd}-{cliente}: {e}, usando infinito")
         
         # SE tiver coordenadas e for distância, usar cálculo geográfico
         if tem_coordenadas and tipo_dado == 'distancia':
@@ -354,9 +367,24 @@ def resolver_maxcobertura(df, p, raio_cobertura=0.0, tipo_dado='distancia'):
         for cliente in clientes:
             coberto = value(Z[cliente]) > 0.5
             if coberto:
-                # Encontrar qual CD atende o cliente (primeiro que encontrar dentro do raio)
-                cd_atendente = [cd for cd in cds_selecionados if cd in N_alcance[cliente]][0]
-                val = valores[cd_atendente][cliente]
+                # Encontrar qual CD atende o cliente com a melhor métrica
+                cds_possiveis = [cd for cd in cds_selecionados if cd in N_alcance[cliente]]
+                
+                if cds_possiveis:
+                    # Escolher o CD com o menor valor (melhor distância/custo)
+                    cd_atendente = min(cds_possiveis, key=lambda cd: valores[cd][cliente])
+                    val = valores[cd_atendente][cliente]
+                    
+                    # Verificar se o valor é válido (não infinito)
+                    if val == float('inf') or val == float('-inf'):
+                        # Se o valor for infinito, o cliente não está realmente coberto
+                        coberto = False
+                        cd_atendente = "-"
+                        val = "-"
+                else:
+                    cd_atendente = "-"
+                    val = "-"
+                    coberto = False
             else:
                 cd_atendente = "-"
                 val = "-"

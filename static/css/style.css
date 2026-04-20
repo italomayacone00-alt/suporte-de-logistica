@@ -1424,6 +1424,62 @@ body {
     color: #1e40af;
 }
 
+/* Additional Map Styles for Otimizador CDs */
+.mapa-header.otimizador-cds {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.stat-icon.selected.otimizador-cds {
+    background: #fed7aa;
+    color: #ea580c;
+}
+
+.stat-icon.performance.otimizador-cds {
+    background: #fff7ed;
+    color: #f97316;
+}
+
+.legend-marker.selected.otimizador-cds {
+    background: #fed7aa;
+    color: #ea580c;
+}
+
+.legend-marker.coverage-area.otimizador-cds {
+    background: rgba(249, 115, 22, 0.2);
+    border: 2px solid #f97316;
+}
+
+.stat-icon.total.otimizador-cds {
+    background: #e3f2fd;
+    color: #0284c7;
+}
+
+/* Additional Map Styles for Max Cobertura */
+.stat-icon.selected.max-cobertura {
+    background: #e8f5e8;
+    color: #28a745;
+}
+
+.stat-icon.performance.max-cobertura {
+    background: #f3e5f5;
+    color: #28a745;
+}
+
+.legend-marker.selected.max-cobertura {
+    background: #e8f5e8;
+    color: #28a745;
+}
+
+.legend-marker.coverage-area.max-cobertura {
+    background: rgba(40, 167, 69, 0.2);
+    border: 2px solid #28a745;
+}
+
+.stat-icon.total.max-cobertura {
+    background: #e3f2fd;
+    color: #1e40af;
+}
+
 /* Legacy Map Info Styles */
 .mapa-info {
     margin-top: 20px;
@@ -4728,22 +4784,20 @@ body {
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0.5rem 1rem;
-    background: rgba(59, 130, 246, 0.05);
-    border-radius: 8px;
-    border: 1px solid rgba(59, 130, 246, 0.1);
 }
 
 .term {
     font-weight: 600;
     color: #1f2937;
     font-style: italic;
+    font-family: 'Inter', sans-serif;
 }
 
 .operator {
     font-weight: 700;
     color: #6b7280;
     font-size: 1.1rem;
+    font-family: 'Inter', sans-serif;
 }
 
 .formula-description ul {
@@ -4811,6 +4865,7 @@ body {
 .for-all {
     color: #6b7280;
     font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
 }
 
 .constraint-description h6 {

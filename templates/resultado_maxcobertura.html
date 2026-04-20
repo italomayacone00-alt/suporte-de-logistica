@@ -295,7 +295,7 @@
                             {% endif %}
                         </td>
                         <td><span class="tag">{{ atrib.cd }}</span></td>
-                        <td>{{ "%.2f"|format(atrib.valor) if atrib.valor is not none and atrib.valor != '-' else '-' }}</td>
+                        <td>{{ "%.2f"|format(atrib.valor) if atrib.valor is not none and atrib.valor != '-' and (atrib.valor|string != 'inf') and (atrib.valor|string != '-inf') else '-' }}</td>
                         <td>{{ "{:,.0f}".format(atrib.demanda).replace(',', '.') if atrib.demanda is not none else '0' }}</td>
                     </tr>
                     {% endfor %}
@@ -380,7 +380,7 @@
                 </div>
                 <div class="stat-content">
                     <h4>Raio Efetivo Médio</h4>
-                    <p class="stat-value">{{ "%.2f"|format(resultado.raio_cobertura) if resultado.raio_cobertura is not none else '0,00' }}</p>
+                    <p class="stat-value">{{ "%.2f"|format(resultado.raio_cobertura) if resultado.raio_cobertura is not none and (resultado.raio_cobertura|string != 'inf') and (resultado.raio_cobertura|string != '-inf') and resultado.raio_cobertura != 'Binário' else ('Binário' if resultado.raio_cobertura == 'Binário' else '0,00') }}</p>
                     <p class="stat-desc">km de cobertura</p>
                 </div>
             </div>
@@ -437,7 +437,7 @@
                 </div>
                 <div class="rec-content">
                     <h4>Otimização de Raio</h4>
-                    <p>Considere aumentar o raio de cobertura para {{ resultado.raio_cobertura + 5 if resultado.raio_cobertura is not none else 10 }} km para incluir {{ resultado.atribuicoes|selectattr('coberto', 'equalto', false)|list|length if resultado.atribuicoes is not none else 0 }} clientes não cobertos atualmente.</p>
+                    <p>Considere aumentar o raio de cobertura para {{ (resultado.raio_cobertura|int + 5) if resultado.raio_cobertura is not none and resultado.raio_cobertura != 'Binário' else 10 }} km para incluir {{ resultado.atribuicoes|selectattr('coberto', 'equalto', false)|list|length if resultado.atribuicoes is not none else 0 }} clientes não cobertos atualmente.</p>
                 </div>
             </div>
 
