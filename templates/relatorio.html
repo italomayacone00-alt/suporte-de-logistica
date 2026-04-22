@@ -788,7 +788,7 @@ body {
                     <div class="stat-card">
                         <div class="stat-value">
                             {% if projeto.tipo_analise == 'tradicional' %}
-                                {{ projeto.resultados.cds_abertos|length if projeto.resultados.cds_abertos else 'N/A' }}
+                                {{ projeto.resultados.instalacoes_abertas|length if projeto.resultados.instalacoes_abertas else 'N/A' }}
                             {% elif projeto.tipo_analise == 'max_cobertura' %}
                                 {% if projeto.resultados.cds_selecionados %}
                                     {{ projeto.resultados.cds_selecionados|length }}
@@ -801,7 +801,7 @@ body {
                                 {{ projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 'N/A' }}
                             {% endif %}
                         </div>
-                        <div class="stat-label">CDs Ativos</div>
+                        <div class="stat-label">Instalações Ativas</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">
@@ -843,12 +843,12 @@ body {
                 
                 {% if projeto.resultados and (projeto.resultados.cds_selecionados or projeto.resultados.cds_abertos) %}
                 <div style="margin-top: 25px;">
-                    <h4 class="doc-h4">Centros de Distribuição Selecionados</h4>
+                    <h4 class="doc-h4">Instalações Selecionadas</h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                        {% set cds_lista = projeto.resultados.cds_selecionados if projeto.resultados.cds_selecionados else projeto.resultados.cds_abertos %}
-                        {% for cd in cds_lista %}
+                        {% set instalacoes_lista = projeto.resultados.instalacoes_selecionadas if projeto.resultados.instalacoes_selecionadas else projeto.resultados.instalacoes_abertas %}
+                        {% for instalacao in instalacoes_lista %}
                         <div style="background: var(--bg-light); padding: 12px; border-radius: 6px; border-left: 3px solid var(--accent);">
-                            <strong>{{ cd }}</strong><br>
+                            <strong>{{ instalacao }}</strong><br>
                             {% if projeto.tipo_analise == 'tradicional' and projeto.resultados.capacidade_utilizada and cd in projeto.resultados.capacidade_utilizada %}
                                 {% set cap_info = projeto.resultados.capacidade_utilizada[cd] %}
                                 <small>Capacidade: {{ "{:,.0f}".format(cap_info.utilizada).replace(',', '.') }} / {{ "{:,.0f}".format(cap_info.disponivel).replace(',', '.') }} ({{ "%.1f"|format(cap_info.percentual_uso) }}%)</small>
@@ -883,9 +883,9 @@ body {
                         </div>
                         <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
                             <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary);">
-                                {{ projeto.resultados.cds_abertos|length if projeto.resultados.cds_abertos else 0 }}
+                                {{ projeto.resultados.instalacoes_abertas|length if projeto.resultados.instalacoes_abertas else 0 }}
                             </div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">CDs Abertos</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Instalações Abertas</div>
                         </div>
                         <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
                             <div style="font-size: 1.8rem; font-weight: 700; color: #10b981;">
@@ -923,10 +923,10 @@ body {
                                         {{ "%.0f"|format(projeto.resultados.capacidade_utilizada) }}
                                     {% endif %}
                                 {% else %}
-                                    <!-- Fallback: calcular capacidade a partir dos dados dos CDs -->
+                                    <!-- Fallback: calcular capacidade a partir dos dados das Instalações -->
                                     {% set total_capacidade_calc = 0 %}
-                                    {% if projeto.resultados.cds_abertos %}
-                                        {% for cd in projeto.resultados.cds_abertos %}
+                                    {% if projeto.resultados.instalacoes_abertas %}
+                                        {% for cd in projeto.resultados.instalacoes_abertas %}
                                             {% if cd.capacidade %}
                                                 {% set total_capacidade_calc = total_capacidade_calc + cd.capacidade %}
                                             {% endif %}
@@ -946,7 +946,7 @@ body {
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                             <div>
                                 <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-light);">
-                                    <span>Custos Fixos (CDs):</span>
+                                    <span>Custos Fixos (Instalações):</span>
                                     <strong>R$ {{ format_currency_brl(projeto.resultados.custo_fixo_total) if projeto.resultados.custo_fixo_total else '0,00' }}</strong>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-light);">
@@ -1233,7 +1233,7 @@ body {
                         </div>
                         <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
                             <div style="font-size: 1.8rem; font-weight: 700; color: #8b5cf6;">
-                                {{ "%.1f"|format((projeto.resultados.num_cds_selecionados / projeto.resultados.p * 100) if projeto.resultados.num_cds_selecionados and projeto.resultados.p and projeto.resultados.p > 0 else 0) }}%
+                                {{ "%.1f"|format((projeto.resultados.num_instalacoes_selecionadas / projeto.resultados.p * 100) if projeto.resultados.num_instalacoes_selecionadas and projeto.resultados.p and projeto.resultados.p > 0 else 0) }}%
                             </div>
                             <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Performance</div>
                         </div>
@@ -1242,7 +1242,7 @@ body {
                     <!-- Análise de Equidade -->
                     <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border: 1px solid var(--border);">
                         <h5 style="margin-bottom: 15px; color: var(--primary);">⚖️ Análise de Equidade no Atendimento</h5>
-                        <p style="margin-bottom: 10px;">O modelo p-Centros otimiza a máxima {% if projeto.resultados.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} entre CDs e clientes, garantindo equidade no atendimento.</p>
+                        <p style="margin-bottom: 10px;">O modelo p-Centros otimiza a máxima {% if projeto.resultados.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} entre Instalações e clientes, garantindo equidade no atendimento.</p>
                         <div style="background: var(--bg-light); padding: 12px; border-radius: 6px; border-left: 4px solid var(--accent);">
                             <strong>Principais Benefícios:</strong> Redução do pior caso de atendimento, melhoria no nível de serviço para clientes distantes, maior equidade na distribuição.
                         </div>

@@ -1,15 +1,15 @@
-<!-- templates/otimizador_cds.html - Ferramenta de Otimização de CDs -->
+<!-- templates/otimizador_cds.html - Ferramenta de Otimização de Instalações -->
 {% extends "base.html" %}
 
-{% block title %}Otimização de CDs - NexusNode{% endblock %}
+{% block title %}NexusNode - Otimização de Instalações{% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
     <!-- Header -->
     <section class="tool-header">
         <div class="tool-info">
-            <h1>Otimização de CDs</h1>
-            <p>Dimensionamento e layout de centros de distribuição</p>
+            <h1>Otimização de Instalações</h1>
+            <p>Dimensionamento e layout de instalações</p>
         </div>
         <div class="tool-icon-large blue">
             <span class="material-symbols-outlined">hub</span>
@@ -39,8 +39,8 @@
             <span class="material-symbols-outlined">lightbulb</span>
         </div>
         <div class="info-content">
-            <h3>Sobre a Otimização de CDs</h3>
-            <p>Este modelo determina automaticamente o <strong>número ideal de CDs</strong> para minimizar os <strong>custos totais</strong> (fixos + transporte). Ideal para logística onde o equilíbrio entre custos de instalação e operação é fundamental.</p>
+            <h3>Sobre a Otimização de Instalações</h3>
+            <p>Este modelo determina automaticamente o <strong>número ideal de instalações</strong> para minimizar os <strong>custos totais</strong> (fixos + transporte). Ideal para logística onde o equilíbrio entre custos de instalação e operação é fundamental.</p>
             <button class="learn-more-btn" onclick="toggleLearnMoreModal()">
                 <span class="material-symbols-outlined">info</span>
                 Saiba Mais
@@ -51,7 +51,7 @@
     <!-- Step 1: Configuration -->
     <div class="card" id="step1">
         <div class="card-header">
-            <h2>Configuração do Problema Otimização de CDs</h2>
+            <h2>Configuração do Problema Otimização de Instalações</h2>
             <button class="help-btn" onclick="toggleHelpModal()" title="Como usar">
                 <span class="material-symbols-outlined">help_outline</span>
             </button>
@@ -62,10 +62,10 @@
                 <div class="input-group">
                     <label for="num_cds">
                         <span class="material-symbols-outlined">warehouse</span>
-                        CDs Candidatos
+                        Instalações Candidatas
                     </label>
                     <input type="number" id="num_cds" name="num_cds" min="1" max="50" required placeholder="5">
-                    <small>Número de centros de distribuição disponíveis</small>
+                    <small>Número de instalações disponíveis</small>
                 </div>
                 
                 <div class="input-group">
@@ -156,7 +156,7 @@
         <div class="help-modal-backdrop" onclick="toggleHelpModal()"></div>
         <div class="help-modal-content">
             <div class="help-modal-header">
-                <h3>📚 Como Usar a Ferramenta Otimização de CDs</h3>
+                <h3>📚 Como Usar a Ferramenta Otimização de Instalações</h3>
                 <button class="help-modal-close" onclick="toggleHelpModal()">
                     <span class="material-symbols-outlined">close</span>
                 </button>
@@ -169,8 +169,8 @@
                             <span class="material-symbols-outlined">warehouse</span>
                         </div>
                         <div class="help-item-content">
-                            <strong>CDs Candidatos:</strong> Número de centros de distribuição disponíveis para seleção. São todas as opções possíveis que podem ser escolhidas pelo modelo.
-                            <br><small><em>Exemplo: 5 CDs disponíveis em diferentes cidades</em></small>
+                            <strong>Instalações Candidatas:</strong> Número de instalações disponíveis para seleção. São todas as opções possíveis que podem ser escolhidas pelo modelo.
+                            <br><small><em>Exemplo: 5 instalações disponíveis em diferentes cidades</em></small>
                         </div>
                     </div>
                     
@@ -217,7 +217,7 @@
                         <div class="step-item">
                             <div class="step-number">3</div>
                             <div class="step-content">
-                                <strong>Preencha a planilha</strong> com as distâncias ou custos entre CDs e clientes
+                                <strong>Preencha a planilha</strong> com as distâncias ou custos entre instalações e clientes
                             </div>
                         </div>
                         <div class="step-item">
@@ -246,23 +246,23 @@
         <div class="help-modal-backdrop" onclick="toggleLearnMoreModal()"></div>
         <div class="help-modal-content">
             <div class="help-modal-header">
-                <h3>📖 Entenda a Otimização de CDs</h3>
+                <h3>📖 Entenda a Otimização de Instalações</h3>
                 <button class="help-modal-close" onclick="toggleLearnMoreModal()">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <div class="help-modal-body">
                 <div class="help-section">
-                    <h4>🎯 O Que é a Otimização de CDs?</h4>
+                    <h4>🎯 O Que é a Otimização de Instalações?</h4>
                     
                     <div class="concept-box">
                         <div class="concept-icon">
                             <span class="material-symbols-outlined">hub</span>
                         </div>
                         <div class="concept-content">
-                            <p>A <strong>Otimização de CDs</strong> é um modelo de programação linear inteira que determina o <strong>número ideal de CDs</strong> e suas localizações para minimizar os <strong>custos totais</strong>, incluindo custos fixos de instalação e custos variáveis de transporte.</p>
+                            <p>A <strong>Otimização de Instalações</strong> é um modelo de programação linear inteira que determina o <strong>número ideal de instalações</strong> e suas localizações para minimizar os <strong>custos totais</strong>, incluindo custos fixos de instalação e custos variáveis de transporte.</p>
                             <br>
-                            <p><strong>Diferença Chave:</strong> Ao contrário dos modelos com p fixo, este modelo determina automaticamente o número ótimo de CDs, equilibrando economias de escala com custos de transporte.</p>
+                            <p><strong>Diferença Chave:</strong> Ao contrário dos modelos com p fixo, este modelo determina automaticamente o número ótimo de instalações, equilibrando economias de escala com custos de transporte.</p>
                             <br>
                             <p><strong>Contexto Histórico:</strong> Baseado em modelos clássicos de localização de instalações, é amplamente utilizado na logística moderna para planejamento estratégico de redes de distribuição.</p>
                         </div>
@@ -274,15 +274,15 @@
                     
                     <div class="illustration-container">
                         <div class="illustration-title">
-                            <h5>Exemplo Otimização de CDs: Custo Fixo vs Transporte</h5>
+                            <h5>Exemplo Otimização de Instalações: Custo Fixo vs Transporte</h5>
                             <p><strong style="color: #2563eb;">Equilibrar custos fixos de instalação com custos variáveis de transporte</strong></p>
                             <p>Clique nos botões para ver diferentes configurações</p>
                         </div>
                         
                         <div class="simulation-controls">
-                            <button class="control-btn active" onclick="showSolutionStepCD(1)">Todos CDs</button>
-                            <button class="control-btn" onclick="showSolutionStepCD(2)">2 CDs</button>
-                            <button class="control-btn" onclick="showSolutionStepCD(3)">3 CDs (Ótimo)</button>
+                            <button class="control-btn active" onclick="showSolutionStepCD(1)">Todas Instalações</button>
+                            <button class="control-btn" onclick="showSolutionStepCD(2)">2 Instalações</button>
+                            <button class="control-btn" onclick="showSolutionStepCD(3)">3 Instalações (Ótimo)</button>
                         </div>
                         
                         <div class="map-container">
@@ -296,7 +296,7 @@
                                 <div class="client-point" style="top: 60%; left: 40%;" data-demand="90" data-client="C4">C4</div>
                                 <div class="client-point" style="top: 70%; left: 65%;" data-demand="110" data-client="C5">C5</div>
                                 
-                                <!-- CDs Candidatos -->
+                                <!-- Instalações Candidatas -->
                                 <div class="cd-candidate" style="top: 25%; left: 35%;" data-cd="CD1" data-cost="500000">CD1</div>
                                 <div class="cd-candidate" style="top: 45%; left: 55%;" data-cd="CD2" data-cost="450000">CD2</div>
                                 <div class="cd-candidate" style="top: 65%; left: 45%;" data-cd="CD3" data-cost="400000">CD3</div>
@@ -307,7 +307,7 @@
                         
                         <div class="stats-panel">
                             <div class="stat-item">
-                                <div class="stat-label">CDs Ativos:</div>
+                                <div class="stat-label">Instalações Ativas:</div>
                                 <div class="stat-value" id="activeCDs">5</div>
                             </div>
                             <div class="stat-item">
@@ -321,7 +321,7 @@
                         </div>
                         
                         <div class="solution-details" id="solutionDetailsCD">
-                            <strong>Análise:</strong> Todos os 5 CDs disponíveis<br>
+                            <strong>Análise:</strong> Todas as 5 instalações disponíveis<br>
                             <strong>Custo Total:</strong> R$ 2.5M (fixos + transporte)<br>
                             <strong>Economia:</strong> 0% vs configuração atual
                         </div>
@@ -364,10 +364,10 @@
                                 <div class="formula-description">
                                     <p><strong>Onde:</strong></p>
                                     <ul>
-                                        <li><strong>f<sub>i</sub></strong> = Custo fixo de instalação do CD i</li>
-                                        <li><strong>Y<sub>i</sub></strong> = 1 se CD i está aberto, 0 caso contrário</li>
-                                        <li><strong>c<sub>ij</sub></strong> = Custo de transporte do CD i para cliente j</li>
-                                        <li><strong>X<sub>ij</sub></strong> = Quantidade transportada do CD i para cliente j</li>
+                                        <li><strong>f<sub>i</sub></strong> = Custo fixo de instalação da instalação i</li>
+                                        <li><strong>Y<sub>i</sub></strong> = 1 se instalação i está aberta, 0 caso contrário</li>
+                                        <li><strong>c<sub>ij</sub></strong> = Custo de transporte da instalação i para cliente j</li>
+                                        <li><strong>X<sub>ij</sub></strong> = Quantidade transportada da instalação i para cliente j</li>
                                     </ul>
                                     <br>
                                     <p><strong>Explicação:</strong> O modelo minimiza a soma dos custos fixos de instalação mais os custos variáveis de transporte.</p>
@@ -409,8 +409,8 @@
                                         <span class="for-all">&forall; i&isin;I</span>
                                     </div>
                                     <div class="constraint-description">
-                                        <h6>Capacidade dos CDs</h6>
-                                        <p>Transporte não pode exceder capacidade do CD</p>
+                                        <h6>Capacidade das Instalações</h6>
+                                        <p>Transporte não pode exceder capacidade da instalação</p>
                                     </div>
                                 </div>
 
@@ -448,7 +448,7 @@
                                     </div>
                                     <div class="interpretation-content">
                                         <h6>Equilíbrio de Custos</h6>
-                                        <p>Encontra o ponto ideal entre economias de escala (mais CDs) e custos de transporte (menos CDs).</p>
+                                        <p>Encontra o ponto ideal entre economias de escala (mais instalações) e custos de transporte (menos instalações).</p>
                                     </div>
                                 </div>
                                 
@@ -458,7 +458,7 @@
                                     </div>
                                     <div class="interpretation-content">
                                         <h6>Otimização Automática</h6>
-                                        <p>Determina automaticamente o número ideal de CDs, sem precisar definir p previamente.</p>
+                                        <p>Determina automaticamente o número ideal de instalações, sem precisar definir p previamente.</p>
                                     </div>
                                 </div>
                                 
@@ -494,7 +494,7 @@
                                         <div class="complexity-formula">
                                             2<sup>m</sup> - 1
                                         </div>
-                                        <p>Onde <strong>m</strong> = CDs candidatos (todas as combinações possíveis)</p>
+                                        <p>Onde <strong>m</strong> = instalações candidatas (todas as combinações possíveis)</p>
                                     </div>
                                 </div>
                                 <div class="complexity-approaches">
@@ -526,7 +526,7 @@
                 </div>
 
                 <div class="help-section">
-                    <h4>Aplicações Práticas da Otimização de CDs</h4>
+                    <h4>Aplicações Práticas da Otimização de Instalações</h4>
                     
                     <div class="applications-optimized">
                         <div class="apps-grid">
@@ -553,7 +553,7 @@
                                     <span class="material-symbols-outlined">store</span>
                                 </div>
                                 <h5>Varejo e E-commerce</h5>
-                                <p>Dimensionamento de centros de fulfillment e CDs para otimizar custos de última milha e atendimento ao cliente.</p>
+                                <p>Dimensionamento de centros de fulfillment e instalações para otimizar custos de última milha e atendimento ao cliente.</p>
                                 <div class="app-benefit">+40% eficiência</div>
                             </div>
 
@@ -621,7 +621,7 @@
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Solução:</span>
-                                    <span class="detail-value">Otimização de 8 CDs candidatos para redução de custos totais</span>
+                                    <span class="detail-value">Otimização de 8 instalações candidatas para redução de custos totais</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Resultado:</span>
@@ -680,7 +680,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     }
 });
 
-// Função para mostrar diferentes configurações de CDs
+// Função para mostrar diferentes configurações de instalações
 function showSolutionStepCD(step) {
     const activeCDsEl = document.getElementById('activeCDs');
     const totalCostEl = document.getElementById('totalCost');
@@ -688,7 +688,7 @@ function showSolutionStepCD(step) {
     const detailsEl = document.getElementById('solutionDetailsCD');
     const mapArea = document.getElementById('mapAreaCD');
     
-    // Resetar todos os CDs
+    // Resetar todas as instalações
     const allCDs = mapArea.querySelectorAll('.cd-candidate');
     allCDs.forEach(cd => {
         cd.style.opacity = '0.3';
@@ -710,7 +710,7 @@ function showSolutionStepCD(step) {
     
     switch(step) {
         case 1:
-            // Todos os CDs ativos
+            // Todas as instalações ativas
             allCDs.forEach(cd => {
                 cd.style.opacity = '1';
                 cd.style.border = '2px solid #2563eb';
@@ -720,11 +720,11 @@ function showSolutionStepCD(step) {
             activeCDsEl.textContent = '5';
             totalCostEl.textContent = 'R$ 2.5M';
             savingsEl.textContent = '0%';
-            detailsEl.innerHTML = '<strong>Análise:</strong> Todos os 5 CDs disponíveis<br><strong>Custo Total:</strong> R$ 2.5M (fixos + transporte)<br><strong>Economia:</strong> 0% vs configuração atual';
+            detailsEl.innerHTML = '<strong>Análise:</strong> Todas as 5 instalações disponíveis<br><strong>Custo Total:</strong> R$ 2.5M (fixos + transporte)<br><strong>Economia:</strong> 0% vs configuração atual';
             break;
             
         case 2:
-            // 2 CDs estratégicos (CD2 e CD4)
+            // 2 instalações estratégicas (Instalação 2 e Instalação 4)
             const selectedCDs2 = ['CD2', 'CD4'];
             allCDs.forEach(cd => {
                 if (selectedCDs2.includes(cd.dataset.cd)) {
@@ -734,17 +734,17 @@ function showSolutionStepCD(step) {
                 }
             });
             
-            // Conectar clientes aos CDs mais próximos
+            // Conectar clientes às instalações mais próximas
             connectClientsToCDs(['CD2', 'CD4']);
             
             activeCDsEl.textContent = '2';
             totalCostEl.textContent = 'R$ 1.8M';
             savingsEl.textContent = '28%';
-            detailsEl.innerHTML = '<strong>Análise:</strong> 2 CDs estratégicos selecionados<br><strong>Custo Total:</strong> R$ 1.8M (fixos + transporte)<br><strong>Economia:</strong> 28% vs todos os CDs';
+            detailsEl.innerHTML = '<strong>Análise:</strong> 2 instalações estratégicas selecionadas<br><strong>Custo Total:</strong> R$ 1.8M (fixos + transporte)<br><strong>Economia:</strong> 28% vs todas as instalações';
             break;
             
         case 3:
-            // 3 CDs ótimos (CD1, CD3, CD5)
+            // 3 instalações ótimas (CD1, CD3, CD5)
             const selectedCDs3 = ['CD1', 'CD3', 'CD5'];
             allCDs.forEach(cd => {
                 if (selectedCDs3.includes(cd.dataset.cd)) {
@@ -760,33 +760,33 @@ function showSolutionStepCD(step) {
             activeCDsEl.textContent = '3';
             totalCostEl.textContent = 'R$ 1.6M';
             savingsEl.textContent = '36%';
-            detailsEl.innerHTML = '<strong>Análise:</strong> 3 CDs na configuração ótima<br><strong>Custo Total:</strong> R$ 1.6M (fixos + transporte)<br><strong>Economia:</strong> 36% vs todos os CDs';
+            detailsEl.innerHTML = '<strong>Análise:</strong> 3 instalações na configuração ótima<br><strong>Custo Total:</strong> R$ 1.6M (fixos + transporte)<br><strong>Economia:</strong> 36% vs todas as instalações';
             break;
     }
 }
 
-// Função para conectar clientes aos CDs mais próximos
+// Função para conectar clientes às instalações mais próximas
 function connectClientsToCDs(activeCDs) {
     const mapArea = document.getElementById('mapAreaCD');
     const clients = mapArea.querySelectorAll('.client-point');
     
-    // Definir qual CD atende cada cliente baseado na distância
+    // Definir qual instalação atende cada cliente baseado na distância
     const clientAssignments = {
-        'CD1': ['C1', 'C2'],
-        'CD2': ['C3', 'C4'],
-        'CD3': ['C4', 'C5'],
-        'CD4': ['C1', 'C3'],
-        'CD5': ['C2', 'C5']
+        'Instalação1': ['C1', 'C2'],
+        'Instalação2': ['C3', 'C4'],
+        'Instalação3': ['C4', 'C5'],
+        'Instalação4': ['C1', 'C3'],
+        'Instalação5': ['C2', 'C5']
     };
     
     clients.forEach(client => {
         let assignedCD = null;
         let minDistance = Infinity;
         
-        // Encontrar o CD mais próximo
+        // Encontrar a instalação mais próxima
         activeCDs.forEach(cdId => {
-            const cd = mapArea.querySelector(`[data-cd="${cdId}"]`);
-            const distance = calculateDistance(client, cd);
+            const installation = mapArea.querySelector(`[data-cd="${cdId}"]`);
+            const distance = calculateDistance(client, installation);
             
             if (distance < minDistance) {
                 minDistance = distance;
@@ -794,13 +794,13 @@ function connectClientsToCDs(activeCDs) {
             }
         });
         
-        // Colorir cliente baseado no CD atribuído
+        // Colorir cliente baseado na instalação atribuída
         if (assignedCD) {
-            const cd = mapArea.querySelector(`[data-cd="${assignedCD}"]`);
-            const cdColor = cd.style.borderColor;
+            const installation = mapArea.querySelector(`[data-cd="${assignedCD}"]`);
+            const installationColor = installation.style.borderColor;
             
-            client.style.border = `2px solid ${cdColor}`;
-            client.style.background = cd.style.background;
+            client.style.border = `2px solid ${installationColor}`;
+            client.style.background = installation.style.background;
         }
     });
 }

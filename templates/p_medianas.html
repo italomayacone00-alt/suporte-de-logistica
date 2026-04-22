@@ -59,10 +59,10 @@
                 <div class="input-group">
                     <label for="num_cds">
                         <span class="material-symbols-outlined">warehouse</span>
-                        CDs Candidatos
+                        Instalações Candidatas
                     </label>
                     <input type="number" id="num_cds" name="num_cds" min="1" max="50" required placeholder="5">
-                    <small>Número de centros de distribuição disponíveis</small>
+                    <small>Número de instalações disponíveis</small>
                 </div>
                 
                 <div class="input-group">
@@ -77,10 +77,10 @@
                 <div class="input-group">
                     <label for="p_cds">
                         <span class="material-symbols-outlined">pin_drop</span>
-                        CDs a Abrir (p)
+                        Instalações a Abrir (p)
                     </label>
                     <input type="number" id="p_cds" name="p_cds" min="1" max="10" required placeholder="3">
-                    <small>Número exato de CDs que serão abertos</small>
+                    <small>Número exato de instalações que serão abertas</small>
                 </div>
                 
                 <div class="input-group">
@@ -175,8 +175,8 @@
                             <span class="material-symbols-outlined">warehouse</span>
                         </div>
                         <div class="help-item-content">
-                            <strong>CDs Candidatos:</strong> Número de centros de distribuição disponíveis para seleção. São todas as opções possíveis que podem ser escolhidas pelo modelo.
-                            <br><small><em>Exemplo: 5 CDs disponíveis em diferentes cidades</em></small>
+                            <strong>Instalações Candidatas:</strong> Número de instalações disponíveis para seleção. São todas as opções possíveis que podem ser escolhidas pelo modelo.
+                            <br><small><em>Exemplo: 5 instalações disponíveis em diferentes cidades</em></small>
                         </div>
                     </div>
                     
@@ -195,8 +195,8 @@
                             <span class="material-symbols-outlined">pin_drop</span>
                         </div>
                         <div class="help-item-content">
-                            <strong>CDs a Abrir (p):</strong> Número exato de CDs que serão selecionados/abertos pelo modelo. Este é o parâmetro principal do p-Medianas.
-                            <br><small><em>Exemplo: Abrir apenas 3 CDs dos 5 disponíveis</em></small>
+                            <strong>Instalações a Abrir (p):</strong> Número exato de instalações que serão selecionadas/abertas pelo modelo. Este é o parâmetro principal do p-Medianas.
+                            <br><small><em>Exemplo: Abrir apenas 3 instalações das 5 disponíveis</em></small>
                         </div>
                     </div>
                     
@@ -232,7 +232,7 @@
                         <div class="step-item">
                             <div class="step-number">3</div>
                             <div class="step-content">
-                                <strong>Preencha a planilha</strong> com as distâncias ou custos entre CDs e clientes
+                                <strong>Preencha a planilha</strong> com as distâncias ou custos entre instalações e clientes
                             </div>
                         </div>
                         <div class="step-item">
@@ -289,12 +289,12 @@
                     
                     <div class="illustration-container">
                         <div class="illustration-title">
-                            <h5>Exemplo: p = 3 CDs para 15 Clientes</h5>
+                            <h5>Exemplo: p = 3 Instalações para 15 Clientes</h5>
                             <p>Clique nos botões para ver diferentes soluções</p>
                         </div>
                         
                         <div class="simulation-controls">
-                            <button class="control-btn active" onclick="showSolutionStep(1)">Todos CDs</button>
+                            <button class="control-btn active" onclick="showSolutionStep(1)">Todas Instalações</button>
                             <button class="control-btn" onclick="showSolutionStep(2)">p = 1</button>
                             <button class="control-btn" onclick="showSolutionStep(3)">p = 2</button>
                             <button class="control-btn" onclick="showSolutionStep(4)">p = 3 (Ótimo)</button>
@@ -332,7 +332,7 @@
                         
                         <div class="stats-panel">
                             <div class="stat-item">
-                                <div class="stat-label">CDs Selecionados:</div>
+                                <div class="stat-label">Instalações Selecionadas:</div>
                                 <div class="stat-value" id="selectedCDs">5</div>
                             </div>
                             <div class="stat-item">
@@ -383,12 +383,12 @@
                                 <div class="formula-description">
                                     <p><strong>Onde:</strong></p>
                                     <ul>
-                                        <li><strong>d<sub>ij</sub></strong> = Distância/custo entre CD <strong>i</strong> e cliente <strong>j</strong></li>
+                                        <li><strong>d<sub>ij</sub></strong> = Distância/custo entre instalação <strong>i</strong> e cliente <strong>j</strong></li>
                                         <li><strong>q<sub>j</sub></strong> = Demanda do cliente <strong>j</strong></li>
                                         <li><strong>X<sub>ij</sub></strong> = Variável binária (1 se cliente j é atendido pelo CD i, 0 caso contrário)</li>
                                     </ul>
                                     <br>
-                                    <p><strong>Explicação:</strong> O modelo minimiza a soma total das distâncias ponderadas pela demanda, garantindo que cada cliente seja atendido pelo CD mais próximo e considerando o volume de demanda de cada cliente.</p>
+                                    <p><strong>Explicação:</strong> O modelo minimiza a soma total das distâncias ponderadas pela demanda, garantindo que cada cliente seja atendido pela instalação mais próxima e considerando o volume de demanda de cada cliente.</p>
                                 </div>
                             </div>
                         </div>
@@ -413,7 +413,7 @@
                                     </div>
                                     <div class="constraint-description">
                                         <h6>Número de Instalações</h6>
-                                        <p>Exatamente <strong>p</strong> CDs devem ser abertos/ativados</p>
+                                        <p>Exatamente <strong>p</strong> instalações devem ser abertas/ativadas</p>
                                     </div>
                                 </div>
 
@@ -428,7 +428,7 @@
                                     </div>
                                     <div class="constraint-description">
                                         <h6>Atendimento Completo</h6>
-                                        <p>Cada cliente deve ser atendido por exatamente um CD</p>
+                                        <p>Cada cliente deve ser atendido por exatamente uma instalação</p>
                                     </div>
                                 </div>
 
@@ -441,7 +441,7 @@
                                     </div>
                                     <div class="constraint-description">
                                         <h6>Vínculo Lógico</h6>
-                                        <p>Um cliente só pode ser atendido por um CD que esteja aberto</p>
+                                        <p>Um cliente só pode ser atendido por uma instalação que esteja aberta</p>
                                     </div>
                                 </div>
 
@@ -679,7 +679,7 @@
                                         </div>
                                         <div class="detail-item">
                                             <span class="detail-label">Solução:</span>
-                                            <span class="detail-value">Otimização de 3 CDs estratégicos</span>
+                                            <span class="detail-value">Otimização de 3 instalações estratégicas</span>
                                         </div>
                                         <div class="detail-item">
                                             <span class="detail-label">Resultado:</span>
@@ -746,7 +746,7 @@ function showSolutionStep(step) {
             if (costValue) costValue.textContent = '2,847 km·ton';
             if (selectedCDs) selectedCDs.textContent = '5';
             if (avgDistance) avgDistance.textContent = '95km';
-            if (solutionDetails) solutionDetails.innerHTML = '<strong>Análise:</strong> Todos os 5 CDs disponíveis<br><strong>Custo Total:</strong> 2,847 km × toneladas<br><strong>Atendimento:</strong> 100% (15/15 clientes)';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Análise:</strong> Todas as 5 instalações disponíveis<br><strong>Custo Total:</strong> 2,847 km × toneladas<br><strong>Atendimento:</strong> 100% (15/15 clientes)';
             break;
         case 2:
             // p = 1 (apenas CD2)
@@ -776,7 +776,7 @@ function showSolutionStep(step) {
             if (costValue) costValue.textContent = '2,156 km·ton';
             if (selectedCDs) selectedCDs.textContent = '2';
             if (avgDistance) avgDistance.textContent = '98km';
-            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução p=2:</strong> CDs {2, 3} selecionados<br><strong>Custo Total:</strong> 2,156 km × toneladas<br><strong>Atendimento:</strong> 100%';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução p=2:</strong> Instalações {2, 3} selecionadas<br><strong>Custo Total:</strong> 2,156 km × toneladas<br><strong>Atendimento:</strong> 100%';
             break;
         case 4:
             // p = 3 (CDs 1, 2 e 3) - Ótimo
@@ -791,7 +791,7 @@ function showSolutionStep(step) {
             if (costValue) costValue.textContent = '1,247 km·ton';
             if (selectedCDs) selectedCDs.textContent = '3';
             if (avgDistance) avgDistance.textContent = '78km';
-            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução Ótima p=3:</strong> CDs {1, 2, 3} selecionados<br><strong>Custo Total:</strong> 1,247 km × toneladas<br><strong>Atendimento:</strong> 100%';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução Ótima p=3:</strong> Instalações {1, 2, 3} selecionadas<br><strong>Custo Total:</strong> 1,247 km × toneladas<br><strong>Atendimento:</strong> 100%';
             break;
     }
     

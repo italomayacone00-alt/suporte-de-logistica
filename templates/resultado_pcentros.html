@@ -20,7 +20,7 @@
         </div>
         <div class="result-info">
             <h1>Solução Ótima p-Centros (Min-Max)</h1>
-            <p>{{ resultado.p }} CDs selecionados para minimizar a maior {{ resultado.tipo_valor if resultado.tipo_valor else 'distância' }} (equidade máxima)</p>
+            <p>{{ resultado.p }} Instalações selecionadas para minimizar a maior {{ resultado.tipo_valor if resultado.tipo_valor else 'distância' }} (equidade máxima)</p>
             {% if resultado.tipo_valor %}
             <small>Tipo de análise: {% if resultado.tipo_valor == 'distancia' %}📍 Distâncias{% else %}💰 Custos Financeiros{% endif %}</small>
             {% endif %}
@@ -34,7 +34,7 @@
                     {% endif %}
                 </small>
                 {% if resultado.info_coordenadas and resultado.info_coordenadas.cds_com_coords %}
-                <br><small style="color: #666;">CDs com coordenadas: {{ resultado.info_coordenadas.cds_com_coords|length }}/{{ resultado.cds_selecionados|length }}</small>
+                <br><small style="color: #666;">Instalações com coordenadas: {{ resultado.info_coordenadas.cds_com_coords|length }}/{{ resultado.cds_selecionados|length }}</small>
                 {% endif %}
             </div>
             {% endif %}
@@ -62,7 +62,7 @@
                     <span class="material-symbols-outlined">location_city</span>
                 </div>
                 <div class="metric-content">
-                    <span class="metric-label">CDs Selecionados</span>
+                    <span class="metric-label">Instalações Selecionadas</span>
                     <span class="metric-value">{{ resultado.num_cds_selecionados }} / {{ resultado.p }}</span>
                 </div>
             </div>
@@ -104,7 +104,7 @@
                 <div class="info-content">
                     <h3>Restrições</h3>
                     <p>
-                        • &Sigma; Y_i = p (exatamente p CDs)<br>
+                        • &Sigma; Y_i = p (exatamente p Instalações)<br>
                         • &Sigma; X_ij = 1 (atendimento completo)<br>
                         • Z &ge; {% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %}_ij &times; X_ij ({% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} m&aacute;xima)
                     </p>
@@ -154,7 +154,7 @@
                                 <span class="material-symbols-outlined">warehouse</span>
                             </div>
                             <div class="stat-content">
-                                <span class="stat-label">CDs Selecionados</span>
+                                <span class="stat-label">Instalações Selecionadas</span>
                                 <span class="stat-value">{{ resultado.cds_selecionados|length if resultado.cds_selecionados is not none else 0 }}</span>
                             </div>
                         </div>
@@ -164,7 +164,7 @@
                                 <span class="material-symbols-outlined">location_on</span>
                             </div>
                             <div class="stat-content">
-                                <span class="stat-label">Total de CDs</span>
+                                <span class="stat-label">Total de Instalações</span>
                                 <span class="stat-value">{{ resultado.info_coordenadas.cds_com_coords|length if resultado.info_coordenadas and resultado.info_coordenadas.cds_com_coords else 0 }}</span>
                             </div>
                         </div>
@@ -199,7 +199,7 @@
     <!-- CDs Selected -->
     <section class="card">
         <div class="card-header">
-            <h2>CDs Selecionados (p-Centros)</h2>
+            <h2>Instalações Selecionadas (p-Centros)</h2>
             <div class="badge">{{ resultado.num_cds_selecionados }} / {{ resultado.p }} unidades</div>
         </div>
         
@@ -228,7 +228,7 @@
             {% endfor %}
         </div>
         
-        <!-- Resumo dos CDs -->
+        <!-- Resumo das Instalações -->
         <div class="cd-summary">
             <div class="summary-item">
                 <span class="summary-label">Total de Clientes:</span>
@@ -239,7 +239,7 @@
                 <span class="summary-value">{{ "%.1f"|format((resultado.num_cds_selecionados / resultado.p * 100) if resultado.p > 0 else 0) }}%</span>
             </div>
             <div class="summary-item">
-                <span class="summary-label">Média por CD:</span>
+                <span class="summary-label">Média por Instalação:</span>
                 <span class="summary-value">{{ "%.1f"|format((total_clientes / resultado.num_cds_selecionados) if total_clientes > 0 and resultado.num_cds_selecionados > 0 else 0) }} clientes</span>
             </div>
         </div>
@@ -248,7 +248,7 @@
     <!-- Client Assignments -->
     <section class="card">
         <div class="card-header">
-            <h2>Atribuições Clientes-CDs</h2>
+            <h2>Atribuições Clientes-Instalações</h2>
             <div class="badge">{{ resultado.atribuicoes|length if resultado.atribuicoes is not none else 0 }} atribuições</div>
         </div>
         
@@ -256,7 +256,7 @@
             <table class="routes-table">
                 <thead>
                     <tr>
-                        <th>CD Selecionado</th>
+                        <th>Instalação Selecionada</th>
                         <th>Cliente Atendido</th>
                         <th>{% if resultado.tipo_valor == 'custo' %}Custo{% else %}Distância{% endif %} (d_ij)</th>
                         <th>Status</th>
@@ -290,14 +290,14 @@
         </div>
         
         <div class="charts-grid">
-            <!-- Gráfico 1: Distribuição de Clientes por CD -->
+            <!-- Gráfico 1: Distribuição de Clientes por Instalação -->
             <div class="chart-container">
-                <h3>Distribuição de Clientes por CD</h3>
+                <h3>Distribuição de Clientes por Instalação</h3>
                 <div class="chart-wrapper">
                     <canvas id="clientesPorCDChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> {% if resultado.clientes_por_cd %}{% set max_clientes = resultado.clientes_por_cd.values()|max %}{% set total_clientes = resultado.atribuicoes|length %}O CD mais movimentado atende {{ max_clientes }} clientes ({{ "%.1f"|format((max_clientes / total_clientes * 100)) }}% do total). {% if max_clientes > (total_clientes / resultado.num_cds_selecionados * 1.2) %}Este CD está sobrecarregado e pode beneficiar-se de redistribuição.{% else %}A distribuição está relativamente equilibrada.{% endif %}{% else %}Nenhum cliente alocado no momento.{% endif %}</p>
+                    <p><strong>Insight:</strong> {% if resultado.clientes_por_cd %}{% set max_clientes = resultado.clientes_por_cd.values()|max %}{% set total_clientes = resultado.atribuicoes|length %}A Instalação mais movimentada atende {{ max_clientes }} clientes ({{ "%.1f"|format((max_clientes / total_clientes * 100)) }}% do total). {% if max_clientes > (total_clientes / resultado.num_cds_selecionados * 1.2) %}Esta Instalação está sobrecarregada e pode beneficiar-se de redistribuição.{% else %}A distribuição está relativamente equilibrada.{% endif %}{% else %}Nenhum cliente alocado no momento.{% endif %}</p>
                 </div>
             </div>
 
@@ -319,18 +319,18 @@
                     <canvas id="heatmapChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> Este mapa visualiza a intensidade de {% if resultado.tipo_valor == 'custo' %}custos{% else %}distâncias{% endif %} entre CDs e clientes. Linhas mais altas indicam {% if resultado.tipo_valor == 'custo' %}custos elevados{% else %}distâncias longas{% endif %}, ajudando a identificar rotas que precisam de atenção especial.</p>
+                    <p><strong>Insight:</strong> Este mapa visualiza a intensidade de {% if resultado.tipo_valor == 'custo' %}custos{% else %}distâncias{% endif %} entre Instalações e clientes. Linhas mais altas indicam {% if resultado.tipo_valor == 'custo' %}custos elevados{% else %}distâncias longas{% endif %}, ajudando a identificar rotas que precisam de atenção especial.</p>
                 </div>
             </div>
 
             <!-- Gráfico 4: Análise de Eficiência -->
             <div class="chart-container">
-                <h3>Índice de Eficiência por CD</h3>
+                <h3>Índice de Eficiência por Instalação</h3>
                 <div class="chart-wrapper">
                     <canvas id="eficienciaChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> O índice mede o balanceamento entre número de clientes e {% if resultado.tipo_valor == 'custo' %}custo médio{% else %}distância média{% endif %} por CD. Valores mais altos indicam melhor eficiência (mais clientes com {% if resultado.tipo_valor == 'custo' %}custos menores{% else %}distâncias menores{% endif %}). Use esta análise para identificar CDs de melhor e pior performance.</p>
+                    <p><strong>Insight:</strong> O índice mede o balanceamento entre número de clientes e {% if resultado.tipo_valor == 'custo' %}custo médio{% else %}distância média{% endif %} por Instalação. Valores mais altos indicam melhor eficiência (mais clientes com {% if resultado.tipo_valor == 'custo' %}custos menores{% else %}distâncias menores{% endif %}). Use esta análise para identificar Instalações de melhor e pior performance.</p>
                 </div>
             </div>
         </div>
@@ -388,7 +388,7 @@
                 <div class="stat-content">
                     <h4>Densidade de Clientes</h4>
                     <p class="stat-value">{{ "%.2f"|format((resultado.atribuicoes|length / resultado.num_cds_selecionados) if resultado.atribuicoes and resultado.num_cds_selecionados > 0 else 0) }}</p>
-                    <p class="stat-desc">Média por CD ativo</p>
+                    <p class="stat-desc">Média por Instalação ativa</p>
                 </div>
             </div>
         </div>
@@ -408,7 +408,7 @@
                 </div>
                 <div class="rec-content">
                     <h4>Otimização de Capacidade</h4>
-                    <p>Considere redistribuir {{ resultado.clientes_por_cd.values()|max - (resultado.atribuicoes|length / resultado.num_cds_selecionados) if resultado.clientes_por_cd and resultado.atribuicoes and resultado.num_cds_selecionados > 0 else 0 }} clientes do CD mais sobrecarregado para balancear o sistema.</p>
+                    <p>Considere redistribuir {{ resultado.clientes_por_cd.values()|max - (resultado.atribuicoes|length / resultado.num_cds_selecionados) if resultado.clientes_por_cd and resultado.atribuicoes and resultado.num_cds_selecionados > 0 else 0 }} clientes da Instalação mais sobrecarregada para balancear o sistema.</p>
                 </div>
             </div>
 
@@ -428,7 +428,7 @@
                 </div>
                 <div class="rec-content">
                     <h4>Expansão Estratégica</h4>
-                    <p>Identifique regiões com alta concentração de clientes para possíveis novos CDs ou pontos de distribuição.</p>
+                    <p>Identifique regiões com alta concentração de clientes para possíveis novas Instalações ou pontos de distribuição.</p>
                 </div>
             </div>
         </div>
@@ -520,7 +520,7 @@
                             <span class="preview-value">p-Centros</span>
                         </div>
                         <div class="preview-item">
-                            <span class="preview-label">CDs Selecionados:</span>
+                            <span class="preview-label">Instalações Selecionadas:</span>
                             <span class="preview-value">{{ resultado.cds_selecionados|length if resultado.cds_selecionados else 0 }}</span>
                         </div>
                         <div class="preview-item">
@@ -878,7 +878,7 @@ function downloadResults() {
     const dadosResumo = [
         ["Métrica", "Valor"],
         ["Modelo", "p-Centros"],
-        ["CDs Selecionados", resultado.cds_selecionados ? resultado.cds_selecionados.length : 0],
+        ["Instalações Selecionadas", resultado.cds_selecionados ? resultado.cds_selecionados.length : 0],
         ["Parâmetro p", resultado.p],
         ["Tipo de Distância", resultado.tipo_valor],
         ["Valor Máximo", resultado.valor_maximo || 0],
@@ -887,18 +887,18 @@ function downloadResults() {
     const wsResumo = XLSX.utils.aoa_to_sheet(dadosResumo);
     XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo da Análise");
     
-    // Planilha 2: CDs Selecionados
-    const dadosCDs = [["CD Selecionado", "Status"]];
+    // Planilha 2: Instalações Selecionadas
+    const dadosCDs = [["Instalação Selecionada", "Status"]];
     if (resultado.cds_selecionados && resultado.cds_selecionados.length > 0) {
         resultado.cds_selecionados.forEach(cd => {
             dadosCDs.push([cd, "Selecionado"]);
         });
     }
     const wsCDs = XLSX.utils.aoa_to_sheet(dadosCDs);
-    XLSX.utils.book_append_sheet(wb, wsCDs, "CDs Selecionados");
+    XLSX.utils.book_append_sheet(wb, wsCDs, "Instalações Selecionadas");
     
-    // Planilha 3: Atribuições Clientes-CDs
-    const dadosAtribuicoes = [["Cliente", "CD Atendimento", "Distância", "Status", "Observação"]];
+    // Planilha 3: Atribuições Clientes-Instalações
+    const dadosAtribuicoes = [["Cliente", "Instalação Atendimento", "Distância", "Status", "Observação"]];
     if (resultado.atribuicoes && resultado.atribuicoes.length > 0) {
         resultado.atribuicoes.forEach(atrib => {
             const status = "Atendido";
@@ -916,7 +916,7 @@ function downloadResults() {
         dadosAtribuicoes.push(["Nenhuma atribuição encontrada", "", "", "", "", ""]);
     }
     const wsAtribuicoes = XLSX.utils.aoa_to_sheet(dadosAtribuicoes);
-    XLSX.utils.book_append_sheet(wb, wsAtribuicoes, "Atribuições Clientes-CDs");
+    XLSX.utils.book_append_sheet(wb, wsAtribuicoes, "Atribuições Clientes-Instalações");
     
     // Gerar arquivo XLSX e fazer download
     const nomeArquivo = `resultados_completos_p_centros_${new Date().toISOString().split('T')[0]}.xlsx`;

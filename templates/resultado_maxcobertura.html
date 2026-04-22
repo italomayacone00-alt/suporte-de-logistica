@@ -20,7 +20,7 @@
         </div>
         <div class="result-info">
             <h1>Solução Ótima Máxima Cobertura (MCLP)</h1>
-            <p>{{ resultado.p }} CDs selecionados para maximizar a demanda coberta dentro do raio de {{ resultado.raio_cobertura }} km</p>
+            <p>{{ resultado.p }} Instalações selecionadas para maximizar a demanda coberta dentro do raio de {{ resultado.raio_cobertura }} km</p>
             {% if resultado.tipo_valor %}
             <small>Tipo de análise: {% if resultado.tipo_valor == 'distancia' %}📍 Distâncias{% else %}💰 Custos Financeiros{% endif %}</small>
             {% endif %}
@@ -34,7 +34,7 @@
                     {% endif %}
                 </small>
                 {% if resultado.info_coordenadas and resultado.info_coordenadas.cds_com_coords %}
-                <br><small style="color: #666;">CDs com coordenadas: {{ resultado.info_coordenadas.cds_com_coords|length }}/{{ resultado.cds_selecionados|length }}</small>
+                <br><small style="color: #666;">Instalações com coordenadas: {{ resultado.info_coordenadas.cds_com_coords|length }}/{{ resultado.cds_selecionados|length }}</small>
                 {% endif %}
             </div>
             {% endif %}
@@ -62,7 +62,7 @@
                     <span class="material-symbols-outlined">location_city</span>
                 </div>
                 <div class="metric-content">
-                    <span class="metric-label">CDs Selecionados</span>
+                    <span class="metric-label">Instalações Selecionadas</span>
                     <span class="metric-value">{{ resultado.num_cds_selecionados if resultado.num_cds_selecionados is not none else 0 }} / {{ resultado.p if resultado.p is not none else 0 }}</span>
                 </div>
             </div>
@@ -151,7 +151,7 @@
                                 <span class="material-symbols-outlined">warehouse</span>
                             </div>
                             <div class="stat-content">
-                                <span class="stat-label">CDs Selecionados</span>
+                                <span class="stat-label">Instalações Selecionadas</span>
                                 <span class="stat-value">{{ resultado.cds_selecionados|length if resultado.cds_selecionados is not none else 0 }}</span>
                             </div>
                         </div>
@@ -161,7 +161,7 @@
                                 <span class="material-symbols-outlined">location_on</span>
                             </div>
                             <div class="stat-content">
-                                <span class="stat-label">Total de CDs</span>
+                                <span class="stat-label">Total de Instalações</span>
                                 <span class="stat-value">{{ resultado.info_coordenadas.cds_com_coords|length if resultado.info_coordenadas and resultado.info_coordenadas.cds_com_coords else 0 }}</span>
                             </div>
                         </div>
@@ -217,7 +217,7 @@
     <!-- CDs Selected -->
     <section class="card">
         <div class="card-header">
-            <h2>CDs Selecionados (Máxima Cobertura)</h2>
+            <h2>Instalações Selecionadas (Máxima Cobertura)</h2>
             <div class="badge">{{ resultado.cds_selecionados|length if resultado.cds_selecionados is not none else 0 }} / {{ resultado.p }} unidades</div>
         </div>
         
@@ -247,7 +247,7 @@
             {% endfor %}
         </div>
         
-        <!-- Resumo dos CDs -->
+        <!-- Resumo das Instalações -->
         <div class="cd-summary">
             <div class="summary-item">
                 <span class="summary-label">Total de Clientes:</span>
@@ -259,7 +259,7 @@
             </div>
             <div class="summary-item">
                 <span class="summary-label">Eficiência Média:</span>
-                <span class="summary-value">{{ "%.1f"|format((clientes_cobertos / (resultado.cds_selecionados|length if resultado.cds_selecionados else 1)) if resultado.cds_selecionados and resultado.cds_selecionados|length > 0 else 0) }} clientes/CD</span>
+                <span class="summary-value">{{ "%.1f"|format((clientes_cobertos / (resultado.cds_selecionados|length if resultado.cds_selecionados else 1)) if resultado.cds_selecionados and resultado.cds_selecionados|length > 0 else 0) }} clientes/Instalação</span>
             </div>
         </div>
     </section>
@@ -277,7 +277,7 @@
                     <tr>
                         <th>Cliente</th>
                         <th>Status</th>
-                        <th>Atendido Pelo CD</th>
+                        <th>Atendido Pela Instalação</th>
                         <th>Distância</th>
                         <th>Demanda</th>
                     </tr>
@@ -324,7 +324,7 @@
                     <canvas id="coberturaPorCDChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> {% if resultado.cds_selecionados %}{% set max_cobertura = 0 %}{% for cd in resultado.cds_selecionados %}{% set atribuicoes_cd = resultado.atribuicoes|selectattr('cd', 'equalto', cd)|list if resultado.atribuicoes is not none else [] %}{% set cobertura_cd = (atribuicoes_cd|selectattr('coberto')|list|length / atribuicoes_cd|length * 100) if atribuicoes_cd|length > 0 else 0 %}{% if cobertura_cd > max_cobertura %}{% set max_cobertura = cobertura_cd %}{% set best_cd = cd %}{% endif %}{% endfor %}O CD com melhor performance é {{ best_cd if best_cd is defined else 'N/A' }} com {{ "%.1f"|format(max_cobertura) }}% de cobertura. {% if max_cobertura < 80 %}Considere ajustar o raio ou redistribuir clientes para melhorar a cobertura.{% endif %}{% else %}Nenhum CD selecionado.{% endif %}</p>
+                    <p><strong>Insight:</strong> {% if resultado.cds_selecionados %}{% set max_cobertura = 0 %}{% for cd in resultado.cds_selecionados %}{% set atribuicoes_cd = resultado.atribuicoes|selectattr('cd', 'equalto', cd)|list if resultado.atribuicoes is not none else [] %}{% set cobertura_cd = (atribuicoes_cd|selectattr('coberto')|list|length / atribuicoes_cd|length * 100) if atribuicoes_cd|length > 0 else 0 %}{% if cobertura_cd > max_cobertura %}{% set max_cobertura = cobertura_cd %}{% set best_cd = cd %}{% endif %}{% endfor %}A Instalação com melhor performance é {{ best_cd if best_cd is defined else 'N/A' }} com {{ "%.1f"|format(max_cobertura) }}% de cobertura. {% if max_cobertura < 80 %}Considere ajustar o raio ou redistribuir clientes para melhorar a cobertura.{% endif %}{% else %}Nenhuma Instalação selecionada.{% endif %}</p>
                 </div>
             </div>
 
@@ -335,7 +335,7 @@
                     <canvas id="demandaChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> {% if resultado.demanda_coberta and resultado.percentual_cobertura %}A cobertura atual atende {{ "%.1f"|format(resultado.percentual_cobertura) }}% da demanda total ({{ "{:,.0f}".format(resultado.demanda_coberta).replace(',', '.') }} unidades). {% if resultado.percentual_cobertura < 75 %}Há oportunidade significativa para aumentar a cobertura expandindo o raio ou adicionando CDs.{% else %}A cobertura está em um nível satisfatório.{% endif %}{% else %}Sem dados suficientes para análise de demanda.{% endif %}</p>
+                    <p><strong>Insight:</strong> {% if resultado.demanda_coberta and resultado.percentual_cobertura %}A cobertura atual atende {{ "%.1f"|format(resultado.percentual_cobertura) }}% da demanda total ({{ "{:,.0f}".format(resultado.demanda_coberta).replace(',', '.') }} unidades). {% if resultado.percentual_cobertura < 75 %}Há oportunidade significativa para aumentar a cobertura expandindo o raio ou adicionando Instalações.{% else %}A cobertura está em um nível satisfatório.{% endif %}{% else %}Sem dados suficientes para análise de demanda.{% endif %}</p>
                 </div>
             </div>
 
@@ -357,7 +357,7 @@
                     <canvas id="eficienciaCoberturaChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> O índice mede a eficiência de cada CD na cobertura de clientes dentro do raio especificado. Valores mais altos indicam CDs que atendem mais clientes eficientemente. CDs com baixo índice podem precisar de reposicionamento ou ajuste de raio.</p>
+                    <p><strong>Insight:</strong> O índice mede a eficiência de cada Instalação na cobertura de clientes dentro do raio especificado. Valores mais altos indicam Instalações que atendem mais clientes eficientemente. Instalações com baixo índice podem precisar de reposicionamento ou ajuste de raio.</p>
                 </div>
             </div>
         </div>
@@ -417,7 +417,7 @@
                 <div class="stat-content">
                     <h4>Densidade de Cobertura</h4>
                     <p class="stat-value">{{ "%.2f"|format((clientes_cobertos / (resultado.cds_selecionados|length if resultado.cds_selecionados else 1)) if resultado.cds_selecionados and resultado.cds_selecionados|length > 0 else 0) }}</p>
-                    <p class="stat-desc">Clientes cobertos por CD</p>
+                    <p class="stat-desc">Clientes cobertos por Instalação</p>
                 </div>
             </div>
         </div>
@@ -447,7 +447,7 @@
                 </div>
                 <div class="rec-content">
                     <h4>Redução de Gaps de Cobertura</h4>
-                    <p>Analise regiões com alta concentração de clientes não cobertos para possíveis novos CDs ou reconfiguração de rotas existentes.</p>
+                    <p>Analise regiões com alta concentração de clientes não cobertos para possíveis novas Instalações ou reconfiguração de rotas existentes.</p>
                 </div>
             </div>
 
@@ -549,7 +549,7 @@
                             <span class="preview-value">Max Cobertura</span>
                         </div>
                         <div class="preview-item">
-                            <span class="preview-label">CDs Selecionados:</span>
+                            <span class="preview-label">Instalações Selecionadas:</span>
                             <span class="preview-value">{{ resultado.cds_selecionados|length if resultado.cds_selecionados else 0 }}</span>
                         </div>
                         <div class="preview-item">
@@ -851,7 +851,7 @@ function downloadResults() {
     const dadosResumo = [
         ["Métrica", "Valor"],
         ["Modelo", "Máxima Cobertura"],
-        ["CDs Selecionados", resultado.cds_selecionados ? resultado.cds_selecionados.length : 0],
+        ["Instalações Selecionadas", resultado.cds_selecionados ? resultado.cds_selecionados.length : 0],
         ["Raio de Cobertura", resultado.raio_cobertura + " km"],
         ["Tipo de Distância", resultado.tipo_valor],
         ["Demanda Total Coberta", resultado.demanda_coberta || 0],
@@ -861,18 +861,18 @@ function downloadResults() {
     const wsResumo = XLSX.utils.aoa_to_sheet(dadosResumo);
     XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo da Análise");
     
-    // Planilha 2: CDs Selecionados
-    const dadosCDs = [["CD Selecionado", "Status"]];
+    // Planilha 2: Instalações Selecionadas
+    const dadosCDs = [["Instalação Selecionada", "Status"]];
     if (resultado.cds_selecionados && resultado.cds_selecionados.length > 0) {
         resultado.cds_selecionados.forEach(cd => {
             dadosCDs.push([cd, "Ativo"]);
         });
     }
     const wsCDs = XLSX.utils.aoa_to_sheet(dadosCDs);
-    XLSX.utils.book_append_sheet(wb, wsCDs, "CDs Selecionados");
+    XLSX.utils.book_append_sheet(wb, wsCDs, "Instalações Selecionadas");
     
-    // Planilha 3: Atribuições Clientes-CDs
-    const dadosAtribuicoes = [["Cliente", "CD Atendimento", "Distância (km)", "Demanda", "Status"]];
+    // Planilha 3: Atribuições Clientes-Instalações
+    const dadosAtribuicoes = [["Cliente", "Instalação Atendimento", "Distância (km)", "Demanda", "Status"]];
     if (resultado.atribuicoes && resultado.atribuicoes.length > 0) {
         resultado.atribuicoes.forEach(atrib => {
             const status = atrib.coberto ? "Dentro do Raio" : "Fora do Raio";
@@ -889,7 +889,7 @@ function downloadResults() {
         dadosAtribuicoes.push(["Nenhuma atribuição encontrada", "", "", "", "", ""]);
     }
     const wsAtribuicoes = XLSX.utils.aoa_to_sheet(dadosAtribuicoes);
-    XLSX.utils.book_append_sheet(wb, wsAtribuicoes, "Atribuições Clientes-CDs");
+    XLSX.utils.book_append_sheet(wb, wsAtribuicoes, "Atribuições Clientes-Instalações");
     
     // Gerar arquivo XLSX e fazer download
     const nomeArquivo = `resultados_completos_maxima_cobertura_${new Date().toISOString().split('T')[0]}.xlsx`;

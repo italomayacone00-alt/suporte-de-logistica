@@ -20,7 +20,7 @@
         </div>
         <div class="result-info">
             <h1>Solução Ótima - Modelo Tradicional</h1>
-            <p>{{ resultado.p }} CDs selecionados para minimizar custos totais de distribuição</p>
+            <p>{{ resultado.p }} Instalações selecionadas para minimizar custos totais de distribuição</p>
             {% if resultado.tipo_valor %}
             <small>Tipo de análise: {% if resultado.tipo_valor == 'distancia' %}📍 Distâncias{% else %}💰 Custos Financeiros{% endif %}</small>
             {% endif %}
@@ -34,7 +34,7 @@
                     {% endif %}
                 </small>
                 {% if resultado.info_coordenadas and resultado.info_coordenadas.cds_com_coords %}
-                <br><small style="color: #666;">CDs com coordenadas: {{ resultado.info_coordenadas.cds_com_coords|length }}/{{ resultado.total_cds if resultado.total_cds is not none else 0 }}</small>
+                <br><small style="color: #666;">Instalações com coordenadas: {{ resultado.info_coordenadas.cds_com_coords|length }}/{{ resultado.total_cds if resultado.total_cds is not none else 0 }}</small>
                 {% endif %}
             </div>
             {% endif %}
@@ -62,7 +62,7 @@
                     <span class="material-symbols-outlined">warehouse</span>
                 </div>
                 <div class="metric-content">
-                    <span class="metric-label">CDs Abertos</span>
+                    <span class="metric-label">Instalações Abertas</span>
                     <span class="metric-value">{{ resultado.cds_abertos|length if resultado.cds_abertos is not none else 0 }}</span>
                 </div>
             </div>
@@ -103,7 +103,7 @@
                 <div class="info-content">
                     <h3>Restrições</h3>
                     <p>
-                        • Σ Y_i = p (exatamente p CDs)<br>
+                        • Σ Y_i = p (exatamente p Instalações)<br>
                         • Σ X_ij = 1 (atendimento completo)<br>
                         • Z ≥ {% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %}_ij × X_ij ({% if resultado.tipo_valor == 'custo' %}custo{% else %}distância{% endif %} máxima)
                     </p>
@@ -155,7 +155,7 @@
                                 <span class="material-symbols-outlined">warehouse</span>
                             </div>
                             <div class="stat-content">
-                                <span class="stat-label">CDs Selecionados</span>
+                                <span class="stat-label">Instalações Selecionadas</span>
                                 <span class="stat-value">{{ resultado.num_cds_selecionados if resultado.num_cds_selecionados is not none else 0 }}</span>
                             </div>
                         </div>
@@ -165,7 +165,7 @@
                                 <span class="material-symbols-outlined">location_on</span>
                             </div>
                             <div class="stat-content">
-                                <span class="stat-label">Total de CDs</span>
+                                <span class="stat-label">Total de Instalações</span>
                                 <span class="stat-value">{{ resultado.total_cds if resultado.total_cds is not none else 0 }}</span>
                             </div>
                         </div>
@@ -200,7 +200,7 @@
     <!-- CDs Selected -->
     <section class="card">
         <div class="card-header">
-            <h2>CDs Abertos</h2>
+            <h2>Instalações Abertas</h2>
             <div class="badge">{{ resultado.num_cds_selecionados if resultado.num_cds_selecionados is not none else 0 }} / {{ resultado.p if resultado.p is not none else 0 }} unidades</div>
         </div>
         
@@ -232,7 +232,7 @@
             {% endfor %}
         </div>
         
-        <!-- Resumo dos CDs -->
+        <!-- Resumo das Instalações -->
         <div class="cd-summary">
             <div class="summary-item">
                 <span class="summary-label">Total de Rotas:</span>
@@ -243,7 +243,7 @@
                 <span class="summary-value">{{ "%.1f"|format((resultado.cds_abertos|length / resultado.cds_abertos|length * 100) if resultado.cds_abertos and resultado.cds_abertos|length > 0 else 0) }}%</span>
             </div>
             <div class="summary-item">
-                <span class="summary-label">Média de Rotas por CD:</span>
+                <span class="summary-label">Média de Rotas por Instalação:</span>
                 <span class="summary-value">{{ "%.1f"|format((total_rotas / resultado.cds_abertos|length) if total_rotas > 0 and resultado.cds_abertos and resultado.cds_abertos|length > 0 else 0) }}</span>
             </div>
         </div>
@@ -252,7 +252,7 @@
     <!-- Client Assignments -->
     <section class="card">
         <div class="card-header">
-            <h2>Atribuições Clientes-CDs</h2>
+            <h2>Atribuições Clientes-Instalações</h2>
             <div class="badge">{{ resultado.transportes|length if resultado.transportes is not none else 0 }} atribuições</div>
         </div>
         
@@ -260,8 +260,8 @@
             <table class="routes-table">
                 <thead>
                     <tr>
-                        <th>CD Origem</th>
-                        <th>CD Destino</th>
+                        <th>Instalação Origem</th>
+                        <th>Instalação Destino</th>
                         <th>{% if resultado.tipo_valor == 'custo' %}Custo{% else %}Custo{% endif %} (d_ij)</th>
                         <th>Quantidade</th>
                         <th>Status</th>
@@ -298,34 +298,54 @@
         <div class="charts-grid">
             <!-- Gráfico 1: Distribuição de Rotas por CD -->
             <div class="chart-container">
-                <h3>Distribuição de Rotas por CD</h3>
+                <h3>Distribuição de Rotas por Instalação</h3>
                 <div class="chart-wrapper">
                     <canvas id="rotasPorCDChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> {% if resultado.cds_abertos %}{% set total_rotas = resultado.transportes|length if resultado.transportes is not none else 0 %}{% set max_rotas = 0 %}{% for cd in resultado.cds_abertos %}{% set rotas_cd = resultado.transportes|selectattr('origem', 'equalto', cd)|list if resultado.transportes is not none else [] %}{% if rotas_cd|length > max_rotas %}{% set max_rotas = rotas_cd|length %}{% set best_cd = cd %}{% endif %}{% endfor %}O CD com mais rotas é {{ best_cd if best_cd is defined else 'N/A' }} com {{ max_rotas }} rotas ({{ "{:,.1f}".format((max_rotas / total_rotas * 100)) if total_rotas > 0 else 0 }}% do total). {% if max_rotas > (total_rotas / resultado.cds_abertos|length * 1.5) %}Este CD está sobrecarregado e pode beneficiar-se de redistribuição.{% else %}A distribuição está relativamente equilibrada.{% endif %}{% else %}Nenhum CD aberto.{% endif %}</p>
+                    <p><strong>Insight:</strong> 
+    {% if resultado.cds_abertos %}
+        {% set total_rotas = resultado.transportes|length if resultado.transportes is not none else 0 %}
+        {% set max_rotas = 0 %}
+        {% for cd in resultado.cds_abertos %}
+            {% set rotas_cd = resultado.transportes|selectattr('origem', 'equalto', cd)|list if resultado.transportes is not none else [] %}
+            {% if rotas_cd|length > max_rotas %}
+                {% set max_rotas = rotas_cd|length %}
+                {% set best_cd = cd %}
+            {% endif %}
+        {% endfor %}
+        A Instalação com mais rotas é {{ best_cd if best_cd is defined else 'N/A' }} com {{ max_rotas }} rotas ({{ "{:,.1f}".format((max_rotas / total_rotas * 100)) if total_rotas > 0 else 0 }}% do total). 
+        {% if max_rotas > (total_rotas / resultado.cds_abertos|length * 1.5) %}
+            Esta Instalação está sobrecarregada e pode beneficiar-se de redistribuição.
+        {% else %}
+            A distribuição está relativamente equilibrada.
+        {% endif %}
+    {% else %}
+        Nenhuma Instalação aberta.
+    {% endif %}
+</p>
                 </div>
             </div>
 
-            <!-- Gráfico 2: Custos por CD -->
+            <!-- Gráfico 2: Custos por Instalação -->
             <div class="chart-container">
-                <h3>{% if resultado.tipo_valor == 'custo' %}Custos Totais{% else %}Custos de Distribuição{% endif %} por CD</h3>
+                <h3>{% if resultado.tipo_valor == 'custo' %}Custos Totais{% else %}Custos de Distribuição{% endif %} por Instalação</h3>
                 <div class="chart-wrapper">
                     <canvas id="custosPorCDChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> {% if resultado.custo_total %}O custo total é R$ {{ "{:,.2f}".format(resultado.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_total is not none else '0,00' }}. Este gráfico mostra a distribuição de custos por CD.{% else %}Sem dados para análise de custos.{% endif %}</p>
+                    <p><strong>Insight:</strong> {% if resultado.custo_total %}O custo total é R$ {{ "{:,.2f}".format(resultado.custo_total).replace(',', 'X').replace('.', ',').replace('X', '.') if resultado.custo_total is not none else '0,00' }}. Este gráfico mostra a distribuição de custos por Instalação.{% else %}Sem dados para análise de custos.{% endif %}</p>
                 </div>
             </div>
 
             <!-- Gráfico 3: Quantidade vs Custo -->
             <div class="chart-container">
-                <h3>Quantidade vs {% if resultado.tipo_valor == 'custo' %}Custo{% else %}Custo{% endif %} por CD</h3>
+                <h3>Quantidade vs {% if resultado.tipo_valor == 'custo' %}Custo{% else %}Custo{% endif %} por Instalação</h3>
                 <div class="chart-wrapper">
                     <canvas id="quantidadeCustoChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> Este gráfico compara o volume de quantidade com os {% if resultado.tipo_valor == 'custo' %}custos{% else %}custos{% endif %} de cada CD. CDs com alta quantidade e baixo {% if resultado.tipo_valor == 'custo' %}custo{% else %}custo{% endif %} são os mais eficientes.</p>
+                    <p><strong>Insight:</strong> Este gráfico compara o volume de quantidade com os {% if resultado.tipo_valor == 'custo' %}custos{% else %}custos{% endif %} de cada Instalação. Instalações com alta quantidade e baixo {% if resultado.tipo_valor == 'custo' %}custo{% else %}custo{% endif %} são os mais eficientes.</p>
                 </div>
             </div>
 
@@ -336,7 +356,7 @@
                     <canvas id="eficienciaChart"></canvas>
                 </div>
                 <div class="chart-insights">
-                    <p><strong>Insight:</strong> O índice mede a relação entre quantidade atendida e {% if resultado.tipo_valor == 'custo' %}custo{% else %}custo{% endif %} total por CD. Valores mais altos indicam CDs mais eficientes (movimentam mais volume com menor {% if resultado.tipo_valor == 'custo' %}custo{% else %}custo{% endif %}).</p>
+                    <p><strong>Insight:</strong> O índice mede a relação entre quantidade atendida e {% if resultado.tipo_valor == 'custo' %}custo{% else %}custo{% endif %} total por Instalação. Valores mais altos indicam Instalações mais eficientes (movimentam mais volume com menor {% if resultado.tipo_valor == 'custo' %}custo{% else %}custo{% endif %}).</p>
                 </div>
             </div>
         </div>
@@ -382,7 +402,7 @@
                 <div class="stat-content">
                     <h4>Densidade de Operação</h4>
                     <p class="stat-value">{{ "%.2f"|format((resultado.transportes|length / resultado.cds_abertos|length) if resultado.transportes and resultado.cds_abertos and resultado.cds_abertos|length > 0 else 0) }}</p>
-                    <p class="stat-desc">Rotas por CD aberto</p>
+                    <p class="stat-desc">Rotas por Instalação aberta</p>
                 </div>
             </div>
 
@@ -414,7 +434,7 @@
                 </div>
                 <div class="rec-content">
                     <h4>Otimização de Rotas</h4>
-                    <p>Considere redistribuir rotas do CD mais sobrecarregado para balancear melhor a carga e reduzir custos operacionais.</p>
+                    <p>Considere redistribuir rotas da Instalação mais sobrecarregada para balancear melhor a carga e reduzir custos operacionais.</p>
                 </div>
             </div>
 
@@ -434,7 +454,7 @@
                 </div>
                 <div class="rec-content">
                     <h4>Expansão Estratégica</h4>
-                    <p>Identifique regiões com alta demanda e baixo {% if resultado.tipo_valor == 'custo' %}custo{% else %}custo{% endif %} para possíveis novos CDs ou otimização de rotas existentes.</p>
+                    <p>Identifique regiões com alta demanda e baixo {% if resultado.tipo_valor == 'custo' %}custo{% else %}custo{% endif %} para possíveis novas Instalações ou otimização de rotas existentes.</p>
                 </div>
             </div>
         </div>
@@ -531,7 +551,7 @@
                             <span class="preview-value">Tradicional</span>
                         </div>
                         <div class="preview-item">
-                            <span class="preview-label">CDs Abertos:</span>
+                            <span class="preview-label">Instalações Abertas:</span>
                             <span class="preview-value">{{ resultado.cds_abertos|length if resultado.cds_abertos is not none else 0 }}</span>
                         </div>
                         <div class="preview-item">
@@ -828,26 +848,26 @@ function downloadResults() {
     const dadosResumo = [
         ["Métrica", "Valor"],
         ["Modelo", "Problema Tradicional"],
-        ["CDs Abertos", resultado.cds_selecionados ? resultado.cds_selecionados.length : 0],
+        ["Instalações Abertas", resultado.cds_selecionados ? resultado.cds_selecionados.length : 0],
         ["Custo Total", resultado.custo_total || 0],
-        ["Custo Médio por CD", resultado.custo_medio || 0],
+        ["Custo Médio por Instalação", resultado.custo_medio || 0],
         ["Data da Análise", new Date().toLocaleDateString('pt-BR')]
     ];
     const wsResumo = XLSX.utils.aoa_to_sheet(dadosResumo);
     XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo da Análise");
     
-    // Planilha 2: CDs Abertos
-    const dadosCDs = [["CD Aberto", "Status"]];
+    // Planilha 2: Instalações Abertas
+    const dadosCDs = [["Instalação Aberta", "Status"]];
     if (resultado.cds_selecionados && resultado.cds_selecionados.length > 0) {
         resultado.cds_selecionados.forEach(cd => {
             dadosCDs.push([cd, "Aberto"]);
         });
     }
     const wsCDs = XLSX.utils.aoa_to_sheet(dadosCDs);
-    XLSX.utils.book_append_sheet(wb, wsCDs, "CDs Abertos");
+    XLSX.utils.book_append_sheet(wb, wsCDs, "Instalações Abertas");
     
-    // Planilha 3: Atribuições Clientes-CDs
-    const dadosAtribuicoes = [["Cliente", "CD Atendimento", "Distância", "Status"]];
+    // Planilha 3: Atribuições Clientes-Instalações
+    const dadosAtribuicoes = [["Cliente", "Instalação Atendimento", "Distância", "Status"]];
     if (resultado.atribuicoes && resultado.atribuicoes.length > 0) {
         resultado.atribuicoes.forEach(atrib => {
             const status = "Atendido";
@@ -863,7 +883,7 @@ function downloadResults() {
         dadosAtribuicoes.push(["Nenhuma atribuição encontrada", "", "", ""]);
     }
     const wsAtribuicoes = XLSX.utils.aoa_to_sheet(dadosAtribuicoes);
-    XLSX.utils.book_append_sheet(wb, wsAtribuicoes, "Atribuições Clientes-CDs");
+    XLSX.utils.book_append_sheet(wb, wsAtribuicoes, "Atribuições Clientes-Instalações");
     
     // Gerar arquivo XLSX e fazer download
     const nomeArquivo = `resultados_completos_tradicional_${new Date().toISOString().split('T')[0]}.xlsx`;

@@ -61,10 +61,10 @@
                 <div class="input-group">
                     <label for="num_cds">
                         <span class="material-symbols-outlined">warehouse</span>
-                        CDs Candidatos
+                        Instalações Candidatas
                     </label>
                     <input type="number" id="num_cds" name="num_cds" min="1" max="50" required placeholder="5">
-                    <small>Número de centros de distribuição disponíveis</small>
+                    <small>Número de instalações disponíveis</small>
                 </div>
                 
                 <div class="input-group">
@@ -79,10 +79,10 @@
                 <div class="input-group">
                     <label for="p_cds">
                         <span class="material-symbols-outlined">pin_drop</span>
-                        CDs a Abrir (p)
+                        Instalações a Abrir (p)
                     </label>
                     <input type="number" id="p_cds" name="p_cds" min="1" max="10" required placeholder="3">
-                    <small>Número exato de CDs que serão abertos</small>
+                    <small>Número exato de instalações que serão abertas</small>
                 </div>
                 
                 <div class="input-group highlight-box">
@@ -187,8 +187,8 @@
                             <span class="material-symbols-outlined">warehouse</span>
                         </div>
                         <div class="help-item-content">
-                            <strong>CDs Candidatos:</strong> Número de locais disponíveis para instalação. São todas as opções possíveis que podem ser escolhidas pelo modelo.
-                            <br><small><em>Exemplo: 5 antenas disponíveis em diferentes locais</em></small>
+                            <strong>Instalações Candidatas:</strong> Número de locais disponíveis para instalação. São todas as opções possíveis que podem ser escolhidas pelo modelo.
+                            <br><small><em>Exemplo: 5 instalações disponíveis em diferentes locais</em></small>
                         </div>
                     </div>
                     
@@ -207,8 +207,8 @@
                             <span class="material-symbols-outlined">pin_drop</span>
                         </div>
                         <div class="help-item-content">
-                            <strong>CDs a Abrir (p):</strong> Número exato de instalações que serão selecionadas para maximizar cobertura. Este é o parâmetro principal do Máxima Cobertura.
-                            <br><small><em>Exemplo: Abrir apenas 2 antenas das 5 disponíveis</em></small>
+                            <strong>Instalações a Abrir (p):</strong> Número exato de instalações que serão selecionadas para maximizar cobertura. Este é o parâmetro principal do Máxima Cobertura.
+                            <br><small><em>Exemplo: Abrir apenas 2 instalações das 5 disponíveis</em></small>
                         </div>
                     </div>
                     
@@ -254,7 +254,7 @@
                         <div class="step-item">
                             <div class="step-number">3</div>
                             <div class="step-content">
-                                <strong>Preencha a planilha</strong> com as distâncias ou custos entre CDs e pontos de cobertura
+                                <strong>Preencha a planilha</strong> com as distâncias ou custos entre instalações e pontos de cobertura
                             </div>
                         </div>
                         <div class="step-item">
@@ -311,13 +311,13 @@
                     
                     <div class="illustration-container">
                         <div class="illustration-title">
-                            <h5>Exemplo Máxima Cobertura: p = 2 Antenas, Raio = 3km</h5>
+                            <h5>Exemplo Máxima Cobertura: p = 2 Instalações, Raio = 3km</h5>
                             <p><strong style="color: #1f4e78;">Maximizar população coberta dentro do raio</strong></p>
                             <p>Clique nos botões para ver diferentes soluções</p>
                         </div>
                         
                         <div class="simulation-controls">
-                            <button class="control-btn active" onclick="showSolutionStepMC(1)">Todas Antenas</button>
+                            <button class="control-btn active" onclick="showSolutionStepMC(1)">Todas Instalações</button>
                             <button class="control-btn" onclick="showSolutionStepMC(2)">p = 1</button>
                             <button class="control-btn" onclick="showSolutionStepMC(3)">p = 2 (Ótimo)</button>
                         </div>
@@ -347,7 +347,7 @@
                         
                         <div class="stats-panel">
                             <div class="stat-item">
-                                <div class="stat-label">Antenas Selecionadas:</div>
+                                <div class="stat-label">Instalações Selecionadas:</div>
                                 <div class="stat-value" id="selectedAntennas">5</div>
                             </div>
                             <div class="stat-item">
@@ -361,7 +361,7 @@
                         </div>
                         
                         <div class="solution-details" id="solutionDetails">
-                            <strong>Análise:</strong> Todas as 5 antenas disponíveis<br>
+                            <strong>Análise:</strong> Todas as 5 instalações disponíveis<br>
                             <strong>Cobertura:</strong> 60k habitantes (100%)<br>
                             <strong>Alcance:</strong> Todas cobertas
                         </div>
@@ -972,7 +972,7 @@ function showSolutionStepMC(step) {
             if (selectedAntennasEl) selectedAntennasEl.textContent = '5';
             if (totalCoverage) totalCoverage.textContent = '60k';
             if (percentCoverage) percentCoverage.textContent = '100%';
-            if (solutionDetails) solutionDetails.innerHTML = '<strong>Análise:</strong> Todas as 5 antenas disponíveis<br><strong>Cobertura:</strong> 60k habitantes (100%)<br><strong>Alcance:</strong> Todas cobertas<br><em style="color: #6b7280;">Máxima cobertura, mas alto custo</em>';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Análise:</strong> Todas as 5 instalações disponíveis<br><strong>Cobertura:</strong> 60k habitantes (100%)<br><strong>Alcance:</strong> Todas cobertas<br><em style="color: #6b7280;">Máxima cobertura, mas alto custo</em>';
             break;
         case 2:
             // p = 1 (A2 - melhor posição individual para cobertura)
@@ -1002,7 +1002,7 @@ function showSolutionStepMC(step) {
             if (selectedAntennasEl) selectedAntennasEl.textContent = '1';
             if (totalCoverage) totalCoverage.textContent = '40k';
             if (percentCoverage) percentCoverage.textContent = '67%';
-            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução p=1:</strong> Antena A2 selecionada (melhor individual)<br><strong>Cobertura:</strong> 40k de 60k habitantes<br><strong>Alcance:</strong> 6/8 bairros<br><em style="color: #6b7280;">Uma antena só, cobertura parcial</em>';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução p=1:</strong> Instalação A2 selecionada (melhor individual)<br><strong>Cobertura:</strong> 40k de 60k habitantes<br><strong>Alcance:</strong> 6/8 bairros<br><em style="color: #6b7280;">Uma instalação só, cobertura parcial</em>';
             break;
         case 3:
             // p = 2 (A1 e A2) - Ótimo Máxima Cobertura
@@ -1032,7 +1032,7 @@ function showSolutionStepMC(step) {
             if (selectedAntennasEl) selectedAntennasEl.textContent = '2';
             if (totalCoverage) totalCoverage.textContent = '60k';
             if (percentCoverage) percentCoverage.textContent = '100%';
-            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução Ótima p=2:</strong> Antenas {A1, A2} selecionadas<br><strong>Cobertura:</strong> 60k de 60k habitantes<br><strong>Alcance:</strong> 8/8 bairros<br><em style="color: #16a34a;">Cobertura total com custo otimizado!</em>';
+            if (solutionDetails) solutionDetails.innerHTML = '<strong>Solução Ótima p=2:</strong> Instalações {A1, A2} selecionadas<br><strong>Cobertura:</strong> 60k de 60k habitantes<br><strong>Alcance:</strong> 8/8 bairros<br><em style="color: #16a34a;">Cobertura total com custo otimizado!</em>';
             break;
     }
     

@@ -135,7 +135,7 @@
                     <span class="material-symbols-outlined">hub</span>
                 </div>
                 <div class="tool-content">
-                    <h3>Otimização de CDs</h3>
+                    <h3>Otimização de Instalações</h3>
                     <p>Dimensionamento ideal de centros de distribuição com equilíbrio entre custos fixos e variáveis.</p>
                     <div class="tool-use-cases">
                         <span class="use-case-tag">Custos fixos</span>
@@ -190,7 +190,7 @@
             <div class="comparison-row">
                 <div class="tool-name">
                     <span class="tool-indicator yellow"></span>
-                    Otimização de CDs
+                    Otimização de Instalações
                 </div>
                 <div class="criteria">Minimizar custo total</div>
                 <div class="criteria">Variável (otimizado)</div>
@@ -245,7 +245,7 @@
                         <span>Máxima Cobertura</span>
                         {% else %}
                         <span class="material-symbols-outlined">hub</span>
-                        <span>Otimização de CDs</span>
+                        <span>Otimização de Instalações</span>
                         {% endif %}
                     </div>
                     <div class="project-date-modern">
@@ -404,9 +404,9 @@ function getTipoNome(tipo) {
         'p_centros': 'p-Centros',
         'p_medianas': 'p-Medianas',
         'max_cobertura': 'Máxima Cobertura',
-        'tradicional': 'Otimização de CDs'
+        'tradicional': 'Otimização de Instalações'
     };
-    return nomes[tipo] || 'Otimização de CDs';
+    return nomes[tipo] || 'Otimização de Instalações';
 }
 
 function formatarData(dataString) {
@@ -1164,10 +1164,10 @@ function selectObjective(objective) {
     switch(objective) {
         case 'minimize-cost':
             recommendation = {
-                name: 'Otimização de CDs',
+                name: 'Otimização de Instalações',
                 description: 'Esta ferramenta é ideal para minimizar custos totais, equilibrando custos fixos de instalação com custos variáveis de transporte.',
                 features: [
-                    'Número variável de CDs (determinado automaticamente)',
+                    'Número variável de instalações (determinado automaticamente)',
                     'Equilíbrio ótimo entre custos fixos e variáveis',
                     'Solução de custo mínimo total'
                 ],
