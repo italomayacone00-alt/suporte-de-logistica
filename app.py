@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, flash, redirect, url_for, Response, jsonify
+from flask import Flask, render_template, request, send_file, flash, redirect, url_for, Response, jsonify, session
 import pandas as pd
 import os
 from werkzeug.utils import secure_filename
@@ -435,7 +435,7 @@ def gerar_template():
         
         return send_file(
             output,
-            download_name="Template_Localizacao_CDs.xlsx",
+            download_name="Template_Localizacao_Instalacoes.xlsx",
             as_attachment=True,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
@@ -1733,16 +1733,195 @@ def relatorio_projeto(projeto_id):
         flash('Projeto não encontrado.', 'error')
         return redirect(url_for('dashboard'))
     
-    # Por enquanto, redireciona para a exportação padrão
-    # Futuro: implementar geração de PDF/Excel personalizado
-    if projeto['tipo_analise'] == 'p_centros':
-        return redirect(url_for('exportar_resultados_pcentros'))
-    elif projeto['tipo_analise'] == 'p_medianas':
-        return redirect(url_for('exportar_resultados_pmedianas'))
-    elif projeto['tipo_analise'] == 'max_cobertura':
-        return redirect(url_for('exportar_resultados_maxcobertura'))
-    else:
-        return redirect(url_for('exportar_resultados_tradicional'))
+    # Criar lista com apenas este projeto para o template
+    projetos = [projeto]
+    
+    # Calcular métricas consolidadas
+    def calcular_consolidados(projetos):
+        total_cds = 0
+        total_clientes = 0
+        total_investimento = 0.0
+        
+        for projeto in projetos:
+            resultados = projeto.get('resultados', {})
+            tipo = projeto.get('tipo_analise')
+            
+            if tipo == 'tradicional':
+                total_cds += len(resultados.get('cds_abertos', []))
+                # Contar clientes únicos em vez de rotas
+                clientes_unicos = set()
+                transportes = resultados.get('transportes', [])
+                for transporte in transportes:
+                    if transporte.get('destino'):
+                        clientes_unicos.add(transporte['destino'])
+                total_clientes += len(clientes_unicos)
+                total_investimento += float(resultados.get('custo_total', 0))
+            
+            elif tipo == 'p_medianas':
+                total_cds += resultados.get('num_cds_selecionados', 0)
+                total_clientes += len(resultados.get('atribuicoes', []))
+                total_investimento += float(resultados.get('custo_total_ponderado', 0))
+            
+            elif tipo == 'p_centros':
+                total_cds += resultados.get('num_cds_selecionados', 0)
+                total_clientes += len(resultados.get('atribuicoes', []))
+                # p-centros não tem custo monetário
+            
+            elif tipo == 'max_cobertura':
+                # Máxima Cobertura: múltiplas formas de obter número de CDs
+                cds_selecionados = 0
+                if resultados.get('num_cds_selecionados'):
+                    cds_selecionados = resultados.get('num_cds_selecionados')
+                elif resultados.get('cds_selecionados'):
+                    cds_selecionados = len(resultados.get('cds_selecionados'))
+                elif resultados.get('atribuicoes'):
+                    # Extrair CDs únicos das atribuições
+                    cds_unicos = set()
+                    for atribuicao in resultados.get('atribuicoes', []):
+                        if atribuicao.get('cd_selecionado'):
+                            cds_unicos.add(atribuicao.get('cd_selecionado'))
+                    cds_selecionados = len(cds_unicos)
+                
+                total_cds += cds_selecionados
+                
+                # Contar clientes cobertos
+                clientes_cobertos = len([a for a in resultados.get('atribuicoes', []) if a.get('coberto')])
+                total_clientes += clientes_cobertos
+                # Máxima cobertura não tem custo monetário
+        
+        return {
+            'total_cds': total_cds,
+            'total_clientes': total_clientes,
+            'total_investimento': total_investimento
+        }
+    
+    # Calcular métricas consolidadas
+    consolidados = calcular_consolidados(projetos)
+    
+    # Função para processar dados dos projetos e garantir campos necessários
+    def processar_dados_projetos(projetos):
+        for projeto in projetos:
+            resultados = projeto.get('resultados', {})
+            tipo = projeto.get('tipo_analise')
+            
+            if tipo == 'tradicional' and resultados:
+                # Garantir volume_por_cd para cálculo de porcentagens
+                if 'volume_por_cd' not in resultados and resultados.get('transportes'):
+                    volume_por_cd = {}
+                    for transporte in resultados.get('transportes', []):
+                        cd_origem = transporte.get('origem')
+                        quantidade = transporte.get('quantidade', 0)
+                        if cd_origem in volume_por_cd:
+                            volume_por_cd[cd_origem] += quantidade
+                        else:
+                            volume_por_cd[cd_origem] = quantidade
+                    resultados['volume_por_cd'] = volume_por_cd
+            
+            elif tipo == 'max_cobertura' and resultados:
+                # Garantir campos para Máxima Cobertura
+                if 'num_cds_selecionados' not in resultados:
+                    if resultados.get('cds_selecionados'):
+                        resultados['num_cds_selecionados'] = len(resultados.get('cds_selecionados'))
+                    elif resultados.get('atribuicoes'):
+                        cds_unicos = set()
+                        for atribuicao in resultados.get('atribuicoes', []):
+                            if atribuicao.get('cd_selecionado'):
+                                cds_unicos.add(atribuicao.get('cd_selecionado'))
+                        resultados['num_cds_selecionados'] = len(cds_unicos)
+                
+                if 'clientes_atendidos' not in resultados:
+                    clientes_cobertos = len([a for a in resultados.get('atribuicoes', []) if a.get('coberto')])
+                    resultados['clientes_atendidos'] = clientes_cobertos
+                
+                if 'demanda_nao_coberta' not in resultados:
+                    demanda_nao_coberta = 0
+                    for atribuicao in resultados.get('atribuicoes', []):
+                        if not atribuicao.get('coberto') and atribuicao.get('demanda'):
+                            demanda_nao_coberta += atribuicao.get('demanda', 0)
+                    resultados['demanda_nao_coberta'] = demanda_nao_coberta
+    
+    # Processar dados dos projetos
+    processar_dados_projetos(projetos)
+    
+    # Configurar variáveis para o template
+    from datetime import datetime
+    ano_atual = datetime.now().year
+    data_atual = datetime.now().strftime('%d/%m/%Y')
+    periodo_analise = f'Janeiro a Dezembro de {ano_atual}'
+    
+    # Contar tipos de análises
+    tipos_contagem = {}
+    for projeto in projetos:
+        tipo = projeto['tipo_analise']
+        tipos_contagem[tipo] = tipos_contagem.get(tipo, 0) + 1
+    
+    # Funções auxiliares
+    def get_tipo_nome(tipo):
+        nomes = {
+            'tradicional': 'Modelo Tradicional',
+            'p_medianas': 'p-Medianas',
+            'p_centros': 'p-Centros',
+            'max_cobertura': 'Máxima Cobertura'
+        }
+        return nomes.get(tipo, tipo)
+    
+    def get_tipo_icone(tipo):
+        icones = {
+            'tradicional': 'inventory_2',
+            'p_medianas': 'location_city',
+            'p_centros': 'center_focus_strong',
+            'max_cobertura': 'radar'
+        }
+        return icones.get(tipo, 'analytics')
+    
+    def get_tipo_descricao(tipo):
+        descricoes = {
+            'tradicional': 'Localização com custos fixos e capacidades',
+            'p_medianas': 'Localização com p fixo minimizando custos',
+            'p_centros': 'Localização com p fixo minimizando distância máxima',
+            'max_cobertura': 'Maximização de cobertura com raio limitado'
+        }
+        return descricoes.get(tipo, tipo)
+    
+    def formatar_data(data_str):
+        if not data_str:
+            return ''
+        try:
+            data = datetime.strptime(data_str, '%Y-%m-%d')
+            return data.strftime('%d/%m/%Y')
+        except:
+            return data_str
+    
+    def formatar_data_completa(data_str):
+        if not data_str:
+            return ''
+        try:
+            data = datetime.strptime(data_str, '%Y-%m-%d')
+            return data.strftime('%d de %B de %Y')
+        except:
+            return data_str
+    
+    def format_currency_brl(valor):
+        if not valor:
+            return 'R$ 0,00'
+        return f'R$ {valor:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
+    
+    return render_template('relatorio.html', 
+                         projetos=projetos,
+                         projeto=projeto,
+                         total_cds_consolidados=consolidados['total_cds'],
+                         total_clientes_consolidados=consolidados['total_clientes'],
+                         total_investimento_consolidado=consolidados['total_investimento'],
+                         ano_atual=ano_atual,
+                         data_atual=data_atual,
+                         tipos_contagem=tipos_contagem,
+                         periodo_analise=periodo_analise,
+                         get_tipo_nome=get_tipo_nome,
+                         get_tipo_icone=get_tipo_icone,
+                         get_tipo_descricao=get_tipo_descricao,
+                         formatar_data=formatar_data,
+                         formatar_data_completa=formatar_data_completa,
+                         format_currency_brl=format_currency_brl)
 
 @app.route('/gerar_relatorio_anual', methods=['POST'])
 def gerar_relatorio_anual():
@@ -1939,6 +2118,7 @@ def gerar_relatorio_anual():
         # Renderizar template corrigido
         html_content = render_template('relatorio.html', 
                                      projetos=projetos_selecionados,
+                                     projeto=projetos_selecionados[0] if projetos_selecionados else None,
                                      total_cds_consolidados=consolidados['total_cds'],
                                      total_clientes_consolidados=consolidados['total_clientes'],
                                      total_investimento_consolidado=consolidados['total_investimento'],
@@ -2141,9 +2321,10 @@ def relatorio_anual_visualizacao():
         
         return render_template('relatorio.html', 
                              projetos=projetos,
+                             projeto=projetos[0] if projetos else None,
                              total_cds_consolidados=consolidados['total_cds'],
                              total_clientes_consolidados=consolidados['total_clientes'],
-                             total_investimento_consolidado=consolidados['total_investimento'],
+                             total_investimento_consolidados=consolidados['total_investimento'],
                              ano_atual=ano_atual,
                              data_atual=data_atual,
                              tipos_contagem=tipos_contagem,
@@ -2870,9 +3051,9 @@ def resolver_pmediana_simples_route():
         return redirect(url_for('pmediana_simples'))
 
 # --- ROTA PARA GERAR RELATÓRIO EM WORD ---
-@app.route('/gerar_relatorio_word')
-def gerar_relatorio_word():
-    """Gera o relatório anual em formato Word (.docx) com design profissional"""
+@app.route('/gerar_relatorio_word/<int:projeto_id>')
+def gerar_relatorio_word(projeto_id):
+    """Gera o relatório em formato Word (.docx) com design profissional"""
     try:
         from docx import Document
         from docx.shared import Inches, Pt, RGBColor
@@ -2883,12 +3064,13 @@ def gerar_relatorio_word():
         import tempfile
         import os
         
-        # Carregar todos os projetos do banco de dados
-        projetos = listar_projetos()
-        
-        if not projetos:
-            flash('Nenhum projeto encontrado para gerar relatório.', 'warning')
+        # Carregar apenas o projeto específico pelo ID
+        projeto = carregar_resultados_projeto(projeto_id)
+        if not projeto:
+            flash('Projeto não encontrado.', 'error')
             return redirect(url_for('dashboard'))
+        
+        projetos = [projeto]
         
         # ESSENCIAL: Processar dados dos projetos para calcular porcentagens e métricas
         def processar_dados_projetos(projetos):
@@ -3066,7 +3248,7 @@ def gerar_relatorio_word():
         
         # ============= CAPA PROFISSIONAL =============
         # Adicionar cabeçalho com gradiente simulado
-        title = doc.add_heading('Relatório Técnico Anual', 0)
+        title = doc.add_heading('Relatório Técnico de Otimização Logística', 0)
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
         
         # Formatar título
@@ -3229,6 +3411,71 @@ def gerar_relatorio_word():
             # ============= MAPA INTERATIVO =============
             if projeto.get('mapa_html'):
                 doc.add_heading('🗺️ Mapa Interativo', level=2)
+                
+                # Tentar adicionar imagem do mapa ao documento Word
+                try:
+                    mapa_file = projeto["mapa_html"]
+                    # Corrigir caminho para pasta 'mapas' em vez de 'maps'
+                    mapa_path = os.path.join('static', 'mapas', mapa_file)
+                    
+                    if os.path.exists(mapa_path):
+                        # Verificar se é um arquivo HTML (não pode ser adicionado como imagem diretamente)
+                        if mapa_file.endswith('.html'):
+                            # Para arquivos HTML, adicionar screenshot ou informação
+                            doc.add_paragraph('📍 Visualização do Mapa:', style='Intense Quote')
+                            
+                            # Adicionar parágrafo informando sobre o mapa
+                            mapa_info_para = doc.add_paragraph()
+                            mapa_info_para.add_run('📋 Formato do Mapa: ').bold = True
+                            mapa_info_para.add_run('Mapa interativo em formato HTML')
+                            
+                            # Adicionar informações de acesso
+                            acesso_para = doc.add_paragraph()
+                            acesso_para.add_run('🌐 Acesso ao Mapa: ').bold = True
+                            acesso_para.add_run('O mapa interativo completo está disponível na versão web do relatório com funcionalidades de zoom, filtros e análise detalhada.')
+                            
+                            # Adicionar QR code placeholder (texto)
+                            qr_para = doc.add_paragraph()
+                            qr_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            qr_para.add_run('[ QR Code para acesso ao mapa interativo ]')
+                            qr_para.runs[0].font.size = Pt(12)
+                            qr_para.runs[0].italic = True
+                            
+                            doc.add_paragraph()  # Espaço após o QR code placeholder
+                        else:
+                            # Se for uma imagem (PNG, JPG), adicionar diretamente
+                            doc.add_paragraph('📍 Visualização do Mapa:', style='Intense Quote')
+                            
+                            # Adicionar imagem centralizada
+                            paragraph = doc.add_paragraph()
+                            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            run = paragraph.add_run()
+                            run.add_picture(mapa_path, width=Inches(6))  # 6 polegadas de largura
+                            
+                            # Legenda da imagem
+                            legenda_para = doc.add_paragraph()
+                            legenda_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            legenda_para.add_run('Figura: Mapa interativo com localização dos CDs e clientes')
+                            legenda_para.runs[0].italic = True
+                            legenda_para.runs[0].font.size = Pt(10)
+                            
+                            doc.add_paragraph()  # Espaço após a imagem
+                    else:
+                        # Se o arquivo não existir, adicionar mensagem
+                        mapa_para = doc.add_paragraph()
+                        mapa_para.add_run('📍 Status do Mapa: ').bold = True
+                        mapa_para.add_run(f'Arquivo do mapa não encontrado: {mapa_path}')
+                
+                except Exception as e:
+                    # Se houver erro ao adicionar imagem, continuar com informações textuais
+                    mapa_para = doc.add_paragraph()
+                    mapa_para.add_run('📍 Status do Mapa: ').bold = True
+                    mapa_para.add_run('Não foi possível incluir a imagem do mapa no documento Word')
+                    
+                    # Adicionar informações de debug
+                    debug_para = doc.add_paragraph()
+                    debug_para.add_run('🔍 Informações de Debug: ').bold = True
+                    debug_para.add_run(f'Arquivo: {projeto.get("mapa_html", "N/A")}, Erro: {str(e)}')
                 
                 # Informações do mapa
                 mapa_para = doc.add_paragraph()
@@ -3999,7 +4246,7 @@ def gerar_relatorio_word():
             output,
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             as_attachment=True,
-            download_name=f'Relatorio_Tecnico_Anual_{datetime.now().strftime("%Y%m%d_%H%M%S")}.docx'
+            download_name=f'Relatorio_Tecnico_Otimizacao_{datetime.now().strftime("%Y%m%d_%H%M%S")}.docx'
         )
         
     except ImportError:

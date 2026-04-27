@@ -9,361 +9,264 @@
 
 <style>
 /* ===================================================================
-   RELATÓRIO PROFISSIONAL A4 - VERSÃO CORRIGIDA
+   RELATÓRIO LIMPO E FUNCIONAL
    =================================================================== */
 
-/* CONFIGURAÇÃO DE IMPRESSÃO A4 */
+/* CONFIGURAÇÃO DE IMPRESSÃO */
 @page { 
     size: A4; 
-    margin: 0;
+    margin: 15mm;
 }
 
-/* RESET PROFISSIONAL */
+/* RESET GLOBAL */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* VARIÁVEIS PROFISSIONAIS */
-:root {
-    --primary: #0f172a;
-    --primary-dark: #1e293b;
-    --accent: #2563eb;
-    --accent-light: #dbeafe;
-    --text-primary: #1f2937;
-    --text-secondary: #4b5563;
-    --text-muted: #64748b;
-    --bg-white: #ffffff;
-    --bg-light: #f8fafc;
-    --border: #e2e8f0;
-    --border-light: #f1f5f9;
-    --shadow: rgba(0, 0, 0, 0.1);
-}
-
-/* BODY PROFISSIONAL */
 body {
     font-family: 'Inter', sans-serif;
-    background: #525659;
-    color: var(--text-primary);
-    line-height: 1.6;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    overflow-x: hidden;
-    overflow-y: auto;
-    height: 100vh;
+    background: #f5f5f5;
+    padding: 20px;
+    line-height: 1.5;
+}
+
+/* VARIÁVEIS */
+:root {
+    --primary: #1e40af;
+    --primary-dark: #1e3a8a;
+    --accent: #3b82f6;
+    --accent-light: #dbeafe;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --bg-white: #ffffff;
+    --bg-light: #f8fafc;
+    --border: #e5e7eb;
+    --shadow: rgba(0, 0, 0, 0.1);
 }
 
 /* CONTAINER PRINCIPAL */
 #pdf-content {
-    width: 100%;
     max-width: 210mm;
     margin: 0 auto;
-    background: var(--bg-white);
-    box-shadow: 0 0 20px var(--shadow);
-    overflow: visible;
-    min-height: 100vh;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 8px;
 }
 
-/* ===================================================================
-   SISTEMA DE PÁGINAS A4
-   =================================================================== */
-
+/* SISTEMA DE PÁGINAS */
 .page {
-    width: 210mm;
+    width: 100%;
     min-height: 297mm;
-    background: var(--bg-white);
-    position: relative;
+    background: white;
     page-break-after: always;
     page-break-inside: avoid;
 }
 
-.page:first-child {
-    page-break-before: auto;
-}
-
 .page:last-child {
     page-break-after: auto;
-    margin-bottom: 0;
 }
 
 /* CONTEÚDO DA PÁGINA */
 .page-content {
     width: 100%;
-    height: 100%;
     padding: 20mm;
-    display: block;
-    position: relative;
+    min-height: 257mm;
 }
 
-/* ===================================================================
-   TIPOGRAFIA PROFISSIONAL
-   =================================================================== */
-
-/* Títulos Principais */
+/* TIPOGRAFIA */
 .doc-h1 {
     font-size: 24pt;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--primary);
-    margin: 0 0 40px 0;
-    text-transform: uppercase;
-    letter-spacing: -0.5px;
+    margin-bottom: 16pt;
     line-height: 1.2;
-    page-break-after: avoid;
-    page-break-inside: avoid;
-    orphans: 2;
-    widows: 2;
 }
 
 .doc-h2 {
-    font-size: 16pt;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 50px 0 25px 0;
-    border-bottom: 2px solid var(--accent-light);
-    padding-bottom: 12px;
+    font-size: 18pt;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin: 16pt 0 12pt 0;
     line-height: 1.3;
-    page-break-after: avoid;
-    page-break-inside: avoid;
-    orphans: 2;
-    widows: 2;
 }
 
 .doc-h3 {
-    font-size: 12pt;
+    font-size: 14pt;
     font-weight: 600;
     color: var(--text-primary);
-    margin: 35px 0 20px 0;
-    line-height: 1.4;
-    page-break-after: avoid;
-    page-break-inside: avoid;
-    orphans: 2;
-    widows: 2;
+    margin: 12pt 0 8pt 0;
+    line-height: 1.3;
 }
 
 .doc-h4 {
-    font-size: 11pt;
+    font-size: 12pt;
     font-weight: 600;
-    color: var(--text-primary);
-    margin: 25px 0 15px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin: 10pt 0 6pt 0;
     line-height: 1.4;
-    page-break-after: avoid;
-    page-break-inside: avoid;
-    orphans: 2;
-    widows: 2;
 }
 
-/* Parágrafos */
 .doc-p {
     font-size: 10pt;
-    font-weight: 400;
-    color: var(--text-secondary);
-    margin: 0 0 15px 0;
-    line-height: 1.7;
+    line-height: 1.5;
+    margin-bottom: 8pt;
+    color: var(--text-primary);
     text-align: justify;
-    hyphens: auto;
-    orphans: 2;
-    widows: 2;
-    page-break-inside: avoid;
 }
 
-/* Listas */
 .doc-ul {
-    list-style: none;
-    margin: 0 0 20px 0;
-    padding-left: 20px;
+    margin: 8pt 0 8pt 16pt;
+    font-size: 10pt;
+    line-height: 1.4;
 }
 
 .doc-ul li {
-    font-size: 10pt;
-    color: var(--text-secondary);
-    margin: 0 0 8px 0;
-    line-height: 1.6;
-    position: relative;
-    padding-left: 15px;
+    margin-bottom: 4pt;
 }
 
-.doc-ul li::before {
-    content: "•";
-    position: absolute;
-    left: 0;
-    color: var(--accent);
-    font-weight: bold;
-}
-
-/* ===================================================================
-   CAPA PROFISSIONAL
-   =================================================================== */
-
+/* CAPA */
 .cover-page {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
-    min-height: 297mm;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    position: relative;
-    overflow: hidden;
-}
-
-.cover-page::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 12mm;
-    background: linear-gradient(180deg, var(--accent) 0%, var(--primary) 100%);
+    min-height: 297mm;
 }
 
 .cover-content {
-    padding: 40mm 20mm 20mm 30mm;
-    position: relative;
-    z-index: 2;
+    padding: 30mm 20mm;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .cover-logo {
-    font-family: 'Inter', sans-serif;
-    font-size: 2.2rem;
-    font-weight: 900;
-    margin-bottom: 40px;
+    font-size: 20pt;
+    font-weight: 700;
+    margin-bottom: 20pt;
     display: flex;
     align-items: center;
-    gap: 12px;
-}
-
-.cover-logo .material-symbols-outlined {
-    font-size: 2.5rem;
-    color: var(--accent);
+    justify-content: center;
+    gap: 8pt;
 }
 
 .cover-title {
-    font-family: 'Inter', sans-serif;
-    font-size: 3.5rem;
-    font-weight: 700;
-    line-height: 1.1;
-    margin-bottom: 30px;
+    font-size: 28pt;
+    font-weight: 800;
+    margin-bottom: 12pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .cover-subtitle {
-    font-size: 1.2rem;
-    font-weight: 300;
+    font-size: 14pt;
+    font-weight: 400;
     opacity: 0.9;
-    margin-bottom: 40px;
-    max-width: 600px;
-    line-height: 1.6;
+    max-width: 80%;
+    margin: 0 auto;
+    line-height: 1.4;
 }
 
 .cover-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: 25px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 15mm;
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .cover-info {
     display: flex;
-    gap: 40px;
+    justify-content: space-around;
+    text-align: center;
 }
 
 .cover-info-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 4pt;
 }
 
 .cover-info-label {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 9pt;
+    opacity: 0.7;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
 .cover-info-value {
-    font-size: 1rem;
+    font-size: 12pt;
     font-weight: 600;
-    color: white;
 }
 
-/* ===================================================================
-   SEÇÕES ESPECIAIS
-   =================================================================== */
-
+/* ELEMENTOS DE CONTEÚDO */
 .highlight-box {
     background: var(--accent-light);
     border-left: 4px solid var(--accent);
     border-radius: 4px;
-    padding: 20px;
-    margin: 25px 0;
+    padding: 12px;
+    margin: 16px 0;
     page-break-inside: avoid;
-}
-
-.highlight-box strong {
-    color: var(--primary);
-    font-weight: 600;
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin: 30px 0;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0;
     page-break-inside: avoid;
 }
 
 .stat-card {
     background: var(--bg-light);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px;
+    border-radius: 6px;
+    padding: 16px;
     text-align: center;
     page-break-inside: avoid;
 }
 
 .stat-value {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--accent);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* ===================================================================
-   PROJETOS E MAPAS
-   =================================================================== */
-
+/* PROJETOS */
 .proj-card {
-    background: var(--bg-white);
+    background: white;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 30px;
-    margin: 30px 0;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 20px 0;
     page-break-inside: avoid;
-    box-shadow: 0 2px 8px var(--shadow);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .proj-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
     border-bottom: 1px solid var(--border);
 }
 
 .proj-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--primary);
     margin: 0;
@@ -371,18 +274,19 @@ body {
 }
 
 .proj-meta {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
     text-align: right;
 }
 
+/* MAPAS */
 .map-wrapper {
     width: 100%;
-    height: 220px;
-    border-radius: 8px;
+    height: 200px;
+    border-radius: 6px;
     border: 1px solid var(--border);
     overflow: hidden;
-    margin: 20px 0;
+    margin: 16px 0;
     background: var(--bg-light);
     page-break-inside: avoid;
 }
@@ -393,22 +297,19 @@ body {
     border: none;
 }
 
-/* ===================================================================
-   ASSINATURA
-   =================================================================== */
-
+/* ASSINATURA */
 .signature-section {
-    margin-top: 60px;
-    padding-top: 30px;
+    margin-top: 40px;
+    padding-top: 20px;
     border-top: 1px solid var(--border);
     page-break-inside: avoid;
 }
 
 .signature-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 40px;
-    margin-top: 30px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin-top: 20px;
 }
 
 .signature-item {
@@ -417,28 +318,49 @@ body {
 
 .signature-line {
     border-bottom: 1px solid var(--text-primary);
-    height: 40px;
-    margin-bottom: 10px;
+    height: 30px;
+    margin-bottom: 8px;
 }
 
 .signature-name {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .signature-role {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* ===================================================================
-   BOTÕES E CONTROLES
-   =================================================================== */
+/* DEPENDÊNCIA DE CD */
+.cd-dependency-box {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    border-left: 3px solid;
+    page-break-inside: avoid;
+}
 
+.cd-dependency-critical {
+    background: #fef2f2;
+    border-left-color: #dc2626;
+}
+
+.cd-dependency-important {
+    background: #fffbeb;
+    border-left-color: #f59e0b;
+}
+
+.cd-dependency-normal {
+    background: #f0fdf4;
+    border-left-color: #16a34a;
+}
+
+/* BOTÕES */
 .no-print {
     display: block;
 }
@@ -447,138 +369,136 @@ body {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    display: flex;
+    display: none;
     gap: 10px;
-    z-index: 9999;
+    z-index: 1000;
+}
+
+@media screen {
+    .controls {
+        display: flex;
+    }
 }
 
 .btn-action {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+    background: var(--accent);
     color: white;
     border: none;
-    border-radius: 50px;
-    padding: 12px 24px;
+    border-radius: 20px;
+    padding: 10px 20px;
     font-family: 'Inter', sans-serif;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .btn-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-}
-
-.btn-action:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 .btn-action .material-symbols-outlined {
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
-/* Botões de Navegação */
+/* NAVEGAÇÃO */
 .navigation-controls {
     position: fixed;
     right: 20px;
     top: 50%;
     transform: translateY(-50%);
-    display: flex;
+    display: none;
     flex-direction: column;
     gap: 8px;
-    z-index: 9998;
+    z-index: 999;
+}
+
+@media screen {
+    .navigation-controls {
+        display: flex;
+    }
 }
 
 .nav-btn {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-    color: white;
-    border: none;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
+    background: white;
+    border: 1px solid var(--border);
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    opacity: 0.8;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
 }
 
 .nav-btn:hover {
-    opacity: 1;
     transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .nav-btn .material-symbols-outlined {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
 }
 
 .nav-top {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+    background: var(--accent);
+    border-color: var(--accent);
 }
 
-/* ===================================================================
-   IMPRESSÃO PROFISSIONAL
-   =================================================================== */
+.nav-top .material-symbols-outlined {
+    color: white;
+}
 
+/* IMPRESSÃO */
 @media print {
     body {
         background: none;
         padding: 0;
+        margin: 0;
     }
     
     #pdf-content {
         box-shadow: none;
         max-width: 100%;
+        margin: 0;
+        border-radius: 0;
     }
     
     .page {
         box-shadow: none;
         margin: 0;
         page-break-after: always;
+        width: 100%;
+        height: auto;
+        min-height: 297mm;
     }
     
     .page:last-child {
         page-break-after: auto;
     }
     
-    .no-print {
-        display: none !important;
+    .page-content {
+        padding: 15mm;
+        width: 100%;
+        height: auto;
+        min-height: auto;
     }
     
-    .controls {
-        display: none !important;
-    }
-    
+    .no-print,
+    .controls,
     .navigation-controls {
         display: none !important;
     }
     
-    /* Numeração de páginas */
-    .page::after {
-        content: "Página " counter(page);
-        position: absolute;
-        bottom: 10mm;
-        right: 20mm;
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        font-family: 'Inter', sans-serif;
-    }
-    
-    @page :first {
-        margin: 0;
-    }
-    
-    /* Evitar quebras indesejadas */
+    /* Evitar quebras */
     .doc-h1,
     .doc-h2,
     .doc-h3,
@@ -588,28 +508,52 @@ body {
     .stat-card,
     .proj-card,
     .map-wrapper,
-    .signature-section {
+    .signature-section,
+    .signature-item,
+    .cd-dependency-box {
         page-break-inside: avoid !important;
     }
     
-    /* Controle de órfãos e viúvas */
-    .doc-p {
-        orphans: 2;
-        widows: 2;
+    .proj-card {
+        page-break-after: always;
     }
     
-    /* Ajustes finais para impressão */
-    .page-content {
-        padding: 20mm;
+    .proj-card:last-child {
+        page-break-after: auto;
+    }
+    
+    /* Simplificar cores */
+    .doc-p,
+    .doc-h1, .doc-h2, .doc-h3, .doc-h4 {
+        color: #000 !important;
+    }
+    
+    .stat-card,
+    .proj-card {
+        background: #fff !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+    }
+    
+    .highlight-box {
+        background: #f5f5f5 !important;
+        border: 1px solid #ccc !important;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .signature-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 20px !important;
     }
 }
 
-/* ===================================================================
-   RESPONSIVIDADE
-   =================================================================== */
-
+/* RESPONSIVO */
 @media screen and (max-width: 1200px) {
-    .page {
+    #pdf-content {
         transform: scale(0.8);
         transform-origin: top center;
         margin-bottom: -50px;
@@ -617,7 +561,7 @@ body {
 }
 
 @media screen and (max-width: 768px) {
-    .page {
+    #pdf-content {
         transform: scale(0.6);
         margin-bottom: -100px;
     }
@@ -629,33 +573,9 @@ body {
     }
     
     .btn-action {
-        padding: 10px 20px;
-        font-size: 0.8rem;
+        padding: 8px 16px;
+        font-size: 0.75rem;
     }
-}
-
-/* ===================================================================
-   ÍCONES MATERIAL SYMBOLS
-   =================================================================== */
-
-.material-symbols-outlined {
-    font-family: 'Material Symbols Outlined';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: 'liga';
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 </style>
@@ -672,7 +592,7 @@ body {
             </div>
             
             <div class="cover-title">
-                Relatório Técnico Anual
+                Relatório Técnico
                 <div class="cover-subtitle">
                     Análise Otimizada de Redes Logísticas e Soluções de Distribuição
                 </div>
@@ -698,10 +618,6 @@ body {
         <div class="page-content">
             <h1 class="doc-h1">1. Fundamentação Teórica</h1>
             
-            <p class="doc-p">O presente relatório técnico tem como objetivo apresentar uma análise abrangente dos resultados obtidos através da aplicação de modelos matemáticos de Otimização Combinatória em redes logísticas, desenvolvidos e implementados mediante a plataforma inteligente NexusNode. A crescente complexidade dos cenários modernos de distribuição exige decisões estratégicas fundamentadas em dados estruturados e análises quantitativas robustas, visando garantir máxima eficiência operacional e competitividade no mercado.</p>
-            
-            <p class="doc-p">O foco central deste documento consiste na compilação sistemática de análises detalhadas referentes à localização ótima de facilidades logísticas (Centros de Distribuição), buscando alcançar o equilíbrio ideal entre múltiplos objetivos estratégicos: redução significativa de custos operacionais, minimização de distâncias percorridas na cadeia de suprimentos e maximização da cobertura geográfica de atendimento aos pontos de demanda identificados.</p>
-            
             <div class="highlight-box">
                 <strong>Objetivo Principal:</strong> Fornecer uma base analítica e matemática rigorosa, fundamentada em algoritmos de otimização avançados, para subsidiar o processo decisório de planejamento estratégico da cadeia de suprimentos da organização no período avaliado, possibilitando maximização de eficiência e rentabilidade.
             </div>
@@ -711,9 +627,6 @@ body {
             <p class="doc-p">Para a obtenção dos resultados apresentados na Seção 3 deste relatório técnico, foram empregados algoritmos computacionais avançados de Pesquisa Operacional, especificamente desenvolvidos e implementados através de abordagens matemáticas distintas e complementares, cada uma com suas características e aplicações específicas:</p>
             
             {% set modelos_analisados = projetos | map(attribute='tipo_analise') | list | unique | list %}
-            
-            <!-- Debug: Verificar modelos detectados -->
-            <!-- {% if modelos_analisados %}Modelos detectados: {{ modelos_analisados }}{% else %}Nenhum modelo detectado{% endif %} -->
             
             {% if 'p_medianas' in modelos_analisados %}
             <h3 class="doc-h3">2.1. Modelo p-Medianas</h3>
@@ -788,7 +701,7 @@ body {
                     <div class="stat-card">
                         <div class="stat-value">
                             {% if projeto.tipo_analise == 'tradicional' %}
-                                {{ projeto.resultados.instalacoes_abertas|length if projeto.resultados.instalacoes_abertas else 'N/A' }}
+                                {{ projeto.resultados.cds_abertos|length if projeto.resultados.cds_abertos else 'N/A' }}
                             {% elif projeto.tipo_analise == 'max_cobertura' %}
                                 {% if projeto.resultados.cds_selecionados %}
                                     {{ projeto.resultados.cds_selecionados|length }}
@@ -839,6 +752,35 @@ body {
                             Clientes Atendidos
                         </div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-value">
+                            {% if projeto.tipo_analise == 'tradicional' %}
+                                {% if projeto.resultados.demanda_atendida and projeto.resultados.demanda_atendida > 0 %}
+                                    {{ "%.0f"|format(projeto.resultados.demanda_atendida) }}
+                                {% else %}
+                                    {% set total_quantidades = projeto.resultados.transportes|map(attribute='quantidade')|list|sum if projeto.resultados.transportes else 0 %}
+                                    {{ "%.0f"|format(total_quantidades) }}
+                                {% endif %}
+                            {% elif projeto.tipo_analise == 'max_cobertura' %}
+                                {{ projeto.resultados.raio_cobertura if projeto.resultados.raio_cobertura else 'N/A' }} km
+                            {% elif projeto.tipo_analise == 'p_centros' %}
+                                {{ "{:,.2f}".format(projeto.resultados.valor_maximo).replace(',', 'X').replace('.', ',').replace('X', '.') if projeto.resultados.valor_maximo else 'N/A' }}
+                            {% else %}
+                                {{ "%.2f"|format((projeto.resultados.custo_total_ponderado / projeto.resultados.atribuicoes|length) if projeto.resultados.custo_total_ponderado and projeto.resultados.atribuicoes and projeto.resultados.atribuicoes|length > 0 else 0) }}
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">
+                            {% if projeto.tipo_analise == 'tradicional' %}
+                                Capacidade Usada
+                            {% elif projeto.tipo_analise == 'max_cobertura' %}
+                                Raio de Cobertura
+                            {% elif projeto.tipo_analise == 'p_centros' %}
+                                {% if projeto.resultados.tipo_valor == 'custo' %}Custo Máximo{% else %}Distância Máxima{% endif %}
+                            {% else %}
+                                Custo Médio
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
                 
                 {% if projeto.resultados and (projeto.resultados.cds_selecionados or projeto.resultados.cds_abertos) %}
@@ -883,7 +825,7 @@ body {
                         </div>
                         <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
                             <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary);">
-                                {{ projeto.resultados.instalacoes_abertas|length if projeto.resultados.instalacoes_abertas else 0 }}
+                                {{ projeto.resultados.cds_abertos|length if projeto.resultados.cds_abertos else 0 }}
                             </div>
                             <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Instalações Abertas</div>
                         </div>
@@ -904,35 +846,11 @@ body {
                         </div>
                         <div style="text-align: center; padding: 15px; background: white; border-radius: 6px;">
                             <div style="font-size: 1.8rem; font-weight: 700; color: #f59e0b;">
-                                {% if projeto.resultados.capacidade_utilizada %}
-                                    {% if projeto.resultados.capacidade_utilizada is mapping %}
-                                        {% set total_capacidade = 0 %}
-                                        {% for cd, dados in projeto.resultados.capacidade_utilizada.items() %}
-                                            {% set total_capacidade = total_capacidade + (dados.utilizada if dados.utilizada else 0) %}
-                                        {% endfor %}
-                                        {{ "%.0f"|format(total_capacidade) }}
-                                    {% elif projeto.resultados.capacidade_utilizada is iterable %}
-                                        {% set total_capacidade = 0 %}
-                                        {% for cd in projeto.resultados.capacidade_utilizada %}
-                                            {% if cd.utilizada %}
-                                                {% set total_capacidade = total_capacidade + cd.utilizada %}
-                                            {% endif %}
-                                        {% endfor %}
-                                        {{ "%.0f"|format(total_capacidade) }}
-                                    {% else %}
-                                        {{ "%.0f"|format(projeto.resultados.capacidade_utilizada) }}
-                                    {% endif %}
+                                {% if projeto.resultados.demanda_atendida and projeto.resultados.demanda_atendida > 0 %}
+                                    {{ "%.0f"|format(projeto.resultados.demanda_atendida) }}
                                 {% else %}
-                                    <!-- Fallback: calcular capacidade a partir dos dados das Instalações -->
-                                    {% set total_capacidade_calc = 0 %}
-                                    {% if projeto.resultados.instalacoes_abertas %}
-                                        {% for cd in projeto.resultados.instalacoes_abertas %}
-                                            {% if cd.capacidade %}
-                                                {% set total_capacidade_calc = total_capacidade_calc + cd.capacidade %}
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
-                                    {{ "%.0f"|format(total_capacidade_calc) }}
+                                    {% set total_quantidades = projeto.resultados.transportes|map(attribute='quantidade')|list|sum if projeto.resultados.transportes else 0 %}
+                                    {{ "%.0f"|format(total_quantidades) }}
                                 {% endif %}
                             </div>
                             <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Capacidade Usada</div>
@@ -992,6 +910,27 @@ body {
                 <div style="margin-top: 30px; padding: 20px; background: var(--bg-light); border-radius: 8px;">
                     <h4 class="doc-h4" style="margin-top: 0; color: var(--primary);">🔍 Curva ABC dos Custos de Rotas</h4>
                     
+                    <!-- Explicação sobre Custo por Unidade -->
+                    <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; border-left: 4px solid #0ea5e9; margin-bottom: 20px;">
+                        <h5 style="color: #0369a1; margin-bottom: 10px; font-size: 0.95rem;">💡 Entendendo os Custos por Unidade</h5>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                            O <strong>custo por unidade</strong> (ex: R$ 0,86/unidade) representa o valor gasto para transportar 
+                            uma única unidade de produto em uma rota específica. Este valor é calculado pela fórmula:
+                        </p>
+                        <div style="background: white; padding: 10px; border-radius: 4px; margin: 10px 0; text-align: center; font-family: monospace;">
+                            <strong>Custo Total da Rota = Quantidade × Custo Unitário</strong>
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                            <strong>Fatores que influenciam o custo unitário:</strong> distância percorrida, tipo de veículo, 
+                            dificuldade de acesso à localização, custos de combustível e pedágios, volume transportado 
+                            (descontos para maiores quantidades), e características específicas de cada rota.
+                        </p>
+                        <p style="margin: 10px 0 0 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                            <strong>Para que serve esta análise:</strong> identificar rotas ineficientes, negociar melhores 
+                            condições com transportadoras, otimizar trajetos e incluir custos logísticos reais na precificação.
+                        </p>
+                    </div>
+                    
                     {% set rotas_ordenadas = [] %}
                     {% for transporte in projeto.resultados.transportes %}
                         {% set custo_total_rota = transporte.quantidade * transporte.custo_unitario %}
@@ -1035,13 +974,16 @@ body {
                 <div style="margin-top: 30px; padding: 20px; background: var(--bg-light); border-radius: 8px;">
                     <h4 class="doc-h4" style="margin-top: 0; color: var(--primary);">📊 Nível de Importância de Cada CD</h4>
                     
-                    {% set volume_por_cd = {} %}
-                    {% set volume_total = 0 %}
                     
+                    {% set volume_por_cd = {} %}
+                    
+                    <!-- Abordagem direta: somar tudo primeiro -->
+                    {% set volume_total = projeto.resultados.transportes|map(attribute='quantidade')|list|sum %}
+                    
+                    <!-- Depois agrupar por CD -->
                     {% for transporte in projeto.resultados.transportes %}
                         {% set cd_origem = transporte.origem %}
-                        {% set quantidade = transporte.quantidade %}
-                        {% set volume_total = volume_total + quantidade %}
+                        {% set quantidade = transporte.quantidade if transporte.quantidade and transporte.quantidade > 0 else 0 %}
                         {% if cd_origem in volume_por_cd %}
                             {% set _ = volume_por_cd.__setitem__(cd_origem, volume_por_cd[cd_origem] + quantidade) %}
                         {% else %}
@@ -1049,18 +991,20 @@ body {
                         {% endif %}
                     {% endfor %}
                     
+                
                     <div style="margin-top: 15px;">
                         <h5 style="color: var(--accent); margin-bottom: 10px;">🎯 Dependência da Malha Logística</h5>
                         {% for cd, volume in volume_por_cd.items() %}
                         {% set percentual = ((volume|float) / (volume_total|float) * 100)|round(1) if volume_total > 0 else 0.0 %}
-                        {% set cor_borda = "#dc2626" if percentual > 50 else ("#f59e0b" if percentual > 25 else "#10b981") %}
-                        {% set cor_fundo = "#fef2f2" if percentual > 50 else ("#fffbeb" if percentual > 25 else "#f0fdf4") %}
-                        <div style="background: {{ cor_fundo }}; padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid {{ cor_borda }};">
+                        {% set classe_css = "cd-dependency-critical" if percentual > 50 else ("cd-dependency-important" if percentual > 25 else "cd-dependency-normal") %}
+                        <div class="cd-dependency-box {{ classe_css }}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <strong>{{ cd }}</strong>
                                     {% if percentual > 50 %}
                                     <span style="background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 8px;">CRÍTICO</span>
+                                    {% elif percentual > 25 %}
+                                    <span style="background: #fffbeb; color: #f59e0b; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 8px;">IMPORTANTE</span>
                                     {% endif %}
                                 </div>
                                 <div style="text-align: right;">
@@ -1075,8 +1019,22 @@ body {
                         <div style="background: #f0f9ff; padding: 12px; border-radius: 6px; border-left: 4px solid #0ea5e9; margin-top: 10px;">
                             <strong>💡 Insight Estratégico:</strong> 
                             {% set cd_maior = volume_por_cd.items() | max(attribute='1') %}
-                            CD {{ cd_maior[0] }} concentra {{ "%.1f"|format(((cd_maior[1]|float) / (volume_total|float) * 100)|round(1)) if volume_total > 0 else 0.0 }}% do volume total, 
-                            representando ponto crítico da operação.
+                            {% set percentual_maior = ((cd_maior[1]|float) / (volume_total|float) * 100)|round(1) if volume_total > 0 else 0.0 %}
+                            
+                            {% if percentual_maior > 50 %}
+                                CD {{ cd_maior[0] }} concentra {{ "%.1f"|format(percentual_maior) }}% do volume total, 
+                                representando <strong>ponto crítico da operação</strong> e requer atenção especial na gestão.
+                            {% elif percentual_maior > 35 %}
+                                CD {{ cd_maior[0] }} concentra {{ "%.1f"|format(percentual_maior) }}% do volume total, 
+                                indicando <strong>alta dependência</strong> e necessidade de planejamento de contingência.
+                            {% elif percentual_maior > 25 %}
+                                CD {{ cd_maior[0] }} concentra {{ "%.1f"|format(percentual_maior) }}% do volume total, 
+                                representando <strong>importância estratégica</strong> na rede logística.
+                            {% else %}
+                                A distribuição está <strong>bem equilibrada</strong> entre os CDs, 
+                                com {{ cd_maior[0] }} tendo a maior participação ({{ "%.1f"|format(percentual_maior) }}%).
+                                Isso proporciona <strong>resiliência operacional</strong> e reduz riscos.
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
@@ -1180,9 +1138,8 @@ body {
                         {% for cd in projeto.resultados.clientes_por_cd %}
                         {% set volume = projeto.resultados.clientes_por_cd[cd] %}
                         {% set percentual = ((volume|float) / (volume_total|float) * 100)|round(1) if volume_total > 0 else 0.0 %}
-                        {% set cor_borda = "#dc2626" if percentual > 50 else ("#f59e0b" if percentual > 25 else "#10b981") %}
-                        {% set cor_fundo = "#fef2f2" if percentual > 50 else ("#fffbeb" if percentual > 25 else "#f0fdf4") %}
-                        <div style="background: {{ cor_fundo }}; padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid {{ cor_borda }};">
+                        {% set classe_css = "cd-dependency-critical" if percentual > 50 else ("cd-dependency-important" if percentual > 25 else "cd-dependency-normal") %}
+                        <div class="cd-dependency-box {{ classe_css }}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <strong>{{ cd }}</strong>
@@ -1273,9 +1230,8 @@ body {
                         <h5 style="color: var(--accent); margin-bottom: 10px;">🎯 Dependência da Malha Logística</h5>
                         {% for cd, volume in volume_por_cd.items() %}
                         {% set percentual = ((volume|float) / (volume_total|float) * 100)|round(1) if volume_total > 0 else 0.0 %}
-                        {% set cor_borda = "#dc2626" if percentual > 50 else ("#f59e0b" if percentual > 25 else "#10b981") %}
-                        {% set cor_fundo = "#fef2f2" if percentual > 50 else ("#fffbeb" if percentual > 25 else "#f0fdf4") %}
-                        <div style="background: {{ cor_fundo }}; padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid {{ cor_borda }};">
+                        {% set classe_css = "cd-dependency-critical" if percentual > 50 else ("cd-dependency-important" if percentual > 25 else "cd-dependency-normal") %}
+                        <div class="cd-dependency-box {{ classe_css }}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <strong>{{ cd }}</strong>
@@ -1539,9 +1495,8 @@ body {
                         <h5 style="color: var(--accent); margin-bottom: 10px;">🎯 Dependência da Malha Logística</h5>
                         {% for cd, volume in volume_por_cd.items() %}
                         {% set percentual = ((volume|float) / (volume_total|float) * 100)|round(1) if volume_total > 0 else 0.0 %}
-                        {% set cor_borda = "#dc2626" if percentual > 50 else ("#f59e0b" if percentual > 25 else "#10b981") %}
-                        {% set cor_fundo = "#fef2f2" if percentual > 50 else ("#fffbeb" if percentual > 25 else "#f0fdf4") %}
-                        <div style="background: {{ cor_fundo }}; padding: 12px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid {{ cor_borda }};">
+                        {% set classe_css = "cd-dependency-critical" if percentual > 50 else ("cd-dependency-important" if percentual > 25 else "cd-dependency-normal") %}
+                        <div class="cd-dependency-box {{ classe_css }}">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <strong>{{ cd }}</strong>
@@ -1655,7 +1610,7 @@ body {
                         </thead>
                         <tbody>
                             {% for projeto in projetos %}
-                            <tr style="{% if loop.index % 2 == 0 %}background: var(--bg-light);{% endif %}">
+                            <tr{% if loop.index % 2 == 0 %} class="table-row-striped"{% endif %}>
                                 <td style="padding: 10px 8px; border: 1px solid var(--border); font-weight: 500;">{{ projeto.nome }}</td>
                                 <td style="padding: 10px 8px; border: 1px solid var(--border); text-align: center;">
                                     <span style="background: var(--accent-light); color: var(--accent); padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">
@@ -1947,50 +1902,49 @@ body {
             <div class="highlight-box" style="margin-top: 25px;">
                 <strong>Principais Achievements Consolidados:</strong> 
                 
-                <!-- Cálculo simplificado e direto -->
+                
                 {% set total_cds_final = 0 %}
                 {% set total_clientes_final = 0 %}
                 {% set total_investimento_final = 0 %}
                 
-                <!-- MÁXIMA COBERTURA -->
                 {% for projeto in projetos %}
-                    {% if projeto.tipo_analise == 'max_cobertura' %}
-                        {% set total_cds_final = total_cds_final + 2 %}
-                        {% set total_clientes_final = total_clientes_final + 5 %}
-                    {% endif %}
-                {% endfor %}
-                
-                <!-- P-CENTROS -->
-                {% for projeto in projetos %}
-                    {% if projeto.tipo_analise == 'p_centros' %}
-                        {% set total_cds_final = total_cds_final + 2 %}
-                        {% set total_clientes_final = total_clientes_final + 10 %}
-                    {% endif %}
-                {% endfor %}
-                
-                <!-- P-MEDIANAS -->
-                {% for projeto in projetos %}
-                    {% if projeto.tipo_analise == 'p_medianas' %}
-                        {% set total_cds_final = total_cds_final + 2 %}
-                        {% set total_clientes_final = total_clientes_final + 10 %}
-                        {% set total_investimento_final = total_investimento_final + 9581 %}
-                    {% endif %}
-                {% endfor %}
-                
-                <!-- TRADICIONAL -->
-                {% for projeto in projetos %}
-                    {% if projeto.tipo_analise == 'tradicional' %}
-                        {% set total_cds_final = total_cds_final + 3 %}
-                        {% set clientes_unicos_consolidados = [] %}
-                        {% if projeto.resultados.transportes %}
-                            {% for transporte in projeto.resultados.transportes %}
-                                {% if transporte.destino not in clientes_unicos_consolidados %}
-                                    {% set _ = clientes_unicos_consolidados.append(transporte.destino) %}
-                                {% endif %}
-                            {% endfor %}
+                    {% if projeto.resultados %}
+                        {% if projeto.tipo_analise == 'tradicional' %}
+                            {% set total_cds_final = total_cds_final + (projeto.resultados.cds_abertos|length if projeto.resultados.cds_abertos else 0) %}
+                            {% set clientes_unicos_consolidados = [] %}
+                            {% if projeto.resultados.transportes %}
+                                {% for transporte in projeto.resultados.transportes %}
+                                    {% if transporte.destino and transporte.destino not in clientes_unicos_consolidados %}
+                                        {% set _ = clientes_unicos_consolidados.append(transporte.destino) %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            {% set total_clientes_final = total_clientes_final + (clientes_unicos_consolidados|length if clientes_unicos_consolidados else 0) %}
+                            {% set total_investimento_final = total_investimento_final + (projeto.resultados.custo_total if projeto.resultados.custo_total else 0) %}
+                        
+                        {% elif projeto.tipo_analise == 'p_medianas' %}
+                            {% set total_cds_final = total_cds_final + (projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 0) %}
+                            {% set total_clientes_final = total_clientes_final + (projeto.resultados.atribuicoes|length if projeto.resultados.atribuicoes else 0) %}
+                            {% set total_investimento_final = total_investimento_final + (projeto.resultados.custo_total_ponderado if projeto.resultados.custo_total_ponderado else 0) %}
+                        
+                        {% elif projeto.tipo_analise == 'p_centros' %}
+                            {% set total_cds_final = total_cds_final + (projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 0) %}
+                            {% set total_clientes_final = total_clientes_final + (projeto.resultados.atribuicoes|length if projeto.resultados.atribuicoes else 0) %}
+                            {% set total_investimento_final = total_investimento_final + (projeto.resultados.valor_maximo if projeto.resultados.valor_maximo else 0) %}
+                        
+                        {% elif projeto.tipo_analise == 'max_cobertura' %}
+                            {% set total_cds_final = total_cds_final + (projeto.resultados.num_cds_selecionados if projeto.resultados.num_cds_selecionados else 0) %}
+                            {% set clientes_cobertos_calc = 0 %}
+                            {% if projeto.resultados.atribuicoes %}
+                                {% for atribuicao in projeto.resultados.atribuicoes %}
+                                    {% if atribuicao.coberto %}
+                                        {% set clientes_cobertos_calc = clientes_cobertos_calc + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            {% set total_clientes_final = total_clientes_final + clientes_cobertos_calc %}
+                            {% set total_investimento_final = total_investimento_final + (projeto.resultados.demanda_cobertura if projeto.resultados.demanda_cobertura else 0) %}
                         {% endif %}
-                        {% set total_clientes_final = total_clientes_final + (clientes_unicos_consolidados|length if clientes_unicos_consolidados else 0) %}
-                        {% set total_investimento_final = total_investimento_final + 119918 %}
                     {% endif %}
                 {% endfor %}
                 
@@ -2000,9 +1954,8 @@ body {
                 {% if total_investimento_final > 0 %}
                     <strong>R$ {{ format_currency_brl(total_investimento_final) }}</strong>.
                 {% else %}
-                    <strong>{{ "{:,.2f}".format(total_investimento_final).replace(',', 'X').replace('.', ',').replace('X', '.') }}</strong>.
+                    <strong>{{ "{:,}".format(total_investimento_final|round(2)).replace(",", "X").replace(".", ",").replace("X", ".") }}</strong>.
                 {% endif %}
-            </div>
             
             <h2 class="doc-h2">4. Próximos Passos</h2>
             
@@ -2038,7 +1991,7 @@ body {
         <span class="material-symbols-outlined">arrow_back</span>
         Voltar
     </a>
-    <a href="{{ url_for('gerar_relatorio_word') }}" class="btn-action">
+    <a href="{{ url_for('gerar_relatorio_word', projeto_id=projeto.id) }}" class="btn-action">
         <span class="material-symbols-outlined">description</span>
         Baixar Word
     </a>
